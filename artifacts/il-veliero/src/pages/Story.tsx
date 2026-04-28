@@ -8,6 +8,8 @@ export default function Story() {
   const containerRef = useRef<HTMLElement>(null);
   const image1Ref = useRef<HTMLImageElement>(null);
   const image2Ref = useRef<HTMLImageElement>(null);
+  const image1WrapRef = useRef<HTMLDivElement>(null);
+  const image2WrapRef = useRef<HTMLDivElement>(null);
   const text1Ref = useRef<HTMLDivElement>(null);
   const text2Ref = useRef<HTMLDivElement>(null);
 
@@ -52,6 +54,28 @@ export default function Story() {
       );
     });
 
+    // Image reveal — staggered fade-in + upward translate.
+    // Targets the WRAPPER divs so it doesn't collide with the parallax y
+    // tween already running on the inner <img> elements.
+    [image1WrapRef.current, image2WrapRef.current].forEach((wrap, idx) => {
+      if (!wrap) return;
+      gsap.fromTo(
+        wrap,
+        { opacity: 0, y: 60 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.4,
+          ease: "power3.out",
+          delay: idx * 0.15,
+          scrollTrigger: {
+            trigger: wrap,
+            start: "top 85%",
+          },
+        }
+      );
+    });
+
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
@@ -83,7 +107,7 @@ export default function Story() {
 
           {/* Left block — Garden & Breakfast (7 cols) */}
           <div className="md:col-span-7 relative z-10">
-            <div className="overflow-hidden aspect-[4/3] w-full bg-gray-100">
+            <div ref={image1WrapRef} className="overflow-hidden aspect-[4/3] w-full bg-gray-100">
               <img
                 ref={image1Ref}
                 src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop"
@@ -107,7 +131,7 @@ export default function Story() {
 
           {/* Right block — Sea & Cleanliness (4 cols, shifted down) */}
           <div className="md:col-span-4 md:col-start-9 mt-20 md:mt-56 relative z-20">
-            <div className="overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
+            <div ref={image2WrapRef} className="overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
                 src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop"

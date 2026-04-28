@@ -7,6 +7,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Family() {
   const containerRef = useRef<HTMLElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const imageWrapRef = useRef<HTMLDivElement>(null);
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
 
   const addToRefs = (el: HTMLElement | null) => {
@@ -16,35 +17,58 @@ export default function Family() {
   };
 
   useEffect(() => {
-    gsap.fromTo(imageRef.current,
-      { scale: 1.1 },
-      {
-        scale: 1,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
-      }
-    );
+    // Scope all tweens/triggers so they're cleanly torn down on unmount,
+    // preventing duplicate animations on route revisits.
+    const ctx = gsap.context(() => {
+      gsap.fromTo(imageRef.current,
+        { scale: 1.1 },
+        {
+          scale: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
 
-    elementsRef.current.forEach((el) => {
-      gsap.fromTo(el,
-        { opacity: 0, y: 30 },
+      // Image reveal — fade-in + upward translate.
+      // Targets the WRAPPER div so it doesn't collide with the parallax scale
+      // tween already running on the inner <img>.
+      gsap.fromTo(imageWrapRef.current,
+        { opacity: 0, y: 60 },
         {
           opacity: 1,
           y: 0,
-          duration: 1.2,
+          duration: 1.4,
           ease: "power3.out",
           scrollTrigger: {
-            trigger: el,
+            trigger: imageWrapRef.current,
             start: "top 85%",
           },
         }
       );
-    });
+
+      elementsRef.current.forEach((el) => {
+        gsap.fromTo(el,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 85%",
+            },
+          }
+        );
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -88,7 +112,7 @@ export default function Family() {
 
         {/* Right column: Portrait (6 cols, offset by 1) */}
         <div className="md:col-span-6 md:col-start-7">
-          <div className="overflow-hidden aspect-[3/4] w-full">
+          <div ref={imageWrapRef} className="overflow-hidden aspect-[3/4] w-full">
             <img
               ref={imageRef}
               src="https://images.unsplash.com/photo-1543269664-56d93c1b41a6?q=80&w=800&auto=format&fit=crop"

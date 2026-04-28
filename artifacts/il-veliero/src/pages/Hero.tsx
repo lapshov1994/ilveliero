@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNav } from '@/components/NavigationContext';
@@ -15,7 +15,18 @@ export default function Hero() {
   const logoRef = useRef<HTMLDivElement>(null);
   const logoSvgRef = useRef<SVGSVGElement>(null);
   const sailboatRef = useRef<HTMLDivElement>(null);
+  const sailboatSwayRef = useRef<HTMLDivElement>(null);
   const scrollProgressRef = useRef<HTMLDivElement>(null);
+  const [headerScrolled, setHeaderScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setHeaderScrolled(window.scrollY > window.innerHeight * 0.6);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -50,16 +61,29 @@ export default function Hero() {
       },
     });
 
-    // "Sailing" effect — boat drifts away as the user scrolls down
+    // Continuous gentle sway — applied to the inner element so it does NOT
+    // conflict with the outer scroll-driven rotation.
+    if (sailboatSwayRef.current) {
+      gsap.to(sailboatSwayRef.current, {
+        rotation: 3,
+        duration: 3,
+        repeat: -1,
+        yoyo: true,
+        ease: 'power1.inOut',
+        transformOrigin: 'center bottom',
+      });
+    }
+
+    // "Sailing away" — outer wrapper drifts to the right and fades on scroll.
     if (sailboatRef.current) {
       gsap.to(sailboatRef.current, {
-        x: '50vw',
-        y: '30vh',
-        rotation: 12,
+        x: '60vw',
+        y: '20vh',
+        rotation: 15,
         opacity: 0,
         ease: 'none',
         scrollTrigger: {
-          trigger: 'main',
+          trigger: '.hero-section',
           start: 'top top',
           end: 'bottom top',
           scrub: 1.5,
@@ -101,19 +125,27 @@ export default function Hero() {
         className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[60]"
       />
 
-      {/* Header */}
-      <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
+      {/* Header — fixed so the sailboat stays in viewport while it sails away.
+          Adds a glassmorphic backdrop once the user scrolls past the hero so
+          the white text stays readable on light sections below. */}
+      <header
+        className={`fixed top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white transition-all duration-500 ${
+          headerScrolled ? 'bg-[#0A1128]/75 backdrop-blur-md' : ''
+        }`}
+      >
         <div className="flex items-center gap-4 group cursor-pointer relative z-50">
           <div className="relative">
             <div
               ref={sailboatRef}
               className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110"
             >
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
-                <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
-                <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="3 3" className="opacity-70"/>
-              </svg>
+              <div ref={sailboatSwayRef}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
+                  <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
+                  <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="3 3" className="opacity-70"/>
+                </svg>
+              </div>
             </div>
             <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-150 group-hover:opacity-40 transition-all duration-700 origin-center" />
             <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-125 group-hover:opacity-30 transition-all duration-700 delay-150 origin-center" />

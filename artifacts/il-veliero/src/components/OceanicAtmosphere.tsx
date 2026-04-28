@@ -2,13 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 const WAVES = [
-  { top: '8vh',  d: 'M0,10 Q60,0 120,10 T240,10 T360,10 T480,10 T600,10' },
-  { top: '22vh', d: 'M0,10 Q70,20 140,10 T280,10 T420,10 T560,10 T700,10' },
-  { top: '36vh', d: 'M0,10 Q50,2 100,10 T200,10 T300,10 T400,10 T500,10 T600,10' },
-  { top: '50vh', d: 'M0,10 Q80,18 160,10 T320,10 T480,10 T640,10' },
-  { top: '64vh', d: 'M0,10 Q55,4 110,10 T220,10 T330,10 T440,10 T550,10 T660,10' },
-  { top: '78vh', d: 'M0,10 Q65,16 130,10 T260,10 T390,10 T520,10 T650,10' },
-  { top: '92vh', d: 'M0,10 Q45,2 90,10 T180,10 T270,10 T360,10 T450,10 T540,10' },
+  { top: '12vh', d: 'M0,10 Q60,0 120,10 T240,10 T360,10 T480,10 T600,10' },
+  { top: '26vh', d: 'M0,10 Q70,18 140,10 T280,10 T420,10 T560,10 T700,10' },
+  { top: '42vh', d: 'M0,10 Q50,2 100,10 T200,10 T300,10 T400,10 T500,10 T600,10' },
+  { top: '58vh', d: 'M0,10 Q80,16 160,10 T320,10 T480,10 T640,10' },
+  { top: '74vh', d: 'M0,10 Q55,4 110,10 T220,10 T330,10 T440,10 T550,10 T660,10' },
+  { top: '88vh', d: 'M0,10 Q65,14 130,10 T260,10 T390,10 T520,10 T650,10' },
 ];
 
 export default function OceanicAtmosphere() {
@@ -21,18 +20,18 @@ export default function OceanicAtmosphere() {
     waves.forEach((wave, i) => {
       gsap.set(wave, { x: '-10vw' });
 
-      // Constant horizontal drift across the screen
+      // Slow horizontal drift across the whole viewport
       gsap.to(wave, {
-        x: '110vw',
-        duration: 20 + (i % 3) * 4,
+        x: '100vw',
+        duration: gsap.utils.random(25, 35),
         repeat: -1,
         ease: 'none',
-        delay: i * 1.2,
+        delay: i * 1.4,
       });
 
       // Subtle vertical bobbing
       gsap.to(wave, {
-        y: '+=15',
+        y: '+=18',
         duration: 4 + (i % 2),
         repeat: -1,
         yoyo: true,
@@ -65,7 +64,7 @@ export default function OceanicAtmosphere() {
               fill="none"
               stroke="#D4AF37"
               strokeWidth="0.5"
-              strokeOpacity="0.08"
+              opacity="0.1"
             />
           </svg>
         </div>
