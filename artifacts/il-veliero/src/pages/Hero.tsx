@@ -100,7 +100,7 @@ export default function Hero() {
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
         <div className="flex items-center gap-4 group cursor-pointer relative z-50">
           <div className="relative">
-            <div ref={sailboatRef} className="relative z-10 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110">
+            <div ref={sailboatRef} className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
                 <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
                 <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
