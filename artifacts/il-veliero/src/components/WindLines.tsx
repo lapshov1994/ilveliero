@@ -27,8 +27,8 @@ export default function WindLines() {
         ease: 'none',
         delay: startDelay,
         onRepeat: () => {
+          line.style.top = `${5 + Math.random() * 90}vh`;
           gsap.set(line, {
-            y: gsap.utils.random(5, 95) + 'vh',
             x: '-20vw',
             opacity: 1,
           });
