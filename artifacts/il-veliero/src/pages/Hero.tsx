@@ -1,0 +1,168 @@
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function Hero() {
+  const heroBgRef = useRef<HTMLDivElement>(null);
+  const heroBookingRef = useRef<HTMLDivElement>(null);
+  const heroLine1Ref = useRef<HTMLHeadingElement>(null);
+  const heroLine2Ref = useRef<HTMLHeadingElement>(null);
+  const marqueeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Cinematic entrance
+    const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    if (heroBgRef.current) {
+      introTl.fromTo(
+        heroBgRef.current,
+        { scale: 1.1 },
+        { scale: 1, duration: 3, ease: 'power2.out' }
+      );
+    }
+    if (heroLine1Ref.current && heroLine2Ref.current) {
+      introTl.fromTo(
+        [heroLine1Ref.current, heroLine2Ref.current],
+        { y: 100 },
+        { y: 0, duration: 1.2, stagger: 0.15 },
+        '-=2'
+      );
+    }
+    if (heroBookingRef.current) {
+      introTl.fromTo(
+        heroBookingRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 1 },
+        '-=1'
+      );
+    }
+
+    // Hero background parallax
+    if (heroBgRef.current) {
+      gsap.to(heroBgRef.current, {
+        yPercent: 40,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-section',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    }
+
+    // Marquee infinite scroll
+    if (marqueeRef.current) {
+      const inner = marqueeRef.current.querySelector<HTMLElement>('.marquee-inner');
+      if (inner) {
+        gsap.to(inner, { xPercent: -50, ease: 'none', duration: 24, repeat: -1 });
+      }
+    }
+
+    return () => {
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
+  }, []);
+
+  return (
+    <>
+      {/* Transparent header — absolute, over photo */}
+      <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
+        <div className="flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
+            <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" />
+            <path d="M12 22V14" />
+          </svg>
+          <div className="text-lg tracking-[0.2em] font-serif uppercase">
+            il veliero <span className="text-[#D4AF37] ml-1 text-xs">★★★</span>
+          </div>
+        </div>
+        <div
+          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors"
+          data-testid="btn-menu"
+        >
+          Menu
+        </div>
+      </header>
+
+      {/* Full-screen hero */}
+      <section className="hero-section relative w-full h-screen overflow-hidden bg-[#0A1128]">
+        <div
+          ref={heroBgRef}
+          className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+
+        <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">
+          <div className="overflow-hidden mb-2">
+            <h1
+              ref={heroLine1Ref}
+              className="text-5xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-sm"
+              style={{ transform: 'translateY(100%)' }}
+            >
+              Dove il Mare
+            </h1>
+          </div>
+          <div className="overflow-hidden mb-12">
+            <h1
+              ref={heroLine2Ref}
+              className="text-5xl md:text-7xl font-serif text-white italic font-light tracking-tight drop-shadow-sm"
+              style={{ transform: 'translateY(100%)' }}
+            >
+              Incontra il Cielo
+            </h1>
+          </div>
+        </div>
+
+        {/* Booking widget */}
+        <div
+          ref={heroBookingRef}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-5xl bg-black/20 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0"
+        >
+          <div className="flex-1 flex justify-around w-full px-6 py-4 text-white text-sm items-center">
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkin">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Arrivo</span>
+              <span className="font-light tracking-wide">28.04.2026</span>
+            </div>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkout">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Partenza</span>
+              <span className="font-light tracking-wide">30.04.2026</span>
+            </div>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-guests">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Ospiti</span>
+              <span className="font-light tracking-wide">2 Adulti</span>
+            </div>
+          </div>
+          <button
+            className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium hover:bg-white transition-all duration-500 w-full md:w-auto"
+            data-testid="btn-prenota"
+          >
+            Prenota Ora
+          </button>
+        </div>
+      </section>
+
+      {/* Marquee band */}
+      <section className="bg-[#0A1128] overflow-hidden py-4 border-y border-white/5">
+        <div ref={marqueeRef} className="relative flex whitespace-nowrap">
+          <div className="marquee-inner flex text-[#5BB8E8] uppercase tracking-[0.2em] text-xs font-light">
+            {[...Array(4)].map((_, i) => (
+              <span key={i} className="mx-4">
+                Autentico Artigianato Siciliano • Mare e Vento • San Vito Lo Capo •
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

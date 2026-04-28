@@ -1,32 +1,42 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import Story from "@/pages/Story";
+import React, { useEffect } from 'react';
+import { Router as WouterRouter } from 'wouter';
+import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Hero from '@/pages/Hero';
+import Story from '@/pages/Story';
 
-const queryClient = new QueryClient();
+gsap.registerPlugin(ScrollTrigger);
 
-function Router() {
+export default function App() {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      touchMultiplier: 2,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    const lenisRaf = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(lenisRaf);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(lenisRaf);
+      lenis.destroy();
+    };
+  }, []);
+
   return (
-    <Switch>
-      <Route path="/" component={Story} />
-      <Route component={NotFound} />
-    </Switch>
+    <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <main className="bg-white min-h-screen overflow-x-hidden relative">
+        <Hero />
+        <Story />
+      </main>
+    </WouterRouter>
   );
 }
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-}
-
-export default App;
