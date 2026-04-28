@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Hero from '@/pages/Hero';
 import Story from '@/pages/Story';
+import Family from '@/pages/Family';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -36,6 +37,7 @@ export default function App() {
       <main className="bg-white min-h-screen overflow-x-hidden relative">
         <Hero />
         <Story />
+        <Family />
       </main>
     </WouterRouter>
   );
