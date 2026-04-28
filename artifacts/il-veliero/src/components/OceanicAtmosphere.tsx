@@ -10,13 +10,20 @@ const WAVES = [
   { top: '82vh', d: 'M0,10 Q55,4 110,10 T220,10 T330,10 T440,10 T550,10 T660,10' },
 ];
 
-const WIND_STREAKS = [
-  { top: '8vh',  width: '34vw', delay: 0,    dur: 14 },
-  { top: '15vh', width: '22vw', delay: 2.5,  dur: 17 },
-  { top: '24vh', width: '40vw', delay: 5.0,  dur: 12 },
-  { top: '38vh', width: '28vw', delay: 1.5,  dur: 19 },
-  { top: '46vh', width: '36vw', delay: 7.0,  dur: 15 },
-  { top: '60vh', width: '24vw', delay: 3.5,  dur: 18 },
+// Curly wind wisps — each is an SVG with a swirling S-curve path
+const WIND_WISPS = [
+  { top: '9vh',  size: 220, delay: 0,    dur: 16, scale: 1.0,
+    d: 'M5,40 Q40,10 80,30 T160,30 Q190,40 215,20' },
+  { top: '17vh', size: 170, delay: 3.0,  dur: 19, scale: 0.9,
+    d: 'M5,30 Q30,55 60,30 T120,30 Q145,15 165,35' },
+  { top: '26vh', size: 260, delay: 5.5,  dur: 14, scale: 1.1,
+    d: 'M5,40 Q50,15 100,40 T200,40 Q230,55 255,30' },
+  { top: '36vh', size: 200, delay: 1.5,  dur: 21, scale: 0.95,
+    d: 'M5,35 Q35,10 70,35 T140,35 Q175,55 195,25' },
+  { top: '46vh', size: 240, delay: 7.5,  dur: 17, scale: 1.05,
+    d: 'M5,40 Q45,55 90,30 T180,30 Q210,15 235,40' },
+  { top: '58vh', size: 190, delay: 3.5,  dur: 20, scale: 0.95,
+    d: 'M5,35 Q40,10 75,35 T150,35 Q175,15 185,40' },
 ];
 
 // 28 sand grains drifting along the bottom
@@ -60,22 +67,31 @@ export default function OceanicAtmosphere() {
         });
       });
 
-      const streaks = windLayerRef.current?.querySelectorAll<HTMLElement>('.wind-streak') ?? [];
-      streaks.forEach((streak) => {
-        const delay = parseFloat(streak.dataset.delay || '0');
-        const dur = parseFloat(streak.dataset.dur || '15');
-        gsap.set(streak, { x: '-50vw', opacity: 0 });
-        gsap.to(streak, {
+      const wisps = windLayerRef.current?.querySelectorAll<HTMLElement>('.wind-wisp') ?? [];
+      wisps.forEach((wisp) => {
+        const delay = parseFloat(wisp.dataset.delay || '0');
+        const dur = parseFloat(wisp.dataset.dur || '15');
+        const scale = parseFloat(wisp.dataset.scale || '1');
+        gsap.set(wisp, { x: '-30vw', opacity: 0, scale });
+        gsap.to(wisp, {
           x: '120vw',
-          opacity: 0.45,
           duration: dur,
           repeat: -1,
-          ease: 'power1.inOut',
+          ease: 'sine.inOut',
           delay,
           keyframes: {
-            opacity: [0, 0.45, 0.45, 0],
+            opacity: [0, 0.55, 0.65, 0.55, 0],
             easeEach: 'none',
           },
+        });
+        // Gentle vertical undulation while drifting (the curl)
+        gsap.to(wisp, {
+          y: '+=14',
+          duration: 3 + (Math.random() * 1.5),
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          delay: delay * 0.4,
         });
       });
 
@@ -127,25 +143,51 @@ export default function OceanicAtmosphere() {
     <div
       ref={containerRef}
       className="fixed inset-0 pointer-events-none z-[5] overflow-hidden"
+      aria-hidden="true"
     >
-      {/* Wind layer — pale sky-blue streaks drifting across upper half */}
+      {/* Wind layer — curly sky-blue wisps drifting across the upper half */}
       <div ref={windLayerRef} className="absolute inset-0">
-        {WIND_STREAKS.map((s, i) => (
+        {WIND_WISPS.map((w, i) => (
           <div
             key={`wind-${i}`}
-            className="wind-streak absolute"
-            data-delay={s.delay}
-            data-dur={s.dur}
+            className="wind-wisp absolute"
+            data-delay={w.delay}
+            data-dur={w.dur}
+            data-scale={w.scale}
             style={{
-              top: s.top,
+              top: w.top,
               left: 0,
-              width: s.width,
-              height: '1px',
-              background:
-                'linear-gradient(90deg, rgba(91,184,232,0) 0%, rgba(91,184,232,0.85) 50%, rgba(91,184,232,0) 100%)',
-              filter: 'blur(0.5px)',
+              width: `${w.size}px`,
+              height: '60px',
+              filter: 'blur(0.6px)',
             }}
-          />
+          >
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 260 60"
+              preserveAspectRatio="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d={w.d}
+                fill="none"
+                stroke="#5BB8E8"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                opacity="0.9"
+              />
+              <path
+                d={w.d}
+                fill="none"
+                stroke="#5BB8E8"
+                strokeWidth="0.8"
+                strokeLinecap="round"
+                opacity="0.5"
+                transform="translate(0,6)"
+              />
+            </svg>
+          </div>
         ))}
       </div>
 
@@ -168,8 +210,16 @@ export default function OceanicAtmosphere() {
                 d={wave.d}
                 fill="none"
                 stroke="#D4AF37"
-                strokeWidth="0.5"
-                opacity="0.12"
+                strokeWidth="1.1"
+                opacity="0.32"
+              />
+              <path
+                d={wave.d}
+                fill="none"
+                stroke="#5BB8E8"
+                strokeWidth="0.7"
+                opacity="0.22"
+                transform="translate(0,3)"
               />
             </svg>
           </div>
