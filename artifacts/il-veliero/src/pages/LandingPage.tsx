@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { MapPin, Sparkles, Sun, Heart, Play, Star } from "lucide-react";
+import { Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -15,7 +15,7 @@ export default function LandingPage() {
   const heading1Ref = useRef<HTMLDivElement>(null);
   const heading2Ref = useRef<HTMLDivElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
-  const pillarsRef = useRef<HTMLDivElement>(null);
+  const featuresItemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const vibeVideoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -112,25 +112,25 @@ export default function LandingPage() {
       }
     }
 
-    // 4. Pillars Stagger
-    if (pillarsRef.current) {
-      const cards = pillarsRef.current.querySelectorAll(".pillar-card");
+    // 4. Features stagger — play on scroll down, reverse on scroll up
+    featuresItemsRef.current.forEach((item) => {
+      if (!item) return;
       gsap.fromTo(
-        cards,
-        { scale: 0.95, opacity: 0 },
+        item,
+        { opacity: 0, y: 60 },
         {
-          scale: 1,
           opacity: 1,
-          duration: 0.8,
-          stagger: 0.1,
+          y: 0,
+          duration: 1.2,
           ease: "power3.out",
           scrollTrigger: {
-            trigger: pillarsRef.current,
-            start: "top 80%",
+            trigger: item,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
           },
         }
       );
-    }
+    });
 
     // 5. Media Scale-in
     if (vibeVideoRef.current) {
@@ -275,34 +275,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. 4 Pillars Section */}
-      <section className="py-32 px-6 md:px-12 bg-[#FAFAF8]" id="posizione">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-20 section-title-reveal">
-            <h2 className="font-serif text-4xl md:text-5xl text-primary mb-4">La Nostra Promessa</h2>
-            <div className="w-12 h-px bg-secondary mx-auto"></div>
-          </div>
-
-          <div ref={pillarsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: MapPin, title: "Posizione Centrale", desc: "Nel cuore vivo del paese." },
-              { icon: Sun, title: "3 Minuti dalla Spiaggia", desc: "La sabbia bianca a pochi passi." },
-              { icon: Sparkles, title: "Pulizia Impeccabile", desc: "Cura maniacale di ogni dettaglio." },
-              { icon: Heart, title: "Ospitalità Siciliana", desc: "Sentirsi a casa, lontano da casa." },
-            ].map((pillar, idx) => (
-              <div
-                key={idx}
-                className="pillar-card bg-white p-8 border border-border/50 text-center flex flex-col items-center hover:shadow-sm transition-shadow duration-500"
-                data-testid={`card-pillar-${idx}`}
-              >
-                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mb-6">
-                  <pillar.icon className="text-secondary" size={24} strokeWidth={1.5} />
-                </div>
-                <h3 className="font-serif text-xl text-primary mb-3">{pillar.title}</h3>
-                <p className="text-sm text-muted-foreground font-light leading-relaxed">{pillar.desc}</p>
-              </div>
-            ))}
-          </div>
+      {/* 4. Features Section */}
+      <section className="bg-white text-[#0A1128] py-32 px-6 md:px-12 lg:px-24" id="posizione">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-y-24 gap-x-16">
+          {[
+            {
+              num: "01",
+              title: "A due passi dall'acqua",
+              desc: "Tre minuti esatti a piedi. Lasci l'hotel e senti già la sabbia bianca sotto i piedi. Nessuno stress, solo il rumore del mare.",
+            },
+            {
+              num: "02",
+              title: "Purezza Assoluta",
+              desc: "La pulizia non è un dettaglio, è la nostra ossessione. Spazi immacolati per garantirti un rifugio sicuro e senza pensieri.",
+            },
+            {
+              num: "03",
+              title: "Nel cuore della vita",
+              desc: "Tutto ciò che serve è qui. Ristoranti, bar e la vivacità di San Vito, a portata di passeggiata serale. Sicuro e comodo.",
+            },
+            {
+              num: "04",
+              title: "Calore Siciliano",
+              desc: "Non sei un numero di stanza. Ti accogliamo con l'autentica ospitalità della nostra famiglia, partendo da colazioni indimenticabili in giardino.",
+            },
+          ].map((feat, i) => (
+            <div
+              key={i}
+              ref={(el) => { featuresItemsRef.current[i] = el; }}
+              className={`flex flex-col ${i % 2 === 1 ? "md:mt-32" : ""}`}
+              data-testid={`feature-card-${i}`}
+            >
+              <span className="text-[#D4AF37] font-serif text-7xl md:text-8xl mb-2 opacity-40 select-none leading-none">
+                {feat.num}
+              </span>
+              <h3 className="text-3xl md:text-4xl font-serif mb-6 tracking-tight">{feat.title}</h3>
+              <p className="font-sans text-sm md:text-base leading-relaxed opacity-80 max-w-sm">{feat.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 

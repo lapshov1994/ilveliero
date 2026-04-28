@@ -1,0 +1,105 @@
+Шаг 1: Код второго блока (Features)
+
+Создай в проекте новый файл Features.jsx (рядом с твоим App.jsx или Hero.jsx) и вставь туда этот код:
+
+JavaScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Обязательно регистрируем плагин скролла
+gsap.registerPlugin(ScrollTrigger);
+
+export default function Features() {
+  const sectionRef = useRef(null);
+  const itemsRef = useRef([]);
+
+  useEffect(() => {
+    // Анимация появления каждого пункта при доскролливании до него
+    itemsRef.current.forEach((item, index) => {
+      gsap.fromTo(item,
+        { opacity: 0, y: 60 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.2,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: item,
+            start: "top 85%", // Срабатывает, когда верх элемента достигает 85% высоты экрана
+            toggleActions: "play none none reverse" // Плей при скролле вниз, реверс при скролле вверх
+          }
+        }
+      );
+    });
+  }, []);
+
+  // Твои продающие смыслы (можно потом переписать)
+  const features = [
+    { 
+      num: "01", 
+      title: "A due passi dall'acqua", 
+      desc: "Tre minuti esatti a piedi. Lasci l'hotel e senti già la sabbia bianca sotto i piedi. Nessuno stress, solo il rumore del mare." 
+    },
+    { 
+      num: "02", 
+      title: "Purezza Assoluta", 
+      desc: "La pulizia non è un dettaglio, è la nostra ossessione. Spazi immacolati per garantirti un rifugio sicuro e senza pensieri." 
+    },
+    { 
+      num: "03", 
+      title: "Nel cuore della vita", 
+      desc: "Tutto ciò che serve è qui. Ristoranti, bar e la vivacità di San Vito, a portata di passeggiata serale. Sicuro e comodo." 
+    },
+    { 
+      num: "04", 
+      title: "Calore Siciliano", 
+      desc: "Non sei un numero di stanza. Ti accogliamo con l'autentica ospitalità della nostra famiglia, partendo da colazioni indimenticabili in giardino." 
+    }
+  ];
+
+  return (
+    // Чистый белый фон, огромные отступы по вертикали (py-32)
+    <section ref={sectionRef} className="bg-white text-[#0A1128] py-32 px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-y-24 gap-x-16">
+        {features.map((feat, i) => (
+          <div
+            key={i}
+            ref={el => itemsRef.current[i] = el}
+            // Главная фишка сетки: четные элементы (справа) смещены вниз на 120px (md:mt-32)
+            className={`flex flex-col ${i % 2 === 1 ? 'md:mt-32' : ''}`} 
+          >
+            <span className="text-[#D4AF37] font-serif text-7xl md:text-8xl mb-2 opacity-40 select-none">
+              {feat.num}
+            </span>
+            <h3 className="text-3xl md:text-4xl font-serif mb-6 tracking-tight">
+              {feat.title}
+            </h3>
+            <p className="font-sans text-sm md:text-base leading-relaxed opacity-80 max-w-sm">
+              {feat.desc}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+Шаг 2: Сборка страницы воедино
+
+Теперь в твоем главном файле App.jsx нужно импортировать этот новый блок и поставить его под первым экраном.
+
+Твой App.jsx должен выглядеть примерно так:
+
+JavaScript
+import React from 'react';
+import Hero from './Hero'; // Тот самый первый экран, который мы сделали до этого (вынеси его в отдельный файл Hero.jsx)
+import Features from './Features';
+
+export default function App() {
+  return (
+    <main className="bg-[#0A1128] min-h-screen">
+      <Hero />
+      <Features />
+    </main>
+  );
+}
