@@ -1,0 +1,91 @@
+Замени всё содержимое App.jsx на этот код. Это критично для визуального слоя.»
+
+JavaScript
+import React, { useEffect } from 'react';
+import Hero from './components/Hero';
+import Story from './components/Story';
+import Family from './components/Family';
+import Footer from './components/Footer';
+import WindLines from './components/WindLines';
+import Lenis from '@studio-freight/lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function App() {
+  useEffect(() => {
+    const lenis = new Lenis({ duration: 1.5, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smooth: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+    return () => { gsap.ticker.remove(lenis.raf); lenis.destroy(); };
+  }, []);
+
+  return (
+    <main className="relative min-h-screen bg-white overflow-hidden selection:bg-[#D4AF37] selection:text-white">
+      {/* ДЕТАЛЬ 1: ГЛОБАЛЬНОЕ ЗЕРНО (Grain) */}
+      <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.03] mix-blend-multiply bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+      
+      {/* ДЕТАЛЬ 2: ВЕТЕР */}
+      <WindLines />
+
+      <Hero />
+      <Story />
+      <Family />
+      <Footer />
+    </main>
+  );
+}
+2. Создай новый файл src/components/WindLines.jsx
+Просто скажи: «Создай новый файл WindLines.jsx с этим кодом.»
+
+JavaScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function WindLines() {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const lines = containerRef.current.querySelectorAll('.wind-line');
+    lines.forEach((line) => {
+      gsap.to(line, {
+        x: '120vw',
+        duration: gsap.utils.random(15, 25),
+        repeat: -1,
+        ease: "none",
+        delay: gsap.utils.random(0, 10),
+        onRepeat: () => {
+          gsap.set(line, { y: gsap.utils.random(10, 90) + 'vh', x: '-20vw', opacity: gsap.utils.random(0.05, 0.15) });
+        }
+      });
+    });
+  }, []);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="wind-line absolute h-[1px] w-40 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0"
+             style={{ top: `${Math.random() * 100}vh`, left: '-20vw' }} />
+      ))}
+    </div>
+  );
+}
+3. Оживляем парусник в Hero.jsx
+Скажи ему: «Обнови компонент Hero. Добавь GSAP анимацию rotation: 3 для иконки парусника с бесконечным повтором yoyo: true.»
+
+Если он опять не сделает, найди в коде Hero.jsx место с SVG парусником и заставь его добавить этот useEffect:
+
+JavaScript
+const sailboatRef = useRef(null);
+
+useEffect(() => {
+  gsap.to(sailboatRef.current, {
+    rotation: 3,
+    duration: 3,
+    ease: "power1.inOut",
+    repeat: -1,
+    yoyo: true,
+    transformOrigin: "center bottom"
+  });
+}, []);
