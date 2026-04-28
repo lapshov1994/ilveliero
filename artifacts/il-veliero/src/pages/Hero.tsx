@@ -12,6 +12,7 @@ export default function Hero() {
   const marqueeRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const logoSvgRef = useRef<SVGSVGElement>(null);
+  const sailboatRef = useRef<HTMLDivElement>(null);
   const scrollProgressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,14 +48,14 @@ export default function Hero() {
       },
     });
 
-    // Logo sway on SVG only — not the whole header group
-    gsap.to(logoSvgRef.current, {
-      rotation: 1.2,
+    // Sailboat sway on its wrapper div
+    gsap.to(sailboatRef.current, {
+      rotation: 3,
       duration: 3,
       ease: 'power1.inOut',
       repeat: -1,
       yoyo: true,
-      transformOrigin: '50% 80%',
+      transformOrigin: 'center bottom',
     });
 
     // Scroll progress bar
@@ -93,21 +94,20 @@ export default function Hero() {
 
       {/* Header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
-        <div ref={logoRef} className="group relative flex items-center gap-3 cursor-pointer">
+        <div ref={logoRef} className="flex items-center gap-3 group cursor-pointer">
           <div className="relative">
-            <svg ref={logoSvgRef} width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 transition-transform duration-700 group-hover:scale-110">
-              <path d="M12 3L20 15H4L12 3Z" stroke="#D4AF37" strokeWidth="1" fill="currentColor" fillOpacity="0.1"/>
-              <path d="M12 21V15" stroke="#D4AF37" strokeWidth="1"/>
-              <path d="M4 15C4 18.3137 7.58172 21 12 21C16.4183 21 20 18.3137 20 15" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2"/>
-            </svg>
-            {/* Ripple ring on hover */}
-            <span className="absolute inset-0 rounded-full border border-[#D4AF37]/60 scale-50 opacity-0 group-hover:scale-150 group-hover:opacity-0 transition-all duration-700 ease-out pointer-events-none" />
-            {/* Wave line under keel */}
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-px bg-[#D4AF37] opacity-0 group-hover:opacity-40 group-hover:w-12 transition-all duration-700" />
+            <div ref={sailboatRef}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-lg">
+                <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1"/>
+                <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2" className="opacity-60"/>
+              </svg>
+            </div>
+            {/* Wave line under keel on hover */}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#D4AF37] opacity-0 group-hover:w-full group-hover:opacity-40 transition-all duration-700" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg tracking-[0.3em] font-serif uppercase leading-none">il veliero</span>
-            <span className="text-[9px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1 opacity-60">Tradizione &amp; Vento</span>
+          <div className="text-lg tracking-[0.25em] font-serif uppercase">
+            il veliero <span className="text-[#D4AF37] ml-1 text-xs opacity-80">★★★</span>
           </div>
         </div>
         <div

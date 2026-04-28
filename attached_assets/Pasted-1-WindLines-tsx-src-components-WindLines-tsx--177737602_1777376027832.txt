@@ -1,0 +1,97 @@
+1. Добавляем «Ветер» (WindLines.tsx)
+
+Создай новый файл src/components/WindLines.tsx (или просто в папке components). Это те самые тонкие линии морского бриза.
+
+JavaScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function WindLines() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const lines = containerRef.current.querySelectorAll('.wind-line');
+    
+    lines.forEach((line) => {
+      // Рандомная анимация для каждой линии
+      gsap.to(line, {
+        x: '120vw',
+        duration: gsap.utils.random(15, 25),
+        repeat: -1,
+        ease: "none",
+        delay: gsap.utils.random(0, 15),
+        onRepeat: () => {
+          gsap.set(line, { 
+            y: gsap.utils.random(10, 90) + 'vh', 
+            x: '-20vw',
+            opacity: gsap.utils.random(0.05, 0.15) 
+          });
+        }
+      });
+    });
+  }, []);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden">
+      {[...Array(6)].map((_, i) => (
+        <div 
+          key={i} 
+          className="wind-line absolute h-[1px] w-32 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-0"
+          style={{ top: `${Math.random() * 100}vh`, left: '-20vw' }}
+        />
+      ))}
+    </div>
+  );
+}
+2. Оживляем Парусник (В Hero.tsx)
+
+Найди в Hero.tsx место, где отрисовывается логотип, и замени его на этот анимированный блок. Я добавил сюда useRef для парусника и саму логику покачивания.
+
+JavaScript
+// Добавь этот реф в начало компонента Hero
+const sailboatRef = useRef(null);
+
+// Добавь это в useEffect внутри Hero
+gsap.to(sailboatRef.current, {
+  rotation: 3,
+  duration: 3,
+  ease: "power1.inOut",
+  repeat: -1,
+  yoyo: true,
+  transformOrigin: "center bottom"
+});
+
+// А это сам JSX логотипа (замени старый)
+<div className="flex items-center gap-3 group cursor-pointer">
+  <div className="relative">
+    <div ref={sailboatRef}>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-lg">
+        <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1"/>
+        <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2" className="opacity-60"/>
+      </svg>
+    </div>
+    {/* Микро-эффект волны при наведении */}
+    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#D4AF37] opacity-0 group-hover:w-full group-hover:opacity-40 transition-all duration-700"></div>
+  </div>
+  <div className="text-lg tracking-[0.25em] font-serif uppercase">
+    il veliero <span className="text-[#D4AF37] ml-1 text-xs opacity-80">★★★</span>
+  </div>
+</div>
+3. Финальный лоск: Зерно (В App.tsx)
+
+Чтобы убить «пластиковый» вид, добавь этот слой в самый верх return в App.tsx.
+
+JavaScript
+return (
+  <main className="relative min-h-screen bg-white overflow-hidden">
+    {/* ТЕКСТУРА ЗЕРНА — накладывается поверх всего */}
+    <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.025] mix-blend-multiply bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+    
+    <WindLines /> {/* Не забудь импортировать компонент выше! */}
+    <Hero />
+    <Story />
+    <Family />
+    <Footer />
+  </main>
+);
