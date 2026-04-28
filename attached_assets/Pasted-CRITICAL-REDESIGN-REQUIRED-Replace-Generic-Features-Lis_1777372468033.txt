@@ -1,0 +1,31 @@
+CRITICAL REDESIGN REQUIRED: Replace Generic Features List with an Editorial Narrative.
+
+Task: Completely rebuild the current features/pillars section (image_8.png). Abandon the generic centered text grid entirely. This section must feel like a feature article in a high-end travel magazine, not a list.
+
+Design Philosophy: Editorial Layout, Deep Media Integration, Staggered Elements. This section will sell an experience, not features.
+
+Color Rule: Maintain the blue, sand-yellow, and white palette. Absolutely NO orange.
+
+Content Integration (Selling Story): We are selling "Your Perfect 72 Hours." We will blend the beach closeness, cleanliness, and Sicilian hospitality into a single fluid section.
+
+New Structural Layout:
+
+Start with "Artigianato" Detail: Begin with a subtle background texture overlay placeholder of simplified, elegant Sicilian майолика (ceramic pattern) in light sky blue on white.
+
+Media-Rich Staggered Grid (Replaces Cards): Create a grid of four columns. Use three large, varying-aspect-ratio placeholder blocks.
+
+Block 1 (Morning): Full-bleed background placeholder for a tranquil, modern Sicilian hotel garden at sunrise with hints of jasmine. Text overlaid elegantly, slightly offset (e.g., top-left): "Un risveglio profumato. 01." with the description about jasmine and breakfast (image_1.png content).
+
+Block 2 (Beach/Cleanliness - Overlap): Overlap the edge of the garden block. Use a tall, narrow photo placeholder for a pristine, stylized close-up of a white beach. The text ("A due passi..." + description) should be minimal, aligned in a clean white column to the right, emphasizing absolute cleanliness as a feeling, not just a fact. Use the sand-yellow color for key emphasis.
+
+Block 3 (Hospitality/Safety - The "Face" of the Hotel): Create a dedicated photo placeholder for a warm, sincere portrait of the Valenti host family (image_1.png content). Text ("Calore Siciliano..." + description + quote) should be right-aligned next to this photo. This subtly addresses the safety fear by giving a face to the business.
+
+Block 4 (Location/Walkability - Subtle): A small, centered text block at the bottom of the column for "Nel cuore della vita..." linked to an abstract placeholder for walkable infrastructure (like modern paving stones or a bicycle).
+
+Marquee integration: Re-enable the top marquee banner from image_7.png, but make it very slow and slightly transparent, acting as a background element.
+
+Typography: Vary header sizes to create hierarchy. Use large numbers as watermarks, but make them less structured and more organic.
+
+Animation (GSAP & Lenis): Use GSAP ScrollTrigger for extremely smooth, "heavy" scroll physics (the "oil scroll" effect from thisiscrowd.com). Elements must fade-in and slide subtly asynchronously (e.g., garden fades, then beach slide-in), with subtle parallax on the background images. The host family photo must have a slow, scale-in animation.
+
+Constraint Check: Verify zero orange usage. Ensure sand-yellow is accent only. Maintain elegant modern serif for headings. Body text should remain clean sans-serif.

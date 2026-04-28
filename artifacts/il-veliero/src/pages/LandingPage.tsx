@@ -15,8 +15,14 @@ export default function LandingPage() {
   const heading1Ref = useRef<HTMLDivElement>(null);
   const heading2Ref = useRef<HTMLDivElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
-  const featuresItemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const vibeVideoRef = useRef<HTMLDivElement>(null);
+  // Editorial features refs
+  const featBlock1Ref = useRef<HTMLDivElement>(null);
+  const featBg1Ref = useRef<HTMLDivElement>(null);
+  const featBlock2Ref = useRef<HTMLDivElement>(null);
+  const featBg3Ref = useRef<HTMLDivElement>(null);
+  const featBlock3TextRef = useRef<HTMLDivElement>(null);
+  const featBlock4Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Initialize Lenis
@@ -112,25 +118,99 @@ export default function LandingPage() {
       }
     }
 
-    // 4. Features stagger — play on scroll down, reverse on scroll up
-    featuresItemsRef.current.forEach((item) => {
-      if (!item) return;
+    // 4. Editorial Features — asynchronous "oil scroll" animations
+
+    // Block 1 garden: subtle parallax (slower than scroll)
+    if (featBg1Ref.current && featBlock1Ref.current) {
+      gsap.to(featBg1Ref.current, {
+        yPercent: 18,
+        ease: "none",
+        scrollTrigger: {
+          trigger: featBlock1Ref.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 1.5,
+        },
+      });
+    }
+
+    // Block 2 beach: slides in from right, delayed relative to Block 1
+    if (featBlock2Ref.current) {
       gsap.fromTo(
-        item,
-        { opacity: 0, y: 60 },
+        featBlock2Ref.current,
+        { opacity: 0, x: 50 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1.6,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: featBlock2Ref.current,
+            start: "top 75%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    }
+
+    // Block 3 host family photo: slow scale-in (1.08 → 1)
+    if (featBg3Ref.current) {
+      const inner3 = featBg3Ref.current.querySelector<HTMLElement>(".media-inner-3");
+      if (inner3) {
+        gsap.fromTo(
+          inner3,
+          { scale: 1.08 },
+          {
+            scale: 1,
+            duration: 2.2,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: featBg3Ref.current,
+              start: "top 75%",
+            },
+          }
+        );
+      }
+    }
+
+    // Block 3 text: fades in slightly after photo
+    if (featBlock3TextRef.current) {
+      gsap.fromTo(
+        featBlock3TextRef.current,
+        { opacity: 0, y: 35 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.4,
+          ease: "power3.out",
+          delay: 0.25,
+          scrollTrigger: {
+            trigger: featBlock3TextRef.current,
+            start: "top 78%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    }
+
+    // Block 4 location: gentle fade-up
+    if (featBlock4Ref.current) {
+      gsap.fromTo(
+        featBlock4Ref.current,
+        { opacity: 0, y: 40 },
         {
           opacity: 1,
           y: 0,
           duration: 1.2,
           ease: "power3.out",
           scrollTrigger: {
-            trigger: item,
+            trigger: featBlock4Ref.current,
             start: "top 85%",
             toggleActions: "play none none reverse",
           },
         }
       );
-    });
+    }
 
     // 5. Media Scale-in
     if (vibeVideoRef.current) {
@@ -275,45 +355,169 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Features Section */}
-      <section className="bg-white text-[#0A1128] py-32 px-6 md:px-12 lg:px-24" id="posizione">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-y-24 gap-x-16">
-          {[
-            {
-              num: "01",
-              title: "A due passi dall'acqua",
-              desc: "Tre minuti esatti a piedi. Lasci l'hotel e senti già la sabbia bianca sotto i piedi. Nessuno stress, solo il rumore del mare.",
-            },
-            {
-              num: "02",
-              title: "Purezza Assoluta",
-              desc: "La pulizia non è un dettaglio, è la nostra ossessione. Spazi immacolati per garantirti un rifugio sicuro e senza pensieri.",
-            },
-            {
-              num: "03",
-              title: "Nel cuore della vita",
-              desc: "Tutto ciò che serve è qui. Ristoranti, bar e la vivacità di San Vito, a portata di passeggiata serale. Sicuro e comodo.",
-            },
-            {
-              num: "04",
-              title: "Calore Siciliano",
-              desc: "Non sei un numero di stanza. Ti accogliamo con l'autentica ospitalità della nostra famiglia, partendo da colazioni indimenticabili in giardino.",
-            },
-          ].map((feat, i) => (
-            <div
-              key={i}
-              ref={(el) => { featuresItemsRef.current[i] = el; }}
-              className={`flex flex-col ${i % 2 === 1 ? "md:mt-32" : ""}`}
-              data-testid={`feature-card-${i}`}
-            >
-              <span className="text-[#D4AF37] font-serif text-7xl md:text-8xl mb-2 opacity-40 select-none leading-none">
-                {feat.num}
-              </span>
-              <h3 className="text-3xl md:text-4xl font-serif mb-6 tracking-tight">{feat.title}</h3>
-              <p className="font-sans text-sm md:text-base leading-relaxed opacity-80 max-w-sm">{feat.desc}</p>
-            </div>
-          ))}
+      {/* 4. Editorial Features — "72 Ore Perfette" */}
+      <section className="relative bg-white text-[#0A1128] overflow-hidden" id="posizione">
+
+        {/* Subtle Sicilian maiolica texture — sky-blue diamonds at 3% opacity */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <svg className="absolute top-0 left-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="maiolica" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <polygon points="30,4 56,30 30,56 4,30" fill="none" stroke="#5BB8E8" strokeWidth="1"/>
+                <circle cx="30" cy="30" r="3" fill="#5BB8E8"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#maiolica)"/>
+          </svg>
         </div>
+
+        {/* ── Block 1 + 2 row ── */}
+        <div ref={featBlock1Ref} className="relative max-w-[1600px] mx-auto px-6 md:px-12 pt-32 pb-0">
+          <div className="grid grid-cols-12 gap-4 items-start">
+
+            {/* Block 1 — Morning Garden (large, 7 cols) */}
+            <div className="col-span-12 md:col-span-7 relative overflow-hidden" data-testid="feature-block-1">
+              {/* Watermark 01 */}
+              <span className="absolute -top-6 -left-2 font-serif text-[180px] leading-none text-[#0A1128] opacity-[0.04] select-none z-0 pointer-events-none">
+                01
+              </span>
+              {/* Garden image — parallax target */}
+              <div className="relative w-full aspect-[4/5] overflow-hidden">
+                <div
+                  ref={featBg1Ref}
+                  className="absolute inset-0 w-full h-[130%] -top-[15%] bg-cover bg-center"
+                  style={{ background: "linear-gradient(160deg, #0f2a1e 0%, #1a4a30 30%, #2a6040 55%, #1a3a50 80%, #0A1128 100%)" }}
+                >
+                  {/* Light jasmine/dew texture overlay */}
+                  <div className="absolute inset-0 bg-black/25" />
+                  <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent" />
+                </div>
+                {/* Text overlay — top-left, slightly offset */}
+                <div className="absolute top-10 left-10 z-10 text-white max-w-xs">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mb-3 font-sans">Alba in giardino</p>
+                  <h2 className="font-serif text-4xl md:text-5xl font-light leading-tight mb-5 drop-shadow-sm">
+                    Un risveglio<br/>profumato.
+                  </h2>
+                  <p className="text-sm font-light text-white/70 leading-relaxed max-w-[220px]">
+                    Il gelsomino entra dalla finestra. In giardino ti aspettano dolci fatti in casa, caffè forte, e il suono delle rondini sul tetto.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Block 2 — Beach column (4 cols, overlapping left block, shifted up) */}
+            <div
+              ref={featBlock2Ref}
+              className="col-span-12 md:col-span-4 md:-mt-16 md:-ml-6 z-10 relative"
+              data-testid="feature-block-2"
+            >
+              {/* Tall narrow beach image */}
+              <div className="w-full overflow-hidden" style={{ aspectRatio: "3/5" }}>
+                <div
+                  className="w-full h-full bg-cover bg-center"
+                  style={{ background: "linear-gradient(180deg, #87ceeb 0%, #b0ddf5 30%, #d8eefc 55%, #e8f4f8 75%, #f5f0e8 100%)" }}
+                >
+                  <div className="absolute inset-0 bg-white/10" />
+                </div>
+              </div>
+              {/* Text — sand-yellow accent, right of image context */}
+              <div className="mt-8 pl-5 border-l-2 border-[#D4AF37]/40">
+                <span className="text-[#D4AF37] text-[10px] uppercase tracking-[0.2em] font-sans block mb-2">
+                  02 — Purezza Assoluta
+                </span>
+                <h3 className="font-serif text-2xl md:text-3xl text-[#0A1128] mb-4 leading-tight">
+                  A due passi<br/>dall'acqua
+                </h3>
+                <p className="text-sm text-[#0A1128]/70 font-light leading-relaxed">
+                  Tre minuti esatti a piedi. La sabbia di San Vito è tra le più bianche d'Europa. La pulizia non è un dettaglio — è la nostra ossessione.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── Block 3 — Host Family ── */}
+        <div className="max-w-[1600px] mx-auto px-6 md:px-12 py-32">
+          <div className="grid grid-cols-12 gap-8 md:gap-16 items-center">
+
+            {/* Photo — host family portrait */}
+            <div ref={featBg3Ref} className="col-span-12 md:col-span-5 overflow-hidden relative" data-testid="feature-block-3-photo">
+              <div className="w-full overflow-hidden" style={{ aspectRatio: "4/5" }}>
+                <div
+                  className="media-inner-3 w-full h-full bg-cover bg-center"
+                  style={{
+                    background: "linear-gradient(135deg, #1a2a3a 0%, #2a3d52 40%, #1e3048 70%, #0A1128 100%)",
+                    transform: "scale(1.08)",
+                  }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {/* Silhouette placeholder */}
+                    <div className="flex flex-col items-center gap-3 opacity-20">
+                      <div className="w-16 h-16 rounded-full bg-white/60" />
+                      <div className="w-10 h-10 rounded-full bg-white/60" />
+                      <div className="w-24 h-1 bg-white/40 rounded" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 inset-x-0 h-1/4 bg-gradient-to-t from-[#0A1128]/60 to-transparent" />
+                  {/* Family credit */}
+                  <div className="absolute bottom-6 left-6 text-white/50 text-[10px] uppercase tracking-widest font-sans">
+                    La Famiglia Valenti
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Text — right-aligned beside photo */}
+            <div
+              ref={featBlock3TextRef}
+              className="col-span-12 md:col-span-6 md:col-start-7"
+              data-testid="feature-block-3-text"
+            >
+              <span className="absolute font-serif text-[200px] leading-none text-[#0A1128] opacity-[0.03] select-none -left-8 -top-8 pointer-events-none">
+                03
+              </span>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-sans mb-4">
+                03 — Calore Siciliano
+              </p>
+              <h3 className="font-serif text-4xl md:text-5xl text-[#0A1128] leading-tight mb-6">
+                Non sei un numero<br/>di stanza.
+              </h3>
+              <p className="text-base text-[#0A1128]/70 font-light leading-relaxed mb-8 max-w-md">
+                Ti accogliamo con l'autentica ospitalità della nostra famiglia. Ogni mattina in giardino è unica — colazioni fatte in casa, conversazioni sincere, la sensazione di essere al sicuro.
+              </p>
+              <blockquote className="border-l-2 border-[#D4AF37]/50 pl-6">
+                <p className="font-serif text-xl text-[#0A1128]/80 italic leading-relaxed">
+                  "Ogni ospite è trattato come un membro della famiglia. San Vito è il nostro tesoro."
+                </p>
+                <cite className="block mt-3 text-[10px] uppercase tracking-widest text-[#0A1128]/50 not-italic font-sans">
+                  — Famiglia Valenti, proprietari
+                </cite>
+              </blockquote>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── Block 4 — Location / Walkability ── */}
+        <div
+          ref={featBlock4Ref}
+          className="pb-32 px-6 text-center max-w-lg mx-auto"
+          data-testid="feature-block-4"
+        >
+          <div className="w-8 h-px bg-[#D4AF37]/50 mx-auto mb-8" />
+          <span className="text-[10px] uppercase tracking-[0.25em] text-[#D4AF37] font-sans block mb-4">
+            04 — Nel cuore della vita
+          </span>
+          <h3 className="font-serif text-3xl md:text-4xl text-[#0A1128] mb-5 leading-tight">
+            Tutto è a portata<br/>di passeggiata.
+          </h3>
+          <p className="text-sm text-[#0A1128]/60 font-light leading-relaxed">
+            Ristoranti, bar, il mercato del mattino. La vivacità di San Vito Lo Capo è fuori dalla porta. Sicuro, comodo, e deliziosamente a misura d'uomo.
+          </p>
+          <div className="w-8 h-px bg-[#D4AF37]/50 mx-auto mt-8" />
+        </div>
+
       </section>
 
       {/* 5. The Vibe / Garden Section */}
