@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Il Veliero Hotel"
+version = "1.0.0"
+id = "artifacts/il-veliero"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22897
+
+[services.development]
+run = "pnpm --filter @workspace/il-veliero run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/il-veliero", "run", "build" ]
+publicDir = "artifacts/il-veliero/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22897"
+BASE_PATH = "/"

@@ -1,0 +1,51 @@
+Role: You are a Senior Creative Frontend Developer (Awwwards level) specializing in high-end boutique hotel websites.
+
+Task: Build a single-page landing prototype for a premium hotel in San Vito Lo Capo, Sicily.
+
+Tech Stack: > * React / Next.js
+
+Tailwind CSS for styling
+
+GSAP (GreenSock) for advanced animations (Text reveals, Parallax)
+
+Lenis (or similar smooth scroll library) for an inertial, buttery-smooth scrolling experience.
+
+Design System & Aesthetics:
+
+Vibe: Quiet luxury, highly elegant, breathing space (lots of negative space).
+
+Colors: >     * Backgrounds: Pure White (#FFFFFF) and very soft off-white.
+
+Text: Deep Navy Blue (ocean depth).
+
+Accents & Logos: Light Sky Blue (sea breeze).
+
+CTA Buttons: Sand Yellow (muted, elegant).
+
+STRICT RULE: Absolutely NO orange.
+
+Typography: Elegant modern Serif for headings, clean Sans-Serif for body text.
+
+Animation Mechanics (Crucial):
+
+Smooth Scroll: Page must have inertia scrolling (Lenis).
+
+Media Scale-in: High-quality photos and videos must have a subtle, slow scale-in effect on scroll (image grows slowly inside its container).
+
+Text Reveals: Headings should reveal smoothly from the bottom up (using overflow: hidden masks).
+
+Subtle Parallax: Background images/videos should move slightly slower than the scroll speed.
+
+Marquee: A slow, elegant typography marquee section running horizontally with text: "Autentico Artigianato Siciliano • Mare e Vento • San Vito Lo Capo".
+
+Architecture & Sections:
+
+Header: Subtle SVG logo of "il veliero" (sailboat) with 3 stars. Header is transparent at the top, becomes solid white on scroll.
+
+Hero Section (Full height): Placeholder for a highly cinematic background video (sea/breeze vibe). A sticky "Check Availability" booking widget overlapping the bottom of this section.
+
+4 Pillars (Features): Grid emphasizing "3 Min to Beach", "Immaculate Cleanliness", "Central Location", "Sicilian Hospitality".
+
+The Vibe / Garden Section: Large video placeholder for a lush, relaxing hotel garden. Text overlaid or side-by-side about the "Perfect 72 Hours" and morning breakfasts.
+
+Social Proof: Elegant trust-building block with a quote from the family/hosts and 3 short, verified reviews emphasizing safety and location.
