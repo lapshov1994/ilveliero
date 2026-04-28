@@ -1,0 +1,291 @@
+Шаг 1: Кастомный курсор (Global)
+
+Создай файл Cursor.tsx (или .jsx) в папке src. Это будет глобальный компонент.
+
+TypeScript
+import React, { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+
+export default function Cursor() {
+  const cursorRef = useRef(null);
+  const followerRef = useRef(null);
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    // 1. Анимация движения курсора и фолловера
+    const onMouseMove = (e: MouseEvent) => {
+      // Маленькая точка (точный курсор)
+      gsap.to(cursorRef.current, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.1,
+        ease: "power2.out"
+      });
+      
+      // Большой кружок (фолловер - более плавный)
+      gsap.to(followerRef.current, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.4,
+        ease: "power2.out"
+      });
+    };
+
+    // 2. Реакция на ссылки и кнопки
+    const onMouseEnter = () => setIsHovering(true);
+    const onMouseLeave = () => setIsHovering(false);
+
+    window.addEventListener('mousemove', onMouseMove);
+
+    // Ищем все интерактивные элементы
+    const links = document.querySelectorAll('a, button, [role="button"]');
+    links.forEach(link => {
+      link.addEventListener('mouseenter', onMouseEnter);
+      link.addEventListener('mouseleave', onMouseLeave);
+    });
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      links.forEach(link => {
+        link.removeEventListener('mouseenter', onMouseEnter);
+        link.removeEventListener('mouseleave', onMouseLeave);
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    // Анимация при наведении: фолловер расширяется, точка исчезает
+    if (isHovering) {
+      gsap.to(followerRef.current, { scale: 2, borderColor: '#D4AF37', borderOpacity: 0.2, duration: 0.3 });
+      gsap.to(cursorRef.current, { opacity: 0, duration: 0.2 });
+    } else {
+      gsap.to(followerRef.current, { scale: 1, borderColor: '#D4AF37', borderOpacity: 1, duration: 0.3 });
+      gsap.to(cursorRef.current, { opacity: 1, duration: 0.2 });
+    }
+  }, [isHovering]);
+
+  return (
+    <>
+      {/* Только на десктопе */}
+      <div className="hidden md:block pointer-events-none fixed inset-0 z-[9999]">
+        {/* Точка курсора */}
+        <div 
+          ref={cursorRef} 
+          className="fixed top-0 left-0 w-1 h-1 bg-[#D4AF37] -translate-x-1/2 -translate-y-1/2"
+        />
+        {/* Фолловер */}
+        <div 
+          ref={followerRef} 
+          className="fixed top-0 left-0 w-8 h-8 border border-[#D4AF37] rounded-full -translate-x-1/2 -translate-y-1/2"
+        />
+      </div>
+    </>
+  );
+}
+Технический нюанс: убедись, что в tailwind.config.js у тебя нет конфликтов с pointer-events-none.
+
+Шаг 2: Настройка Логотипа, Кнопки и Индикатора в Hero.tsx
+
+Обнови свой файл Hero.tsx. Мы добавим анимацию логотипа в GSAP таймлайн, обновим классы кнопки и добавим индикатор скролла.
+
+Замени код в Hero.tsx на этот:
+
+TypeScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function Hero() {
+  const containerRef = useRef(null);
+  const bgRef = useRef(null);
+  const titleLine1Ref = useRef(null);
+  const titleLine2Ref = useRef(null);
+  const bookingRef = useRef(null);
+  const logoRef = useRef(null); // Реф для логотипа
+  const scrollProgressRef = useRef(null); // Реф для индикатора скролла
+
+  useEffect(() => {
+    // ... твой старый таймлайн tl ...
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    tl.fromTo(bgRef.current, 
+      { scale: 1.1 }, 
+      { scale: 1, duration: 3, ease: "power2.out" }
+    )
+    .fromTo([titleLine1Ref.current, titleLine2Ref.current], 
+      { y: 100 }, 
+      { y: 0, duration: 1.2, stagger: 0.15 },
+      "-=2"
+    )
+    .fromTo(bookingRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 1 },
+      "-=1"
+    );
+
+    // --- ДЕТАЛЬ 1: Покачивание логотипа (il veliero) ---
+    // Бесконечное мягкое покачивание на 1.5 градуса
+    gsap.to(logoRef.current, {
+      rotation: 1.5,
+      duration: 2.5,
+      ease: "power1.inOut",
+      repeat: -1, // Бесконечно
+      yoyo: true // Туда-обратно
+    });
+
+    // --- ДЕТАЛЬ 2: Индикатор Скролла (Тонкая золотая линия вверху) ---
+    gsap.to(scrollProgressRef.current, {
+      scaleX: 1,
+      ease: "none",
+      scrollTrigger: {
+        trigger: document.body,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 0.3 // Мягкая синхронизация со скроллом
+      }
+    });
+
+  }, []);
+
+  return (
+    <section ref={containerRef} className="relative w-full h-screen overflow-hidden bg-[#0A1128]">
+      
+      {/* Индикатор Скролла - лежит в самом верху (z-50) */}
+      <div 
+        ref={scrollProgressRef}
+        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[60]"
+      />
+
+      {/* Background Media */}
+      <div 
+        ref={bgRef}
+        className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')" }}
+      >
+        <div className="absolute inset-0 bg-black/40"></div>
+      </div>
+
+      {/* Header */}
+      <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
+        <div ref={logoRef} className="flex items-center gap-3 origin-center"> {/* origin-center важен для качания */}
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white opacity-80">
+              <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2"/>
+              <path d="M12 22V14" />
+           </svg>
+           <div className="text-lg tracking-[0.2em] font-serif uppercase">
+             il veliero <span className="text-[#D4AF37] ml-1 text-xs">★★★</span>
+           </div>
+        </div>
+        <div className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors relative overflow-hidden group">
+          Menu
+          {/* Тонкая линия подчеркивания при наведении */}
+          <span className="absolute bottom-0 left-0 w-full h-px bg-[#D4AF37] translate-x-[-105%] group-hover:translate-x-0 transition-transform duration-300 origin-left"></span>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">
+        <div className="overflow-hidden mb-2">
+          <h1 ref={titleLine1Ref} className="text-5xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-sm">
+            Dove il Mare
+          </h1>
+        </div>
+        <div className="overflow-hidden mb-12">
+          <h1 ref={titleLine2Ref} className="text-5xl md:text-7xl font-serif text-white italic font-light tracking-tight drop-shadow-sm">
+            Incontra il Cielo
+          </h1>
+        </div>
+      </div>
+
+      {/* Booking Widget (Glassmorphism) */}
+      <div 
+        ref={bookingRef}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-5xl bg-black/20 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl"
+      >
+        <div className="flex-1 flex justify-around w-full px-6 py-4 text-white text-sm items-center">
+          <div className="flex flex-col items-start cursor-pointer group">
+            <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Arrivo</span>
+            <span className="font-light tracking-wide">28.04.2026</span>
+          </div>
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          <div className="flex flex-col items-start cursor-pointer group">
+            <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Partenza</span>
+            <span className="font-light tracking-wide">30.04.2026</span>
+          </div>
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          <div className="flex flex-col items-start cursor-pointer group">
+            <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Ospiti</span>
+            <span className="font-light tracking-wide">2 Adulti</span>
+          </div>
+        </div>
+        
+        {/* --- ДЕТАЛЬ 3: Анимированная кнопка "Prenota" --- */}
+        {/* Используем Tailwind для плавного эффекта при наведении */}
+        <button className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:bg-white hover:text-[#0A1128] hover:shadow-xl relative overflow-hidden group">
+          <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">Prenota Ora</span>
+          {/* Эффект заливки фоном при наведении */}
+          <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500"></span>
+        </button>
+      </div>
+    </section>
+  );
+}
+Шаг 3: Зернистая текстура и Сборка в App.tsx
+
+И последний штрих. Мы добавим компонент курсора и наложим поверх всего сайта невидимую текстуру зерна в App.tsx.
+
+Замени код в App.tsx на этот:
+
+TypeScript
+import React, { useEffect } from 'react';
+import Hero from './Hero'; 
+import Story from './Story'; 
+import Family from './Family'; 
+import Footer from './Footer'; 
+import Cursor from './Cursor'; // <--- Импортируем курсор
+import Lenis from '@studio-freight/lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function App() {
+  useEffect(() => {
+    // Настройки Lenis ... (оставляем как было)
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smooth: true,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(lenis.raf);
+      lenis.destroy();
+    };
+  }, []);
+
+  return (
+    <main className="bg-white min-h-screen relative overflow-hidden font-sans cursor-none md:cursor-auto"> {/* cursor-none чтобы не было дефолтного на десктопе */}
+      
+      {/* --- ДЕТАЛЬ 4: Кастомный курсор --- */}
+      <Cursor />
+
+      {/* --- ДЕТАЛЬ 5: Текстура Зерна (Artigianato) --- */}
+      {/* Накладываем поверх всего сайта прозрачный статичный шум */}
+      <div className="pointer-events-none fixed inset-0 z-[100] opacity-[0.02] bg-[url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==')] bg-repeat"></div>
+
+      <Hero />
+      <Story />
+      <Family />
+      <Footer />
+    </main>
+  );
+}

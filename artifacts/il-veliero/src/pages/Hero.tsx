@@ -10,48 +10,62 @@ export default function Hero() {
   const heroLine1Ref = useRef<HTMLHeadingElement>(null);
   const heroLine2Ref = useRef<HTMLHeadingElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const scrollProgressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Cinematic entrance
     const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-    if (heroBgRef.current) {
-      introTl.fromTo(
-        heroBgRef.current,
-        { scale: 1.1 },
-        { scale: 1, duration: 3, ease: 'power2.out' }
-      );
-    }
-    if (heroLine1Ref.current && heroLine2Ref.current) {
-      introTl.fromTo(
-        [heroLine1Ref.current, heroLine2Ref.current],
-        { y: 100 },
-        { y: 0, duration: 1.2, stagger: 0.15 },
-        '-=2'
-      );
-    }
-    if (heroBookingRef.current) {
-      introTl.fromTo(
-        heroBookingRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 1 },
-        '-=1'
-      );
-    }
+    introTl.fromTo(
+      heroBgRef.current,
+      { scale: 1.1 },
+      { scale: 1, duration: 3, ease: 'power2.out' }
+    )
+    .fromTo(
+      [heroLine1Ref.current, heroLine2Ref.current],
+      { y: 100 },
+      { y: 0, duration: 1.2, stagger: 0.15 },
+      '-=2'
+    )
+    .fromTo(
+      heroBookingRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 1 },
+      '-=1'
+    );
 
     // Hero background parallax
-    if (heroBgRef.current) {
-      gsap.to(heroBgRef.current, {
-        yPercent: 40,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
-        },
-      });
-    }
+    gsap.to(heroBgRef.current, {
+      yPercent: 40,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero-section',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true,
+      },
+    });
+
+    // Logo gentle sway
+    gsap.to(logoRef.current, {
+      rotation: 1.5,
+      duration: 2.5,
+      ease: 'power1.inOut',
+      repeat: -1,
+      yoyo: true,
+    });
+
+    // Scroll progress bar
+    gsap.to(scrollProgressRef.current, {
+      scaleX: 1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: document.body,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 0.3,
+      },
+    });
 
     // Marquee infinite scroll
     if (marqueeRef.current) {
@@ -68,10 +82,16 @@ export default function Hero() {
 
   return (
     <>
-      {/* Transparent header — absolute, over photo */}
+      {/* Scroll progress bar — fixed at very top */}
+      <div
+        ref={scrollProgressRef}
+        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[60]"
+      />
+
+      {/* Header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
-        <div className="flex items-center gap-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
+        <div ref={logoRef} className="flex items-center gap-3 origin-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white opacity-80">
             <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" />
             <path d="M12 22V14" />
           </svg>
@@ -80,10 +100,11 @@ export default function Hero() {
           </div>
         </div>
         <div
-          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors"
+          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors relative overflow-hidden group"
           data-testid="btn-menu"
         >
           Menu
+          <span className="absolute bottom-0 left-0 w-full h-px bg-[#D4AF37] translate-x-[-105%] group-hover:translate-x-0 transition-transform duration-300 origin-left" />
         </div>
       </header>
 
@@ -143,10 +164,11 @@ export default function Hero() {
             </div>
           </div>
           <button
-            className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium hover:bg-white transition-all duration-500 w-full md:w-auto"
+            className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
             data-testid="btn-prenota"
           >
-            Prenota Ora
+            <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">Prenota Ora</span>
+            <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
           </button>
         </div>
       </section>
