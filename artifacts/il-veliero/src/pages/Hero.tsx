@@ -29,6 +29,9 @@ export default function Hero() {
   }, []);
 
   useEffect(() => {
+    // Scope all Hero-owned tweens/triggers so their cleanup does NOT touch
+    // ScrollTriggers owned by sibling overlays (SailingVoyager, OceanicAtmosphere).
+    const ctx = gsap.context(() => {
     const introTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
     introTl.fromTo(
@@ -74,22 +77,12 @@ export default function Hero() {
       });
     }
 
-    // "Sailing away" — outer wrapper drifts to the right and fades on scroll.
-    if (sailboatRef.current) {
-      gsap.to(sailboatRef.current, {
-        x: '60vw',
-        y: '20vh',
-        rotation: 15,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.5,
-        },
-      });
-    }
+    // NOTE: The hero sailboat scroll-translate (x:60vw / y:20vh / rotation:15
+    // / opacity:0) was intentionally removed. The header logo's sailboat must
+    // stay anchored top-left; only the gentle ±3° sway on sailboatSwayRef
+    // remains. The "background voyager" sailboat that drifts diagonally
+    // across the page lives in <SailingVoyager /> and is mounted globally
+    // from App.tsx.
 
     // Scroll progress bar
     gsap.to(scrollProgressRef.current, {
@@ -112,9 +105,9 @@ export default function Hero() {
       }
     }
 
-    return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    };
+    });
+
+    return () => ctx.revert();
   }, []);
 
   return (
