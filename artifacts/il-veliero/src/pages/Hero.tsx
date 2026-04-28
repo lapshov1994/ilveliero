@@ -90,13 +90,18 @@ export default function Hero() {
 
       {/* Header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
-        <div ref={logoRef} className="flex items-center gap-3 origin-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white opacity-80">
-            <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" />
-            <path d="M12 22V14" />
-          </svg>
-          <div className="text-lg tracking-[0.2em] font-serif uppercase">
-            il veliero <span className="text-[#D4AF37] ml-1 text-xs">★★★</span>
+        <div ref={logoRef} className="group relative flex items-center gap-3 cursor-pointer">
+          <div className="relative">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 transition-transform duration-700 group-hover:scale-110">
+              <path d="M12 3L20 15H4L12 3Z" stroke="#D4AF37" strokeWidth="1" fill="currentColor" fillOpacity="0.1"/>
+              <path d="M12 21V15" stroke="#D4AF37" strokeWidth="1"/>
+              <path d="M4 15C4 18.3137 7.58172 21 12 21C16.4183 21 20 18.3137 20 15" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2"/>
+            </svg>
+            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-px bg-[#D4AF37] opacity-0 group-hover:opacity-40 group-hover:w-12 transition-all duration-700" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-lg tracking-[0.3em] font-serif uppercase leading-none">il veliero</span>
+            <span className="text-[9px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1 opacity-60">Tradizione &amp; Vento</span>
           </div>
         </div>
         <div
