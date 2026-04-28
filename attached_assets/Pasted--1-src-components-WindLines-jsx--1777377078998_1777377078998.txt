@@ -1,0 +1,56 @@
+Шаг 1: Полностью замени код в src/components/WindLines.jsx
+
+Скопируй этот код целиком и заставь агента вставить его в файл, затерев старый мусор. Я сделал линии тоньше, градиент мягче, а движение — по-настоящему горизонтальным и плавным.
+
+JavaScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function WindLines() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Выбираем только десктопные линии (на мобилке они могут мешать)
+    const lines = containerRef.current.querySelectorAll('.wind-line');
+    
+    lines.forEach((line) => {
+      // Изначально прячем линии за левым краем
+      gsap.set(line, { x: '-20vw', opacity: 0 });
+
+      // Бесконечный цикл движения
+      gsap.to(line, {
+        x: '120vw', // Улетают за правый край
+        duration: gsap.utils.random(15, 30), // Разная скорость (медленно и дорого)
+        repeat: -1, // Бесконечно
+        ease: "none", // Линейное движение, как ветер
+        delay: gsap.utils.random(0, 15), // Рандомная задержка старта
+        onRepeat: () => {
+          // При повторении рандомизируем высоту и прозрачность
+          gsap.set(line, { 
+            y: gsap.utils.random(10, 90) + 'vh', 
+            x: '-20vw', 
+            opacity: gsap.utils.random(0.03, 0.1) // Очень бледные!
+          });
+        }
+      });
+    });
+  }, []);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden">
+      {[...Array(8)].map((_, i) => (
+        <div 
+          key={i} 
+          // Линия как волосок (h-[1px]), супер-мягкий градиент
+          className="wind-line absolute h-[1px] w-64 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparentOpacity-0"
+          style={{ top: `${Math.random() * 100}vh`, left: '-20vw' }}
+        />
+      ))}
+    </div>
+  );
+}
+Шаг 2: Убедись, что «Зерно» тоже работает
+
+Просто скажи агенту:
+
+"Now verify the Grain Texture overlay is in App.jsx. It must be a fixed div, full screen, z-index 100, and opacity 0.02. If it's not there, add it now to kill the 'digital flatness'."

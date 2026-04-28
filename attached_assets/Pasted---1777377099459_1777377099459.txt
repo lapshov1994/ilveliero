@@ -1,0 +1,49 @@
+Найди блок логотипа в коде и замени его целиком на этот исправленный кусок. Я выкрутил настройки анимации и добавил микро-эффект воды при наведении.
+
+1. JSX Структура (Замени старый блок логотипа)
+
+JavaScript
+{/* Логотип Il Veliero - анимированный */}
+<div className="flex items-center gap-4 group cursor-pointer relative z-50">
+  <div className="relative">
+    {/* Парусник с REF для анимации */}
+    <div ref={sailboatRef} className="relative z-10 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
+        <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
+        <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="3 3" className="opacity-70"/>
+      </svg>
+    </div>
+    
+    {/* --- ДЕТАЛЬ: Микро-волны под кораблем при НАВЕДЕНИИ --- */}
+    {/* Они расширяются и бледнеют, создавая ощущение воды */}
+    <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-150 group-hover:opacity-40 transition-all duration-700 origin-center"></span>
+    <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-120 group-hover:opacity-30 group-hover:delay-150 transition-all duration-700 origin-center"></span>
+  </div>
+  
+  {/* Текст логотипа */}
+  <div className="flex flex-col flex-shrink-0">
+    <span className="text-xl tracking-[0.3em] font-serif uppercase text-white leading-none">
+      il veliero
+    </span>
+    <span className="text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1.5 opacity-80 font-light">
+      Tradizione & Vento
+    </span>
+  </div>
+</div>
+2. GSAP Логика (Замени старый useEffect)
+
+Вот новые настройки покачивания. Я увеличил угол до 8 градусов и сделал движение более плавным, но заметным.
+
+JavaScript
+// Внутри useEffect в Hero.tsx
+if (sailboatRef.current) {
+  gsap.to(sailboatRef.current, {
+    rotation: 8, // Было 3, стало 8 — теперь покачивание хорошо видно
+    duration: 2.5, // Медленный, тяжелый ритм дорогой яхты
+    ease: "power1.inOut",
+    repeat: -1, // Бесконечно
+    yoyo: true, // Туда-обратно
+    transformOrigin: "center bottom" // Качается от основания мачты
+  });
+}

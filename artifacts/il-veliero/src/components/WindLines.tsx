@@ -8,28 +8,20 @@ export default function WindLines() {
     if (!containerRef.current) return;
     const lines = containerRef.current.querySelectorAll<HTMLElement>('.wind-line');
 
-    lines.forEach((line, i) => {
-      const duration = gsap.utils.random(15, 25);
-      const topVh = (i + 1) * 14;
-      const startX = i < 3 ? `${i * 25}vw` : '-20vw';
-
-      gsap.set(line, {
-        x: startX,
-        top: topVh + 'vh',
-        opacity: gsap.utils.random(0.05, 0.15),
-      });
+    lines.forEach((line) => {
+      gsap.set(line, { x: '-20vw', opacity: 0 });
 
       gsap.to(line, {
         x: '120vw',
-        duration,
+        duration: gsap.utils.random(15, 30),
         repeat: -1,
         ease: 'none',
-        delay: i < 3 ? 0 : i * 1.5,
+        delay: gsap.utils.random(0, 15),
         onRepeat: () => {
           gsap.set(line, {
-            top: gsap.utils.random(5, 90) + 'vh',
+            y: gsap.utils.random(10, 90) + 'vh',
             x: '-20vw',
-            opacity: gsap.utils.random(0.05, 0.15),
+            opacity: gsap.utils.random(0.03, 0.1),
           });
         },
       });
@@ -38,11 +30,11 @@ export default function WindLines() {
 
   return (
     <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden">
-      {[...Array(6)].map((_, i) => (
+      {[...Array(8)].map((_, i) => (
         <div
           key={i}
-          className="wind-line absolute h-[1px] w-40 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
-          style={{ top: 0, left: 0 }}
+          className="wind-line absolute h-[1px] w-64 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent"
+          style={{ top: `${Math.random() * 100}vh`, left: '-20vw' }}
         />
       ))}
     </div>
