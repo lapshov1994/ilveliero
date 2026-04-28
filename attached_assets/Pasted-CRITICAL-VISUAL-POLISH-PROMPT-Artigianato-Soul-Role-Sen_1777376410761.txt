@@ -1,0 +1,46 @@
+CRITICAL VISUAL POLISH PROMPT: "Artigianato & Soul"
+
+Role: Senior Creative Developer / UI Motion Designer.
+Objective: Add specific micro-interactions and textures to the existing site. Do not change the layout. Follow these technical instructions precisely.
+
+1. GRAIN TEXTURE (The "Paper" Feel):
+
+In App.jsx (or the root component), insert a div as the very first child of the main container.
+
+Properties: fixed, inset-0, z-index-[9999], pointer-events-none, opacity-[0.025].
+
+Background: Use this SVG noise pattern: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/svg%3E").
+
+Requirement: This must be visible over every page to remove "digital" flatness.
+
+2. WIND LINES (The "Sea Breeze" Effect):
+
+Create a new component WindLines.tsx.
+
+Generate 6 thin horizontal div elements.
+
+Style: absolute, h-[1px], w-32, bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent, opacity-10.
+
+Animation: Use GSAP to make them drift from left: -20vw to left: 120vw.
+
+Randomize: Each line must have a random top (0-100vh), a random duration (15s to 25s), and a random delay. Loop infinitely.
+
+3. ANIMATED SAILBOAT LOGO (The "Heartbeat"):
+
+Target the sailboat SVG in the Header.
+
+GSAP Sway: Apply a constant, subtle rotation: rotation: 3, duration: 3, ease: "power1.inOut", repeat: -1, yoyo: true. Set transformOrigin: "center bottom".
+
+Hover Ripple: On hover of the logo group, animate a small golden line underneath to expand from width: 0 to width: 100% with opacity: 0.4.
+
+4. BUTTON REFINEMENT (The "Premium Fill"):
+
+Update all primary gold buttons.
+
+Interaction: On hover, create a "slide-in" effect where a white layer fills the button from left to right, and the text color shifts from black to Navy Blue.
+
+Add transition-all duration-500 ease-out.
+
+5. PARALLAX STRENGTH:
+
+In the Story section, increase the GSAP y parallax value for images to 100px. The images must feel like they are floating at a different depth than the text.

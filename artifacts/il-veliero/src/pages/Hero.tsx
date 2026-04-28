@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useNav } from '@/components/NavigationContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
+  const { toggle } = useNav();
   const heroBgRef = useRef<HTMLDivElement>(null);
   const heroBookingRef = useRef<HTMLDivElement>(null);
   const heroLine1Ref = useRef<HTMLHeadingElement>(null);
@@ -110,13 +112,14 @@ export default function Hero() {
             il veliero <span className="text-[#D4AF37] ml-1 text-xs opacity-80">★★★</span>
           </div>
         </div>
-        <div
-          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors relative overflow-hidden group"
+        <button
+          onClick={toggle}
+          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors relative overflow-hidden group bg-transparent border-none"
           data-testid="btn-menu"
         >
           Menu
           <span className="absolute bottom-0 left-0 w-full h-px bg-[#D4AF37] translate-x-[-105%] group-hover:translate-x-0 transition-transform duration-300 origin-left" />
-        </div>
+        </button>
       </header>
 
       {/* Full-screen hero */}

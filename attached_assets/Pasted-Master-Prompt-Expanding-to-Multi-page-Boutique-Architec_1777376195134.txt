@@ -1,0 +1,65 @@
+Master Prompt: Expanding to Multi-page Boutique Architecture
+
+Task: Transform the current single-page app into a multi-page website using react-router-dom. Maintain the high-end editorial aesthetic.
+
+1. Routing Architecture:
+
+Setup BrowserRouter in main.tsx.
+
+Create the following routes:
+
+/ - Home (Hero, Story, Family, Footer).
+
+/rooms - Gallery of rooms with names like "Vento di Scirocco", "Alba Marina", "Gelsomino".
+
+/gallery - High-end masonry photo grid.
+
+/blog - Editorial list of articles about San Vito Lo Capo (e.g., "Hidden Coves", "The Art of Sicilian Breakfast").
+
+2. Full-Screen Navigation (The Menu):
+
+Replace the "Menu" text in the Header with a functional toggle.
+
+Create a Navigation.tsx component: A full-screen Navy Blue overlay that slides down or fades in using GSAP.
+
+Navigation links must be large, elegant Serif fonts with staggered entrance animations.
+
+Include "Rooms", "Gallery", "Blog", "Contact" in the menu.
+
+3. Home Page Update (Rooms Link):
+
+Add a new section to the Home page (below Family) titled "Le Nostre Dimore" (Our Rooms).
+
+Use a staggered 2-column layout. Left: One large high-quality room photo placeholder. Right: A clean text block with a "Discover the Rooms" button linking to /rooms.
+
+4. Room Page Design:
+
+Each room must have a dedicated card with: Room Name (Serif), size in sqm, and a "View Details" interaction.
+
+Maintain the "01, 02" watermark numbering for rooms.
+
+5. Blog Design:
+
+Use a "Journal" style. Large images, dates in small gold caps, and titles in elegant serif.
+
+Topics to include: "Sicily through the eyes of Valenti family", "The secret paths of Zingaro Reserve".
+
+6. Animation Consistency:
+
+Ensure Lenis smooth scroll works across all new pages.
+
+Use GSAP exit and enter transitions when switching routes to avoid "stuttering".
+
+Что это даст технически:
+
+Логика номеров: На главной появится блок-тизер, который «продает» номера, а при клике уводит на отдельную страницу. Каждому номеру дадим аутентичные названия:
+
+Scirocco — люкс с видом на море.
+
+Mistral — номер с террасой.
+
+Gelsomino — уютный номер в саду.
+
+Блог: Это не просто список статей. Это будет выглядеть как онлайн-журнал. Статья «Безопасные прогулки в Сан-Вито» или «Где найти лучший кус-кус» добавит сайту экспертности и еще больше успокоит туриста.
+
+Галерея: Мы сделаем «ленивую» загрузку, чтобы 50 тяжелых фото не тормозили сайт, и добавим эффект увеличения при наведении.
