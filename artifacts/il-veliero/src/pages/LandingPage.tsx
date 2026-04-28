@@ -3,7 +3,6 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Play, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,6 +15,9 @@ export default function LandingPage() {
   const heading2Ref = useRef<HTMLDivElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const vibeVideoRef = useRef<HTMLDivElement>(null);
+  const gardenBgRef = useRef<HTMLDivElement>(null);
+  const gardenMediaRef = useRef<HTMLDivElement>(null);
+  const reviewItemsRef = useRef<(HTMLDivElement | null)[]>([]);
   // Editorial features refs
   const featBlock1Ref = useRef<HTMLDivElement>(null);
   const featBg1Ref = useRef<HTMLDivElement>(null);
@@ -86,6 +88,7 @@ export default function LandingPage() {
     const animateTextReveal = (element: HTMLElement | null) => {
       if (!element) return;
       const lines = element.querySelectorAll(".reveal-line");
+      if (!lines.length) return;
       gsap.fromTo(
         lines,
         { y: "100%" },
@@ -212,29 +215,64 @@ export default function LandingPage() {
       );
     }
 
-    // 5. Media Scale-in
-    if (vibeVideoRef.current) {
-      const mediaInner = vibeVideoRef.current.querySelector(".media-inner");
+    // 5. Garden bg parallax
+    if (gardenBgRef.current) {
+      gsap.to(gardenBgRef.current, {
+        yPercent: 15,
+        ease: "none",
+        scrollTrigger: {
+          trigger: gardenBgRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 1.8,
+        },
+      });
+    }
+
+    // Garden media scale-in
+    if (gardenMediaRef.current) {
       gsap.fromTo(
-        mediaInner,
-        { scale: 1.1 },
+        gardenMediaRef.current,
+        { scale: 1.08, opacity: 0 },
         {
           scale: 1,
-          duration: 1.5,
-          ease: "power3.out",
+          opacity: 1,
+          duration: 2,
+          ease: "power2.out",
           scrollTrigger: {
-            trigger: vibeVideoRef.current,
-            start: "top 85%",
+            trigger: gardenMediaRef.current,
+            start: "top 78%",
           },
         }
       );
     }
 
-    // Other section headers reveal
+    // 6. Reviews stagger — organic asynchronous reveal
+    reviewItemsRef.current.forEach((item, i) => {
+      if (!item) return;
+      gsap.fromTo(
+        item,
+        { opacity: 0, y: 50 + i * 10 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1.4,
+          ease: "power3.out",
+          delay: i * 0.12,
+          scrollTrigger: {
+            trigger: item,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+
+    // Generic fade-up for section labels
     document.querySelectorAll(".section-title-reveal").forEach((el) => {
       gsap.fromTo(
         el,
-        { y: 50, opacity: 0 },
+        { y: 40, opacity: 0 },
         {
           y: 0,
           opacity: 1,
@@ -520,173 +558,300 @@ export default function LandingPage() {
 
       </section>
 
-      {/* 5. The Vibe / Garden Section */}
-      <section className="py-32 px-6 md:px-12 bg-white" id="giardino">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-            {/* Left: Video Placeholder */}
-            <div
-              ref={vibeVideoRef}
-              className="relative w-full aspect-video overflow-hidden group cursor-pointer"
-              data-testid="video-vibe"
-            >
-              <div className="media-inner w-full h-full bg-gradient-to-br from-primary via-[#112a52] to-secondary relative">
-                <div className="absolute inset-0 bg-primary/20 group-hover:bg-primary/10 transition-colors duration-500" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                  <div className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-500">
-                    <Play size={20} fill="currentColor" className="ml-1 text-white/90" />
-                  </div>
-                  <span className="mt-4 text-xs tracking-[0.2em] uppercase font-light text-white/80">
-                    Il Nostro Giardino
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* 5. Garden / Cinematic Narrative — "72 Ore Perfette" */}
+      <section className="relative overflow-hidden bg-[#060e1c]" id="giardino">
+        {/* Parallax background */}
+        <div
+          ref={gardenBgRef}
+          className="absolute inset-0 w-full h-[130%] -top-[15%]"
+          style={{ background: "linear-gradient(160deg, #060e1c 0%, #0d2236 35%, #0a1e30 65%, #060e1c 100%)" }}
+        >
+          <div className="absolute inset-0 opacity-[0.05]">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grain-garden" width="80" height="80" patternUnits="userSpaceOnUse">
+                  <polygon points="40,6 74,40 40,74 6,40" fill="none" stroke="#5BB8E8" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grain-garden)"/>
+            </svg>
+          </div>
+        </div>
 
-            {/* Right: Text Content */}
-            <div className="max-w-xl">
-              <div ref={heading2Ref} className="mb-8">
-                <div className="overflow-hidden">
-                  <h2 className="reveal-line font-serif text-4xl md:text-5xl lg:text-6xl text-primary leading-tight">
-                    72 Ore Perfette
-                  </h2>
-                </div>
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 py-32 md:py-48">
+          <div className="grid grid-cols-12 gap-8 items-center">
+
+            {/* Left — editorial text, varying scale */}
+            <div className="col-span-12 lg:col-span-6">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#5BB8E8]/60 font-sans mb-8 section-title-reveal">
+                San Vito Lo Capo, Sicilia
+              </p>
+              <div className="overflow-hidden mb-2">
+                <h2
+                  ref={heading2Ref}
+                  className="reveal-line font-serif text-white font-light leading-[0.9] tracking-tight"
+                  style={{ fontSize: "clamp(3.5rem, 8vw, 8rem)" }}
+                >
+                  72 Ore
+                </h2>
               </div>
-              <div className="space-y-6 text-muted-foreground font-light leading-relaxed text-lg section-title-reveal">
-                <p>
-                  Immagina di svegliarti con il profumo del gelsomino che entra dalla finestra. Scendi in giardino, dove un
-                  caffè caldo e dolci appena sfornati ti aspettano all'ombra degli ulivi.
+              <div className="overflow-hidden mb-14">
+                <h2
+                  className="reveal-line font-serif text-[#D4AF37] italic font-light leading-[0.9] tracking-tight"
+                  style={{ fontSize: "clamp(3.5rem, 8vw, 8rem)" }}
+                >
+                  Perfette.
+                </h2>
+              </div>
+              <div className="space-y-5 max-w-md section-title-reveal">
+                <p className="text-white/60 font-light text-base leading-relaxed">
+                  Svegliati con il profumo del gelsomino. Scendi in giardino — caffè caldo, dolci appena sfornati, l'ombra degli ulivi. Poi tre minuti a piedi e sei sull'acqua più azzurra del Mediterraneo.
                 </p>
-                <p>
-                  Nessuna fretta. Il mare è a soli tre minuti a piedi, e le sue sfumature azzurre ti chiamano. Qui, il
-                  tempo rallenta. Le giornate sono scandite dal suono delle onde, dalla luce calda del tramonto e da
-                  sorrisi sinceri.
+                <p className="text-white/35 font-light text-sm leading-relaxed">
+                  Qui il tempo rallenta. Le giornate si misurano in onde, in tramonti che tingono il mare di rame, in sorrisi sinceri di chi ha scelto questo angolo di Sicilia come casa.
                 </p>
               </div>
               <div className="mt-12 section-title-reveal">
-                <Button
-                  variant="outline"
-                  className="rounded-none border-primary text-primary hover:bg-primary hover:text-white uppercase tracking-widest text-xs px-8 py-6"
+                <button
+                  className="border border-white/20 text-white/70 px-10 py-4 text-[10px] uppercase tracking-[0.25em] hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all duration-500"
                   data-testid="btn-scopri-giardino"
                 >
-                  Scopri di Più
-                </Button>
+                  Prenota il tuo soggiorno
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* 6. Social Proof / Trust Section */}
-      <section className="py-32 px-6 md:px-12 bg-[#FAFAF8]">
-        <div className="container mx-auto max-w-6xl">
-          {/* Host Quote */}
-          <div className="max-w-4xl mx-auto text-center mb-24 section-title-reveal">
-            <p className="font-serif text-3xl md:text-4xl text-primary leading-relaxed italic mb-8">
-              "Ogni ospite è trattato come un membro della famiglia. San Vito è il nostro tesoro, e siamo felici di
-              condividerlo con voi."
-            </p>
-            <p className="uppercase tracking-[0.2em] text-xs text-muted-foreground">— La Famiglia Valenti</p>
-          </div>
-
-          {/* Reviews Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Sofía M., Madrid",
-                quote:
-                  "Ci siamo sentiti come a casa. La famiglia è calorosa e la posizione perfetta — 3 minuti a piedi e sei sulla spiaggia più bella della Sicilia.",
-              },
-              {
-                name: "Thomas B., Berlin",
-                quote:
-                  "Pulizia, silenzio, ospitalità autentica. La colazione in giardino è stata indimenticabile.",
-              },
-              {
-                name: "Claire L., Lyon",
-                quote:
-                  "Un angolo di pace raro. Mi sono sentita completamente al sicuro e coccolata per tutta la settimana.",
-              },
-            ].map((review, idx) => (
+            {/* Right — stacked media placeholders */}
+            <div className="col-span-12 lg:col-span-5 lg:col-start-8 flex flex-col gap-4">
               <div
-                key={idx}
-                className="bg-white p-8 md:p-10 border border-border/40 section-title-reveal flex flex-col h-full"
-                data-testid={`review-card-${idx}`}
+                ref={gardenMediaRef}
+                className="relative overflow-hidden cursor-pointer group"
+                style={{ aspectRatio: "4/3", opacity: 0 }}
+                data-testid="video-vibe"
               >
-                <div className="flex gap-1 mb-6">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="text-accent fill-accent" />
-                  ))}
+                <div
+                  ref={vibeVideoRef}
+                  className="media-inner absolute inset-0"
+                  style={{ background: "linear-gradient(135deg, #0d2236 0%, #1a3a52 50%, #0d4a6e 100%)" }}
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-14 h-14 rounded-full border border-white/25 flex items-center justify-center group-hover:border-[#D4AF37]/60 transition-all duration-500 group-hover:scale-110">
+                      <Play size={18} fill="white" className="text-white ml-1 opacity-70" />
+                    </div>
+                    <span className="mt-4 text-[10px] tracking-[0.2em] uppercase text-white/30 font-sans">Il Giardino</span>
+                  </div>
+                  <span className="absolute bottom-5 left-6 text-white/15 font-serif text-xs">mattina · 07:30</span>
                 </div>
-                <p className="font-serif text-lg text-primary mb-8 flex-grow leading-relaxed">"{review.quote}"</p>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{review.name}</p>
               </div>
-            ))}
+              <div className="relative overflow-hidden section-title-reveal" style={{ aspectRatio: "16/5" }}>
+                <div
+                  className="w-full h-full"
+                  style={{ background: "linear-gradient(90deg, #87ceeb 0%, #b8ddf5 40%, #e0f2fa 70%, #f5f0e8 100%)" }}
+                >
+                  <div className="absolute inset-0 bg-black/5" />
+                  <div className="absolute inset-0 flex items-center px-8">
+                    <span className="text-[#0A1128]/40 font-serif italic text-lg">Tre minuti — e sei qui.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* 7. Footer */}
-      <footer className="bg-primary text-white pt-24 pb-12 px-6 md:px-12">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            {/* Brand Column */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white">
-                  <path d="M16 8L24 22H8L16 8Z" fill="currentColor" />
-                  <path d="M16 26C11.5817 26 8 22.4183 8 18H24C24 22.4183 20.4183 26 16 26Z" fill="currentColor" />
-                  <circle cx="16" cy="4" r="1" fill="currentColor" />
-                  <circle cx="11" cy="6" r="1" fill="currentColor" />
-                  <circle cx="21" cy="6" r="1" fill="currentColor" />
-                </svg>
-                <span className="font-serif italic text-3xl font-semibold tracking-wide">il veliero</span>
+      {/* 6. Social Proof — editorial, no card frames */}
+      <section className="relative bg-[#FAFAF8] overflow-hidden" id="recensioni">
+        {/* Watermark surname */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden" aria-hidden="true">
+          <span className="font-serif text-[20vw] text-[#0A1128] opacity-[0.025] select-none leading-none whitespace-nowrap tracking-tighter">
+            Valenti
+          </span>
+        </div>
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 py-32 md:py-40">
+
+          {/* Central anchor quote */}
+          <div
+            ref={(el) => { reviewItemsRef.current[0] = el; }}
+            className="max-w-3xl mx-auto text-center mb-32"
+            data-testid="review-valenti"
+          >
+            <div className="flex justify-center gap-1 mb-10">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={14} className="text-[#D4AF37] fill-[#D4AF37]" />
+              ))}
+            </div>
+            <p className="font-serif text-3xl md:text-4xl lg:text-[2.8rem] text-[#0A1128] leading-tight italic font-light mb-8">
+              "Ogni ospite è trattato come un membro della famiglia. San Vito è il nostro tesoro."
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#0A1128]/35 font-sans">
+              — La Famiglia Valenti, proprietari
+            </p>
+          </div>
+
+          {/* Three reviews — frameless, staggered heights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-[#0A1128]/10">
+
+            <div
+              ref={(el) => { reviewItemsRef.current[1] = el; }}
+              className="py-12 md:py-0 md:pr-14"
+              data-testid="review-card-0"
+            >
+              <div className="flex gap-1 mb-5">
+                {[...Array(5)].map((_, i) => (<Star key={i} size={12} className="text-[#D4AF37] fill-[#D4AF37]" />))}
               </div>
-              <p className="text-white/60 font-light max-w-xs text-sm leading-relaxed">
-                Un rifugio siciliano a conduzione familiare dove il mare è a un respiro e il tempo si ferma.
+              <p className="font-serif text-xl md:text-2xl text-[#0A1128] leading-relaxed mb-5 italic">
+                "Ci siamo sentiti come a casa. La famiglia è calorosa — 3 minuti e sei sulla spiaggia più bella della Sicilia."
+              </p>
+              <p className="text-[9px] uppercase tracking-[0.25em] text-[#0A1128]/35 font-sans">
+                Sofía M. — Madrid
               </p>
             </div>
 
-            {/* Address Column */}
+            <div
+              ref={(el) => { reviewItemsRef.current[2] = el; }}
+              className="py-12 md:py-0 md:px-14 md:mt-20"
+              data-testid="review-card-1"
+            >
+              <div className="flex gap-1 mb-5">
+                {[...Array(5)].map((_, i) => (<Star key={i} size={12} className="text-[#D4AF37] fill-[#D4AF37]" />))}
+              </div>
+              <p className="font-serif text-xl text-[#0A1128] leading-relaxed mb-5 italic">
+                "Pulizia, silenzio, ospitalità autentica. La colazione in giardino — indimenticabile."
+              </p>
+              <p className="text-[9px] uppercase tracking-[0.25em] text-[#0A1128]/35 font-sans mb-5">
+                Thomas B. — Berlin
+              </p>
+              <p className="text-xs text-[#0A1128]/25 font-light leading-relaxed pt-5 border-t border-[#0A1128]/10">
+                Camera impeccabile · asciugamani freschi ogni giorno · zero rumore
+              </p>
+            </div>
+
+            <div
+              ref={(el) => { reviewItemsRef.current[3] = el; }}
+              className="py-12 md:py-0 md:pl-14 md:mt-10"
+              data-testid="review-card-2"
+            >
+              <div className="flex gap-1 mb-5">
+                {[...Array(5)].map((_, i) => (<Star key={i} size={12} className="text-[#D4AF37] fill-[#D4AF37]" />))}
+              </div>
+              <p className="font-serif text-xl text-[#0A1128] leading-relaxed mb-5 italic">
+                "Un angolo di pace raro. Mi sono sentita completamente al sicuro e coccolata per tutta la settimana."
+              </p>
+              <p className="text-[9px] uppercase tracking-[0.25em] text-[#0A1128]/35 font-sans">
+                Claire L. — Lyon
+              </p>
+            </div>
+
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-24 section-title-reveal">
+            <button
+              className="bg-[#D4AF37] text-[#0A1128] px-12 py-4 text-[10px] uppercase tracking-[0.25em] font-medium hover:bg-[#0A1128] hover:text-white transition-all duration-500"
+              data-testid="btn-prenota-reviews"
+            >
+              Prenota Ora — Disponibilità Limitata
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 7. Footer — asymmetric, airy */}
+      <footer className="relative bg-[#0A1128] text-white overflow-hidden" id="contatti">
+
+        {/* Watermark wordmark */}
+        <div className="absolute inset-0 flex items-end pointer-events-none overflow-hidden" aria-hidden="true">
+          <span className="font-serif italic text-[22vw] text-white opacity-[0.03] select-none leading-none whitespace-nowrap -mb-4 -ml-2 tracking-tight">
+            il veliero
+          </span>
+        </div>
+
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 pt-28 pb-14">
+
+          {/* Top: brand + tagline + location */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-8 mb-20 border-b border-white/[0.07] pb-16">
             <div>
-              <h4 className="uppercase tracking-[0.2em] text-xs font-medium mb-6 text-secondary">Posizione</h4>
-              <address className="not-italic text-white/70 text-sm font-light leading-loose">
-                Via Savoia 15<br />
-                91010 San Vito Lo Capo (TP)<br />
+              <div className="flex items-center gap-3 mb-4">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/70">
+                  <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.12" />
+                  <path d="M12 22V14" />
+                </svg>
+                <span className="font-serif italic text-2xl tracking-wide text-white/85">il veliero</span>
+                <span className="text-[#D4AF37] text-xs tracking-wider">★★★</span>
+              </div>
+              <p className="text-white/35 font-light text-sm max-w-xs leading-relaxed">
+                Un rifugio siciliano a conduzione familiare.<br/>Il mare è a un respiro. Il tempo si ferma.
+              </p>
+            </div>
+            <div className="text-left md:text-right">
+              <p className="font-serif italic text-[#D4AF37]/50 text-lg mb-1">San Vito Lo Capo</p>
+              <p className="text-white/25 text-[10px] uppercase tracking-widest font-sans">Sicilia · Italia</p>
+            </div>
+          </div>
+
+          {/* Middle: three info columns */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 mb-20">
+
+            <div>
+              <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.3em] font-sans mb-5">Posizione</p>
+              <address className="not-italic text-white/40 text-sm font-light leading-loose">
+                Via Savoia 15<br/>
+                91010 San Vito Lo Capo (TP)<br/>
                 Sicilia, Italia
               </address>
             </div>
 
-            {/* Contact Column */}
             <div>
-              <h4 className="uppercase tracking-[0.2em] text-xs font-medium mb-6 text-secondary">Contatti</h4>
-              <ul className="text-white/70 text-sm font-light space-y-4">
+              <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.3em] font-sans mb-5">Contatti</p>
+              <ul className="space-y-3">
                 <li>
-                  <a href="tel:+390923000000" className="hover:text-secondary transition-colors" data-testid="link-phone">
+                  <a href="tel:+390923000000" className="text-white/40 text-sm font-light hover:text-[#5BB8E8] transition-colors duration-300" data-testid="link-phone">
                     +39 0923 000000
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:info@ilveliero.it" className="hover:text-secondary transition-colors" data-testid="link-email">
+                  <a href="mailto:info@ilveliero.it" className="text-white/40 text-sm font-light hover:text-[#5BB8E8] transition-colors duration-300" data-testid="link-email">
                     info@ilveliero.it
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-secondary transition-colors" data-testid="link-instagram">
-                    Instagram
+                  <a href="#" className="text-white/40 text-sm font-light hover:text-[#5BB8E8] transition-colors duration-300" data-testid="link-instagram">
+                    @ilveliero.sicilia
                   </a>
                 </li>
               </ul>
             </div>
+
+            <div>
+              <p className="text-[#D4AF37] text-[9px] uppercase tracking-[0.3em] font-sans mb-5">Prenotazioni</p>
+              <p className="text-white/35 text-sm font-light leading-relaxed mb-6">
+                Check-in 15:00 · Check-out 11:00<br/>
+                Aperto tutto l'anno.
+              </p>
+              <button
+                className="border border-[#D4AF37]/30 text-[#D4AF37]/70 px-8 py-3 text-[9px] uppercase tracking-[0.2em] hover:bg-[#D4AF37] hover:text-[#0A1128] transition-all duration-500"
+                data-testid="btn-prenota-footer"
+              >
+                Prenota Ora
+              </button>
+            </div>
+
           </div>
 
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-white/40 font-light">
-            <p>&copy; {new Date().getFullYear()} Il Veliero San Vito Lo Capo. Tutti i diritti riservati.</p>
+          {/* Bottom strip */}
+          <div className="border-t border-white/[0.06] pt-7 flex flex-col md:flex-row justify-between items-center gap-3">
+            <p className="text-white/20 text-[10px] font-light tracking-wide">
+              &copy; {new Date().getFullYear()} Il Veliero — San Vito Lo Capo. Tutti i diritti riservati.
+            </p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors" data-testid="link-privacy">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors" data-testid="link-terms">Cookie Policy</a>
+              <a href="#" className="text-white/20 text-[10px] hover:text-white/40 transition-colors" data-testid="link-privacy">Privacy</a>
+              <a href="#" className="text-white/20 text-[10px] hover:text-white/40 transition-colors" data-testid="link-terms">Cookie</a>
             </div>
           </div>
+
         </div>
       </footer>
     </div>

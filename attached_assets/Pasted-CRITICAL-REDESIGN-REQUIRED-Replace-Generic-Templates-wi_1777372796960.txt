@@ -1,0 +1,35 @@
+CRITICAL REDESIGN REQUIRED: Replace Generic Templates with an Editorial Cinematic Narrative.
+
+Task: Completely rebuild all sections below the Hero section (Features, Garden, Social Proof, Footer) (image_0.png through image_11.png). Abandon generic centering, card layouts, and 50/50 placement entirely. This section must feel like a feature article in a high-end travel magazine, not a list.
+
+Design Philosophy: Editorial Layout, Cinematic Staging, Deep Media Integration, Staggered Elements. This page must sell an experience and address user fears.
+
+Color Rule: Maintain the blue, sand-yellow, and white palette. Absolutely NO orange.
+
+Content Integration (Selling Story): We are selling "Your Perfect 72 Hours." We will blend the beach closeness, cleanliness, center location, and Sicilian hospitality into a single fluid section.
+
+New Structural Layout:
+
+Start with "Artigianato" Detail: Begin with a subtle background texture overlay placeholder of simplified, elegant Sicilian майолика (ceramic pattern) in light sky blue on white.
+
+Top Marquee: Slow, elegant typography marquee banner with "Autentico Artigianato Siciliano • Mare e Vento • San Vito Lo Capo" (image_7.png).
+
+Media-Rich Staggered Grid (Replaces Cards & Center lists): Create a grid of four columns. Use four varying-aspect-ratio placeholder blocks.
+
+Block 1 (Morning & Vibe): Full-bleed background placeholder for a tranquil, modern Sicilian hotel garden at sunrise with hints of jasmine. Text overlaid elegantly, offset (e.g., top-left): "Un risveglio profumato" with the description of jasmine, garden, and hot coffee (image_11.png content). Use large, watermarked number 01 for subtle hierarchy.
+
+Block 2 (Beach/Cleanliness - Overlap): Overlap the edge of the garden section. A photo placeholder for the pristine white beach of San Vito. Integrate the copy about "Tre minuti... шум моря" (image_6.png) and "Чистота... одержимость" (image_6.png). We are showing the cleanliness, not just stating it. Photo placeholder for stylized, immaculate beach. Minimize text, align it in a clean column. The sand-yellow text should be minimal, for emphasis. Watermarked number 02.
+
+Block 3 (Hospitality/Safety/Face): Dedicated placeholder for a real, warm portrait of the Valenti host family (image_1.png). Subtly addresses fear of crime by giving a face to the business. Add the copy from "Non sei un numero di stanza" (image_10.png) and the full Valenti quote about "Каждый гость trattato как член семьи" (image_10.png). Watermarked number 03. Цитату семьи Валенти сделать типографическим элементом, а не карточкой (image_1.png).
+
+Block 4 (Location/Walkability): Small, offset text block at the bottom of the column for "Nel cuore della vita..." (image_7.png) linked to an abstract placeholder for walkable infrastructure (e.g., modern paving stones). Watermarked number 04.
+
+Refined Social Proof: Integrate best reviews inside appropriate narrative blocks (e.g., best cleanliness review near beach block). Abandon the grid of generic card-stack (image_1.png). Keep the "Sofia M., Madrid" etc., attribution, but without the frames.
+
+Refined Footer: (image_9.png, image_10.png) Eliminate the generic centered text block next to media (image_10.png). A new, asymmetrical and airy footer layout. Use the logo. Position and Contatti should be beautifully typeset, perhaps with sand-yellow elements for focus, but airy. Revisit the odd off-canvas gradient rectangle (image_9.png) and make it преднамеренным or remove.
+
+Typography: Vary header sizes to create hierarchy. Headings are elegant modern serif, body text remains clean sans-serif. Use large numbers as watermarks, but make them less structured and more organic.
+
+Animation (GSAP & Lenis): Use GSAP ScrollTrigger for extremely smooth, "heavy" scroll physics (the "oil scroll" effect from thisiscrowd.com). Elements must fade-in and slide subtly asynchronously (e.g., garden fades, then beach slide-in), with subtle parallax on the background images. The host family photo must have a slow, scale-in animation. Lenis smooth scrolling must be active.
+
+Constraint Check: Verify zero orange usage. Ensure sand-yellow is accent only. Maintain elegant modern serif for headings. Body text should remain clean sans-serif. Temas (sea, wind, Sicily, artigianato). Narrative addresses fears.
