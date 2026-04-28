@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useNav } from './NavigationContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -54,11 +55,15 @@ export default function OceanicAtmosphere() {
   const containerRef = useRef<HTMLDivElement>(null);
   const windLayerRef = useRef<HTMLDivElement>(null);
   const sandLayerRef = useRef<HTMLDivElement>(null);
+  const continuousTweensRef = useRef<gsap.core.Tween[]>([]);
+  const { isOpen } = useNav();
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
+      const continuousTweens: gsap.core.Tween[] = [];
+
       const wisps = windLayerRef.current?.querySelectorAll<HTMLElement>('.wind-wisp') ?? [];
       wisps.forEach((wisp) => {
         const delay = parseFloat(wisp.dataset.delay || '0');
@@ -66,25 +71,29 @@ export default function OceanicAtmosphere() {
         const scale = parseFloat(wisp.dataset.scale || '1');
         const rotation = parseFloat(wisp.dataset.rotation || '0');
         gsap.set(wisp, { x: 0, opacity: 0, scale, rotation });
-        gsap.to(wisp, {
-          x: '125vw',
-          duration: dur,
-          repeat: -1,
-          ease: 'sine.inOut',
-          delay,
-          keyframes: {
-            opacity: [0, 0.7, 0.85, 0.7, 0],
-            easeEach: 'none',
-          },
-        });
-        gsap.to(wisp, {
-          y: '+=18',
-          duration: 3 + (Math.random() * 1.8),
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay: delay * 0.4,
-        });
+        continuousTweens.push(
+          gsap.to(wisp, {
+            x: '125vw',
+            duration: dur,
+            repeat: -1,
+            ease: 'sine.inOut',
+            delay,
+            keyframes: {
+              opacity: [0, 0.7, 0.85, 0.7, 0],
+              easeEach: 'none',
+            },
+          })
+        );
+        continuousTweens.push(
+          gsap.to(wisp, {
+            y: '+=18',
+            duration: 3 + (Math.random() * 1.8),
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay: delay * 0.4,
+          })
+        );
       });
 
       const grains = sandLayerRef.current?.querySelectorAll<HTMLElement>('.sand-grain') ?? [];
@@ -93,17 +102,21 @@ export default function OceanicAtmosphere() {
         const dur = parseFloat(grain.dataset.dur || '10');
         const driftY = parseFloat(grain.dataset.driftY || '-8');
         gsap.set(grain, { x: 0, y: 0, opacity: 0 });
-        gsap.to(grain, {
-          x: '+=40',
-          y: `+=${driftY}`,
-          opacity: 0.55,
-          duration: dur,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-          delay,
-        });
+        continuousTweens.push(
+          gsap.to(grain, {
+            x: '+=40',
+            y: `+=${driftY}`,
+            opacity: 0.55,
+            duration: dur,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+            delay,
+          })
+        );
       });
+
+      continuousTweensRef.current = continuousTweens;
 
       // Reveal only after the booking widget scrolls past
       const hero = document.querySelector('.hero-section');
@@ -124,8 +137,18 @@ export default function OceanicAtmosphere() {
       }
     });
 
-    return () => ctx.revert();
+    return () => {
+      continuousTweensRef.current = [];
+      ctx.revert();
+    };
   }, []);
+
+  useEffect(() => {
+    continuousTweensRef.current.forEach((t) => {
+      if (isOpen) t.pause();
+      else t.resume();
+    });
+  }, [isOpen]);
 
   return (
     <div

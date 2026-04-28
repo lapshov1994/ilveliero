@@ -6,7 +6,7 @@ import { useNav } from '@/components/NavigationContext';
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
-  const { toggle } = useNav();
+  const { toggle, isOpen } = useNav();
   const heroBgRef = useRef<HTMLDivElement>(null);
   const heroBookingRef = useRef<HTMLDivElement>(null);
   const heroLine1Ref = useRef<HTMLHeadingElement>(null);
@@ -17,6 +17,8 @@ export default function Hero() {
   const sailboatRef = useRef<HTMLDivElement>(null);
   const sailboatSwayRef = useRef<HTMLDivElement>(null);
   const scrollProgressRef = useRef<HTMLDivElement>(null);
+  const marqueeTweenRef = useRef<gsap.core.Tween | null>(null);
+  const sailboatSwayTweenRef = useRef<gsap.core.Tween | null>(null);
   const [headerScrolled, setHeaderScrolled] = useState(false);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function Hero() {
     // Continuous gentle sway — applied to the inner element so it does NOT
     // conflict with the outer scroll-driven rotation.
     if (sailboatSwayRef.current) {
-      gsap.to(sailboatSwayRef.current, {
+      sailboatSwayTweenRef.current = gsap.to(sailboatSwayRef.current, {
         rotation: 3,
         duration: 3,
         repeat: -1,
@@ -92,14 +94,32 @@ export default function Hero() {
       const inner = marqueeRef.current.querySelector<HTMLElement>('.marquee-inner');
       if (inner) {
         inner.style.willChange = 'transform';
-        gsap.to(inner, { xPercent: -50, ease: 'none', duration: 35, repeat: -1 });
+        marqueeTweenRef.current = gsap.to(inner, {
+          xPercent: -50,
+          ease: 'none',
+          duration: 35,
+          repeat: -1,
+        });
       }
     }
 
     });
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      marqueeTweenRef.current = null;
+      sailboatSwayTweenRef.current = null;
+    };
   }, []);
+
+  useEffect(() => {
+    const tweens = [marqueeTweenRef.current, sailboatSwayTweenRef.current];
+    tweens.forEach((t) => {
+      if (!t) return;
+      if (isOpen) t.pause();
+      else t.resume();
+    });
+  }, [isOpen]);
 
   return (
     <>

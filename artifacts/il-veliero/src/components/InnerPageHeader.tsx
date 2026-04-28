@@ -4,12 +4,13 @@ import gsap from 'gsap';
 import { useNav } from './NavigationContext';
 
 export default function InnerPageHeader() {
-  const { toggle } = useNav();
+  const { toggle, isOpen } = useNav();
   const sailboatRef = useRef<HTMLDivElement>(null);
+  const swayRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
     if (sailboatRef.current) {
-      gsap.to(sailboatRef.current, {
+      swayRef.current = gsap.to(sailboatRef.current, {
         rotation: 6,
         duration: 4.5,
         ease: 'sine.inOut',
@@ -18,7 +19,17 @@ export default function InnerPageHeader() {
         transformOrigin: 'center bottom',
       });
     }
+    return () => {
+      swayRef.current?.kill();
+      swayRef.current = null;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!swayRef.current) return;
+    if (isOpen) swayRef.current.pause();
+    else swayRef.current.resume();
+  }, [isOpen]);
 
   return (
     <header className="fixed top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center bg-white/95 backdrop-blur-sm border-b border-[#0A1128]/5">
