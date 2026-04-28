@@ -1,0 +1,57 @@
+Master Prompt for Replit Agent: "Il Veliero Boutique" Redesign
+
+Role: You are a World-Class Creative Frontend Developer specializing in "Quiet Luxury" hospitality websites (Awwwards/FWA level).
+
+Objective: Build a single-page premium React application for "Il Veliero" hotel in San Vito Lo Capo. The design must feel expensive, modern, and artisanal (Artigianato).
+
+1. Tech Stack & Core Libraries:
+
+React + Vite + Tailwind CSS.
+
+GSAP + ScrollTrigger: For all cinematic entrance animations and parallax.
+
+Lenis: For buttery-smooth inertial scrolling.
+
+Framer Motion: (Optional) for simple state transitions if needed.
+
+2. Design System (Strict Rules):
+
+Palette: Deep Navy Blue (Text/Backgrounds), Sky Blue (Accents), Pure White (Base), Sand-Yellow (Muted gold for CTAs/Highlights).
+
+CRITICAL: Absolutely NO orange.
+
+Typography: * Headings: Elegant High-Contrast Serif (e.g., Cormorant Garamond or Playfair Display).
+
+Body: Clean, airy Sans-Serif with high letter-spacing (e.g., Inter or Montserrat).
+
+Atmosphere: Huge negative space (padding/margin), editorial magazine layout (asymmetry).
+
+3. Global Micro-Interactions (The "Details"):
+
+Grain Overlay: Add a fixed, nearly invisible noise texture (opacity 0.02) over the whole site to remove "digital plastic" look.
+
+Wind Lines: GSAP-animated thin gold gradient lines that slowly drift horizontally across the screen (low opacity).
+
+Scroll Progress: A thin gold bar (1px) at the very top of the viewport.
+
+Interactive Logo: The "il veliero" SVG must subtly sway (rotate 1.5deg) like a boat on water. On hover, show expanding "ripple" lines beneath it.
+
+4. Modular Architecture:
+
+Hero.tsx: Full-screen cinematic entry. Absolute header (transparent). "Dove il Mare / Incontra il Cielo" text revealing from masks. Floating Glassmorphism booking widget at the bottom (Black/20 backdrop-blur).
+
+Story.tsx (72 Ore Perfette): Editorial asymmetrical grid. Use "01" and "02" large watermark numbers. Implement "Overlap" technique: text blocks must physically overlap image placeholders. Use GSAP ScrollTrigger for parallax on image containers (images move slower than scroll).
+
+Family.tsx (Trust & Safety): Focus on the "Face of the business". Narrative layout. Large "03" watermark. "Floating" reviews: testimonials without borders or cards, just typography and a gold left-border line.
+
+Footer.tsx: Deep Navy background. Huge "Inizia il tuo viaggio qui" CTA. Clean grid for contacts/location/socials.
+
+5. Implementation Instructions:
+
+DO NOT use generic card components or 50/50 split sections. Use staggered grids.
+
+Images: Use placeholders (e.g., Unsplash IDs) for now, but ensure the object-cover and container ratios (3:4, 4:3, 16:9) are perfect.
+
+Buttons: Create a custom "Fill" effect: on hover, a background layer slides in, and the text shifts slightly to the right.
+
+Responsive: Ensure the editorial grid collapses elegantly on mobile into a clean single-column story.
