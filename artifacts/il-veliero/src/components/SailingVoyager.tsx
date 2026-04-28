@@ -10,8 +10,7 @@ export default function SailingVoyager() {
   const rockRef = useRef<HTMLDivElement>(null);
   const wave1Ref = useRef<SVGPathElement>(null);
   const wave2Ref = useRef<SVGPathElement>(null);
-  const wave3Ref = useRef<SVGPathElement>(null);
-  const sprayRef = useRef<SVGGElement>(null);
+  const wakeRef = useRef<SVGGElement>(null);
   const flagRef = useRef<SVGPathElement>(null);
   const [location] = useLocation();
   const isHome = location === '/' || location === '';
@@ -22,7 +21,28 @@ export default function SailingVoyager() {
     const track = document.getElementById('voyager-track');
     if (!track) return;
 
+    let detachWake: (() => void) | null = null;
+
     const ctx = gsap.context(() => {
+      // Hidden over hero — fade in only after the booking widget scrolls past
+      const hero = document.querySelector('.hero-section');
+      if (hero) {
+        gsap.set(wrapperRef.current, { opacity: 0 });
+        gsap.to(wrapperRef.current, {
+          opacity: 0.22,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: hero,
+            start: 'bottom 80%',
+            end: 'bottom 20%',
+            scrub: true,
+          },
+        });
+      } else {
+        gsap.set(wrapperRef.current, { opacity: 0.22 });
+      }
+
+      // Drift across the page synced with overall scroll
       gsap.to(wrapperRef.current, {
         x: '110vw',
         y: '40vh',
@@ -54,32 +74,20 @@ export default function SailingVoyager() {
         });
       }
 
-      [wave1Ref.current, wave2Ref.current, wave3Ref.current].forEach((w, i) => {
+      [wave1Ref.current, wave2Ref.current].forEach((w, i) => {
         if (!w) return;
         gsap.fromTo(
           w,
-          { attr: { transform: 'translate(-30,0)' } },
+          { attr: { transform: 'translate(-12,0)' } },
           {
-            attr: { transform: 'translate(30,0)' },
-            duration: 3 + i * 0.6,
+            attr: { transform: 'translate(12,0)' },
+            duration: 2.6 + i * 0.5,
             repeat: -1,
             yoyo: true,
             ease: 'sine.inOut',
           }
         );
       });
-
-      if (sprayRef.current) {
-        gsap.to(sprayRef.current.querySelectorAll('circle'), {
-          opacity: 0,
-          y: -10,
-          duration: 1.8,
-          repeat: -1,
-          yoyo: true,
-          stagger: 0.18,
-          ease: 'sine.inOut',
-        });
-      }
 
       if (flagRef.current) {
         gsap.to(flagRef.current, {
@@ -90,9 +98,53 @@ export default function SailingVoyager() {
           ease: 'sine.inOut',
         });
       }
+
+      // Wake / activation waves — visible only while user scrolls or moves mouse
+      if (wakeRef.current) {
+        gsap.set(wakeRef.current, { opacity: 0 });
+        const wakePaths = wakeRef.current.querySelectorAll<SVGPathElement>('path');
+        wakePaths.forEach((p, i) => {
+          gsap.to(p, {
+            attr: { transform: `translate(${10 + i * 4},0)` },
+            duration: 1.4 + i * 0.3,
+            repeat: -1,
+            yoyo: true,
+            ease: 'sine.inOut',
+          });
+        });
+
+        let idleTimer: ReturnType<typeof setTimeout> | null = null;
+        let visible = false;
+
+        const wake = () => {
+          if (!visible) {
+            visible = true;
+            gsap.to(wakeRef.current, { opacity: 1, duration: 0.35, ease: 'sine.out' });
+          }
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(() => {
+            visible = false;
+            gsap.to(wakeRef.current, { opacity: 0, duration: 1.0, ease: 'sine.in' });
+          }, 700);
+        };
+
+        window.addEventListener('scroll', wake, { passive: true });
+        window.addEventListener('mousemove', wake, { passive: true });
+        window.addEventListener('touchmove', wake, { passive: true });
+
+        detachWake = () => {
+          window.removeEventListener('scroll', wake);
+          window.removeEventListener('mousemove', wake);
+          window.removeEventListener('touchmove', wake);
+          if (idleTimer) clearTimeout(idleTimer);
+        };
+      }
     });
 
-    return () => ctx.revert();
+    return () => {
+      if (detachWake) detachWake();
+      ctx.revert();
+    };
   }, [isHome]);
 
   if (!isHome) return null;
@@ -100,8 +152,8 @@ export default function SailingVoyager() {
   return (
     <div
       ref={wrapperRef}
-      className="fixed top-[18%] left-[-25vw] w-[520px] z-[2] pointer-events-none"
-      style={{ opacity: 0.18 }}
+      className="fixed top-[18%] left-[-18vw] w-[340px] z-[6] pointer-events-none"
+      style={{ opacity: 0 }}
       aria-hidden="true"
       data-testid="background-voyager"
     >
@@ -119,10 +171,8 @@ export default function SailingVoyager() {
           <line x1="250" y1="80" x2="360" y2="320" stroke="#D4AF37" strokeWidth="0.5" opacity="0.45"/>
 
           {/* === MAIN MAST === */}
-          <line
-            x1="250" y1="30" x2="250" y2="335"
-            stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round"
-          />
+          <line x1="250" y1="30" x2="250" y2="335"
+            stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round"/>
 
           {/* === FLAG / PENNANT at masthead === */}
           <path
@@ -138,41 +188,29 @@ export default function SailingVoyager() {
             fill="#D4AF37" fillOpacity="0.18"
             stroke="#D4AF37" strokeWidth="1"/>
 
-          {/* === YARDS (horizontal spars) === */}
+          {/* === YARDS === */}
           <line x1="160" y1="120" x2="340" y2="120" stroke="#D4AF37" strokeWidth="1.4" strokeLinecap="round"/>
           <line x1="140" y1="180" x2="360" y2="180" stroke="#D4AF37" strokeWidth="1.6" strokeLinecap="round"/>
           <line x1="120" y1="240" x2="380" y2="240" stroke="#D4AF37" strokeWidth="1.8" strokeLinecap="round"/>
 
-          {/* === SQUARE SAILS (top to bottom) === */}
-          {/* Topgallant — smallest */}
-          <path
-            d="M170 120 L330 120 L320 175 L180 175 Z"
+          {/* === SQUARE SAILS === */}
+          <path d="M170 120 L330 120 L320 175 L180 175 Z"
             fill="#D4AF37" fillOpacity="0.10"
-            stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round"
-          />
-          {/* Topsail — middle */}
-          <path
-            d="M148 180 L352 180 L340 235 L160 235 Z"
+            stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round"/>
+          <path d="M148 180 L352 180 L340 235 L160 235 Z"
             fill="#D4AF37" fillOpacity="0.12"
-            stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"
-          />
-          {/* Mainsail — largest, gently belly-curved */}
-          <path
-            d="M128 240 L372 240 Q374 290 372 330 Q250 360 128 330 Q126 290 128 240 Z"
+            stroke="#D4AF37" strokeWidth="1.4" strokeLinejoin="round"/>
+          <path d="M128 240 L372 240 Q374 290 372 330 Q250 360 128 330 Q126 290 128 240 Z"
             fill="#D4AF37" fillOpacity="0.14"
-            stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round"
-          />
+            stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round"/>
 
-          {/* === BOWSPRIT (forward jutting spar) === */}
+          {/* === BOWSPRIT + JIB === */}
           <line x1="380" y1="370" x2="465" y2="345" stroke="#D4AF37" strokeWidth="1.8" strokeLinecap="round"/>
-          {/* Jib sail on bowsprit */}
-          <path
-            d="M380 340 L465 345 L385 380 Z"
+          <path d="M380 340 L465 345 L385 380 Z"
             fill="#D4AF37" fillOpacity="0.10"
-            stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round"
-          />
+            stroke="#D4AF37" strokeWidth="1.2" strokeLinejoin="round"/>
 
-          {/* === HULL — long galleon-style with curved keel === */}
+          {/* === HULL === */}
           <path
             d="M75 350
                Q75 365 95 372
@@ -184,57 +222,61 @@ export default function SailingVoyager() {
             fill="#D4AF37" fillOpacity="0.22"
             stroke="#D4AF37" strokeWidth="1.6" strokeLinejoin="round"
           />
-
-          {/* === HULL DETAIL — gun-port line === */}
           <line x1="100" y1="386" x2="400" y2="386" stroke="#D4AF37" strokeWidth="0.6" opacity="0.55"/>
-          {/* portholes */}
           {[120, 160, 200, 240, 280, 320, 360].map((cx) => (
             <circle key={cx} cx={cx} cy="386" r="2.2" fill="#D4AF37" fillOpacity="0.6"/>
           ))}
-
-          {/* === STERN ornament === */}
-          <path
-            d="M75 350 Q60 335 70 320 L80 330 Z"
+          <path d="M75 350 Q60 335 70 320 L80 330 Z"
             fill="#D4AF37" fillOpacity="0.35"
-            stroke="#D4AF37" strokeWidth="0.8"
-          />
+            stroke="#D4AF37" strokeWidth="0.8"/>
 
-          {/* === WAVES UNDER THE SHIP === */}
-          <g opacity="0.85">
+          {/* === BLUE WAVES — only under the hull, never overlap the ship === */}
+          <g>
             <path
               ref={wave1Ref}
-              d="M0 432 Q80 422 160 432 T320 432 T480 432 L500 432 L500 442 L0 442 Z"
+              d="M85 438 Q140 432 195 438 T305 438 T415 438"
               fill="none"
-              stroke="#D4AF37"
-              strokeWidth="1.4"
-              opacity="0.7"
+              stroke="#5BB8E8"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              opacity="0.85"
             />
             <path
               ref={wave2Ref}
-              d="M0 448 Q70 438 140 448 T280 448 T420 448 T500 448"
+              d="M105 456 Q160 450 215 456 T325 456 T395 456"
               fill="none"
-              stroke="#D4AF37"
-              strokeWidth="1.1"
-              opacity="0.55"
-            />
-            <path
-              ref={wave3Ref}
-              d="M0 464 Q90 456 180 464 T360 464 T500 464"
-              fill="none"
-              stroke="#D4AF37"
-              strokeWidth="0.9"
-              opacity="0.4"
+              stroke="#5BB8E8"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              opacity="0.6"
             />
           </g>
 
-          {/* === SPRAY / FOAM around bow & stern === */}
-          <g ref={sprayRef}>
-            <circle cx="430" cy="410" r="2.6" fill="#D4AF37" opacity="0.7"/>
-            <circle cx="445" cy="418" r="1.8" fill="#D4AF37" opacity="0.55"/>
-            <circle cx="455" cy="408" r="1.4" fill="#D4AF37" opacity="0.45"/>
-            <circle cx="60"  cy="410" r="2.2" fill="#D4AF37" opacity="0.6"/>
-            <circle cx="42"  cy="420" r="1.6" fill="#D4AF37" opacity="0.5"/>
-            <circle cx="30"  cy="408" r="1.2" fill="#D4AF37" opacity="0.4"/>
+          {/* === ACTIVATION WAKE — appears only on scroll / mouse move === */}
+          <g ref={wakeRef} style={{ opacity: 0 }}>
+            {/* Bow wake */}
+            <path
+              d="M420 412 Q435 404 450 412 T480 412"
+              fill="none" stroke="#5BB8E8" strokeWidth="1.8" strokeLinecap="round" opacity="0.85"
+            />
+            <path
+              d="M425 422 Q440 416 455 422 T485 422"
+              fill="none" stroke="#5BB8E8" strokeWidth="1.4" strokeLinecap="round" opacity="0.65"
+            />
+            {/* Stern wake */}
+            <path
+              d="M20 412 Q35 404 50 412 T80 412"
+              fill="none" stroke="#5BB8E8" strokeWidth="1.8" strokeLinecap="round" opacity="0.85"
+            />
+            <path
+              d="M15 422 Q30 416 45 422 T75 422"
+              fill="none" stroke="#5BB8E8" strokeWidth="1.4" strokeLinecap="round" opacity="0.65"
+            />
+            {/* Side ripples */}
+            <path
+              d="M180 478 Q220 472 260 478 T340 478"
+              fill="none" stroke="#5BB8E8" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"
+            />
           </g>
         </svg>
       </div>
