@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation';
 import Cursor from '@/components/Cursor';
 import OceanicAtmosphere from '@/components/OceanicAtmosphere';
 import SailingVoyager from '@/components/SailingVoyager';
+import SandFilter from '@/components/SandFilter';
 
 import Hero from '@/pages/Hero';
 import Story from '@/pages/Story';
@@ -78,6 +79,7 @@ export default function App() {
           <Cursor />
           <SailingVoyager />
           <OceanicAtmosphere />
+          <SandFilter />
           <Navigation />
 
           {/* Routes */}
