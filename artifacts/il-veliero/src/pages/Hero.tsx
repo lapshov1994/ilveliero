@@ -50,11 +50,11 @@ export default function Hero() {
       },
     });
 
-    // Sailboat sway on its wrapper div
+    // Sailboat sway on its wrapper div — diagnostic visible
     if (sailboatRef.current) {
       gsap.to(sailboatRef.current, {
-        rotation: 8,
-        duration: 2.5,
+        rotation: 20,
+        duration: 2,
         ease: 'power1.inOut',
         repeat: -1,
         yoyo: true,

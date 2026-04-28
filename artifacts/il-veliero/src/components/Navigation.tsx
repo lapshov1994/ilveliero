@@ -44,7 +44,7 @@ export default function Navigation() {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[200] bg-[#0A1128] flex flex-col justify-center items-center"
+      className="fixed inset-0 z-[1000] bg-[#0A1128] flex flex-col justify-center items-center"
       style={{ pointerEvents: isOpen ? 'all' : 'none', opacity: 0, transform: 'translateY(-100%)' }}
     >
       {/* Close button */}

@@ -8,21 +8,23 @@ export default function InnerPageHeader() {
   const sailboatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    gsap.to(sailboatRef.current, {
-      rotation: 3,
-      duration: 3,
-      ease: 'power1.inOut',
-      repeat: -1,
-      yoyo: true,
-      transformOrigin: 'center bottom',
-    });
+    if (sailboatRef.current) {
+      gsap.to(sailboatRef.current, {
+        rotation: 20,
+        duration: 2,
+        ease: 'power1.inOut',
+        repeat: -1,
+        yoyo: true,
+        transformOrigin: 'center bottom',
+      });
+    }
   }, []);
 
   return (
     <header className="fixed top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center bg-white/95 backdrop-blur-sm border-b border-[#0A1128]/5">
       <Link href="/" className="flex items-center gap-3 group cursor-pointer">
-        <div className="relative">
-          <div ref={sailboatRef}>
+        <div className="relative z-50">
+          <div ref={sailboatRef} className="relative z-50">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#0A1128] drop-shadow-sm">
               <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1"/>
               <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
