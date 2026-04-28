@@ -51,14 +51,16 @@ export default function Hero() {
     });
 
     // Sailboat sway on its wrapper div
-    gsap.to(sailboatRef.current, {
-      rotation: 3,
-      duration: 3,
-      ease: 'power1.inOut',
-      repeat: -1,
-      yoyo: true,
-      transformOrigin: 'center bottom',
-    });
+    if (sailboatRef.current) {
+      gsap.to(sailboatRef.current, {
+        rotation: 8,
+        duration: 2.5,
+        ease: 'power1.inOut',
+        repeat: -1,
+        yoyo: true,
+        transformOrigin: 'center bottom',
+      });
+    }
 
     // Scroll progress bar
     gsap.to(scrollProgressRef.current, {
@@ -96,20 +98,25 @@ export default function Hero() {
 
       {/* Header */}
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
-        <div ref={logoRef} className="flex items-center gap-3 group cursor-pointer">
+        <div className="flex items-center gap-4 group cursor-pointer relative z-50">
           <div className="relative">
-            <div ref={sailboatRef}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-lg">
-                <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1"/>
+            <div ref={sailboatRef} className="relative z-10 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
+                <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
                 <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
-                <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2" className="opacity-60"/>
+                <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="3 3" className="opacity-70"/>
               </svg>
             </div>
-            {/* Wave line under keel on hover */}
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#D4AF37] opacity-0 group-hover:w-full group-hover:opacity-40 transition-all duration-700" />
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-150 group-hover:opacity-40 transition-all duration-700 origin-center" />
+            <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-125 group-hover:opacity-30 transition-all duration-700 delay-150 origin-center" />
           </div>
-          <div className="text-lg tracking-[0.25em] font-serif uppercase">
-            il veliero <span className="text-[#D4AF37] ml-1 text-xs opacity-80">★★★</span>
+          <div className="flex flex-col flex-shrink-0">
+            <span className="text-xl tracking-[0.3em] font-serif uppercase text-white leading-none">
+              il veliero
+            </span>
+            <span className="text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1.5 opacity-80 font-light">
+              Tradizione &amp; Vento
+            </span>
           </div>
         </div>
         <button
