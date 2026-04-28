@@ -1,0 +1,119 @@
+Что нужно сделать прямо сейчас:
+
+Открой боковую панель файлов в Replit (File tree).
+
+Найди главный файл проекта. Скорее всего, это src/App.jsx или src/App.tsx.
+
+Полностью удали всё, что там написано.
+
+Скопируй код ниже и вставь его туда. Я переименовал компонент в App, чтобы он сработал сразу без дополнительных настроек роутинга.
+
+JavaScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function App() {
+  const containerRef = useRef(null);
+  const bgRef = useRef(null);
+  const titleLine1Ref = useRef(null);
+  const titleLine2Ref = useRef(null);
+  const subtitleRef = useRef(null);
+  const bookingRef = useRef(null);
+
+  useEffect(() => {
+    // Жесткий таймлайн для синхронизации всех элементов
+    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+    // 1. Медленный "дорогой" зум фона
+    tl.fromTo(bgRef.current, 
+      { scale: 1.15 }, 
+      { scale: 1, duration: 2.5, ease: "power2.out" }
+    )
+    // 2. Текст элегантно выезжает из маски
+    .fromTo([titleLine1Ref.current, titleLine2Ref.current], 
+      { y: 100 }, 
+      { y: 0, duration: 1.2, stagger: 0.15 },
+      "-=1.5"
+    )
+    // 3. Плавное появление локации
+    .fromTo(subtitleRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 1 },
+      "-=1"
+    )
+    // 4. Появление стеклянного виджета бронирования
+    .fromTo(bookingRef.current,
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 1 },
+      "-=0.8"
+    );
+  }, []);
+
+  return (
+    <section ref={containerRef} className="relative w-full h-screen overflow-hidden bg-[#0A1128]">
+      {/* Background */}
+      <div 
+        ref={bgRef}
+        className="absolute top-0 left-0 w-full h-full bg-cover bg-center opacity-80"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')" }}
+      >
+        <div className="absolute inset-0 bg-black/30"></div>
+      </div>
+
+      {/* Header */}
+      <header className="absolute top-0 left-0 w-full p-8 z-20 flex justify-between items-center text-white">
+        <div className="text-xl tracking-widest font-serif uppercase">
+          il veliero <span className="text-yellow-400/80 ml-2 text-sm">★★★</span>
+        </div>
+        <div className="text-sm tracking-widest uppercase cursor-pointer hover:text-yellow-200 transition-colors">
+          Menu
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4">
+        <div className="overflow-hidden mb-2">
+          <h1 ref={titleLine1Ref} className="text-5xl md:text-7xl font-serif text-white font-light tracking-tight">
+            Dove il Mare
+          </h1>
+        </div>
+        <div className="overflow-hidden mb-8">
+          <h1 ref={titleLine2Ref} className="text-5xl md:text-7xl font-serif text-white italic font-light tracking-tight">
+            Incontra il Cielo
+          </h1>
+        </div>
+        
+        <p ref={subtitleRef} className="text-white/80 max-w-md tracking-widest uppercase text-xs md:text-sm leading-relaxed">
+          San Vito Lo Capo, Sicilia <br/> Il tuo rifugio perfetto
+        </p>
+      </div>
+
+      {/* Glassmorphism Booking Widget */}
+      <div 
+        ref={bookingRef}
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 w-11/12 max-w-4xl bg-white/10 backdrop-blur-md border border-white/20 p-2 flex flex-col md:flex-row justify-between items-center"
+      >
+        <div className="flex-1 flex justify-around w-full px-4 py-2 text-white text-sm">
+          <div className="flex flex-col cursor-pointer hover:text-yellow-200 transition">
+            <span className="text-xs text-white/50 uppercase tracking-wider">Arrivo</span>
+            <span>28.04.2026</span>
+          </div>
+          <div className="w-px h-8 bg-white/20 mx-4"></div>
+          <div className="flex flex-col cursor-pointer hover:text-yellow-200 transition">
+            <span className="text-xs text-white/50 uppercase tracking-wider">Partenza</span>
+            <span>30.04.2026</span>
+          </div>
+          <div className="w-px h-8 bg-white/20 mx-4"></div>
+          <div className="flex flex-col cursor-pointer hover:text-yellow-200 transition">
+            <span className="text-xs text-white/50 uppercase tracking-wider">Ospiti</span>
+            <span>2 Adulti</span>
+          </div>
+        </div>
+        
+        <button className="bg-[#D4AF37] text-[#0A1128] px-8 py-4 uppercase text-xs tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full md:w-auto mt-4 md:mt-0">
+          Prenota Ora
+        </button>
+      </div>
+    </section>
+  );
+}

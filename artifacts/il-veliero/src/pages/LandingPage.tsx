@@ -11,6 +11,10 @@ export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
+  const heroSubtitleRef = useRef<HTMLParagraphElement>(null);
+  const heroBookingRef = useRef<HTMLDivElement>(null);
+  const heroLine1Ref = useRef<HTMLDivElement>(null);
+  const heroLine2Ref = useRef<HTMLDivElement>(null);
   const heading1Ref = useRef<HTMLDivElement>(null);
   const heading2Ref = useRef<HTMLDivElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
@@ -40,7 +44,41 @@ export default function LandingPage() {
     };
     window.addEventListener("scroll", handleScroll);
 
-    // GSAP Animations
+    // GSAP Intro Timeline (cinematic entrance on load)
+    const introTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    if (heroBgRef.current) {
+      introTl.fromTo(
+        heroBgRef.current,
+        { scale: 1.15 },
+        { scale: 1, duration: 2.5, ease: "power2.out" }
+      );
+    }
+    if (heroLine1Ref.current && heroLine2Ref.current) {
+      introTl.fromTo(
+        [heroLine1Ref.current, heroLine2Ref.current],
+        { y: 100 },
+        { y: 0, duration: 1.2, stagger: 0.15 },
+        "-=1.5"
+      );
+    }
+    if (heroSubtitleRef.current) {
+      introTl.fromTo(
+        heroSubtitleRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 1 },
+        "-=1"
+      );
+    }
+    if (heroBookingRef.current) {
+      introTl.fromTo(
+        heroBookingRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 1 },
+        "-=0.8"
+      );
+    }
+
+    // GSAP Scroll Animations
     // 1. Hero Parallax
     if (heroBgRef.current) {
       gsap.to(heroBgRef.current, {
@@ -218,79 +256,95 @@ export default function LandingPage() {
       </header>
 
       {/* 2. Hero Section */}
-      <section className="hero-section relative h-screen w-full overflow-hidden bg-primary">
-        {/* Parallax Background */}
+      <section className="hero-section relative h-screen w-full overflow-hidden bg-[#0A1128]">
+        {/* Parallax Background — Real Photo */}
         <div
           ref={heroBgRef}
-          className="absolute inset-0 w-full h-[120%] -top-[10%] bg-gradient-to-b from-[#0a1a3a] via-primary to-secondary/40"
-        />
+          className="absolute top-0 left-0 w-full h-[120%] -top-[10%] bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
 
         {/* Hero Content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
-          <p className="text-secondary uppercase tracking-[0.3em] text-xs md:text-sm font-medium mb-8">
+          <p
+            ref={heroSubtitleRef}
+            className="text-secondary uppercase tracking-[0.3em] text-xs md:text-sm font-medium mb-8 opacity-0"
+          >
             San Vito Lo Capo, Sicilia
           </p>
 
           <div ref={heading1Ref} className="font-serif text-white text-5xl md:text-7xl lg:text-8xl leading-tight mb-4">
             <div className="overflow-hidden">
-              <div className="reveal-line">Dove il Mare</div>
+              <div ref={heroLine1Ref} className="reveal-line" style={{ transform: "translateY(100%)" }}>
+                Dove il Mare
+              </div>
             </div>
             <div className="overflow-hidden">
-              <div className="reveal-line italic text-secondary/90">Incontra il Cielo</div>
+              <div ref={heroLine2Ref} className="reveal-line italic text-secondary/90" style={{ transform: "translateY(100%)" }}>
+                Incontra il Cielo
+              </div>
             </div>
           </div>
 
           {/* Scroll Indicator */}
-          <div className="absolute bottom-32 md:bottom-40 left-1/2 -translate-x-1/2 animate-bounce text-white/50">
+          <div className="absolute bottom-44 left-1/2 -translate-x-1/2 animate-bounce text-white/50">
             <ChevronDown size={24} strokeWidth={1} />
           </div>
         </div>
 
-        {/* Booking Widget (Overlapping next section) */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-20 w-[90%] max-w-4xl">
-          <div className="bg-white shadow-xl p-4 md:p-6 flex flex-col md:flex-row gap-4 items-end">
-            <div className="w-full md:w-1/4">
-              <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Check-in</label>
-              <input
-                type="date"
-                className="w-full border-b border-border py-2 text-sm focus:outline-none focus:border-primary bg-transparent text-primary"
-                data-testid="input-checkin"
-              />
+        {/* Glassmorphism Booking Widget — inside hero at bottom */}
+        <div
+          ref={heroBookingRef}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 w-11/12 max-w-4xl opacity-0"
+        >
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 flex flex-col md:flex-row justify-between items-center">
+            <div className="flex-1 flex justify-around w-full px-4 py-2 text-white text-sm">
+              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
+                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Arrivo</span>
+                <input
+                  type="date"
+                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer w-32"
+                  data-testid="input-checkin"
+                />
+              </div>
+              <div className="w-px bg-white/20 mx-4 self-stretch" />
+              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
+                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Partenza</span>
+                <input
+                  type="date"
+                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer w-32"
+                  data-testid="input-checkout"
+                />
+              </div>
+              <div className="w-px bg-white/20 mx-4 self-stretch" />
+              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
+                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Ospiti</span>
+                <select
+                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer appearance-none"
+                  data-testid="select-guests"
+                >
+                  <option value="1" className="text-primary bg-white">1 Ospite</option>
+                  <option value="2" className="text-primary bg-white">2 Adulti</option>
+                  <option value="3" className="text-primary bg-white">3 Ospiti</option>
+                  <option value="4" className="text-primary bg-white">4 Ospiti</option>
+                </select>
+              </div>
             </div>
-            <div className="w-full md:w-1/4">
-              <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Check-out</label>
-              <input
-                type="date"
-                className="w-full border-b border-border py-2 text-sm focus:outline-none focus:border-primary bg-transparent text-primary"
-                data-testid="input-checkout"
-              />
-            </div>
-            <div className="w-full md:w-1/4">
-              <label className="block text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Ospiti</label>
-              <select
-                className="w-full border-b border-border py-2 text-sm focus:outline-none focus:border-primary bg-transparent text-primary appearance-none rounded-none"
-                data-testid="select-guests"
-              >
-                <option value="1">1 Ospite</option>
-                <option value="2">2 Ospiti</option>
-                <option value="3">3 Ospiti</option>
-                <option value="4">4 Ospiti</option>
-              </select>
-            </div>
-            <div className="w-full md:w-1/4">
-              <Button
-                className="w-full bg-accent text-accent-foreground hover:bg-accent/90 rounded-none uppercase tracking-widest text-xs py-6"
-                data-testid="btn-verify-availability"
-              >
-                Verifica Disponibilità
-              </Button>
-            </div>
+
+            <button
+              className="bg-accent text-primary px-8 py-4 uppercase text-xs tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full md:w-auto mt-4 md:mt-0"
+              data-testid="btn-verify-availability"
+            >
+              Prenota Ora
+            </button>
           </div>
         </div>
       </section>
-
-      {/* Spacing for overlapping widget */}
-      <div className="h-32 md:h-24 bg-white" />
 
       {/* 3. Marquee Band */}
       <section className="bg-primary overflow-hidden py-4 border-y border-primary/90">
