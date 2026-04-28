@@ -1,0 +1,152 @@
+Вот три файла, которые ты должен заставить его переписать целиком. Не проси «добавить», требуй «заменить всё содержимое файла».
+
+1. Корень сайта: src/App.tsx (или .jsx)
+Здесь мы прописываем «песок» (зерно) и вставляем наши «волны».
+
+TypeScript
+import React, { useEffect } from 'react';
+import Hero from './components/Hero';
+import Story from './components/Story';
+import Family from './components/Family';
+import OceanicAtmosphere from './components/OceanicAtmosphere';
+import Footer from './components/Footer';
+import Lenis from '@studio-freight/lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function App() {
+  useEffect(() => {
+    const lenis = new Lenis({ duration: 1.2, smooth: true });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+    return () => { gsap.ticker.remove(lenis.raf); lenis.destroy(); };
+  }, []);
+
+  return (
+    <main className="relative min-h-screen bg-white overflow-hidden">
+      {/* ДЕТАЛЬ: ЗЕРНО (ПЕСОК) — ПРОВЕРЬ ТУТ OPACITY */}
+      <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.04] mix-blend-multiply bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+      
+      {/* ОКЕАНИЧЕСКИЕ ВОЛНЫ */}
+      <OceanicAtmosphere />
+
+      <Hero />
+      <Story />
+      <Family />
+      <Footer />
+    </main>
+  );
+}
+2. Новый компонент: src/components/OceanicAtmosphere.tsx
+Это те самые изящные волны вместо убогих палок.
+
+TypeScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function OceanicAtmosphere() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const waves = containerRef.current.querySelectorAll('.ocean-wave');
+    waves.forEach((wave) => {
+      gsap.to(wave, {
+        x: '110vw',
+        duration: gsap.utils.random(20, 35),
+        repeat: -1,
+        ease: "none",
+        delay: gsap.utils.random(0, 10),
+        onRepeat: () => {
+          gsap.set(wave, { y: gsap.utils.random(0, 100) + 'vh', x: '-10vw' });
+        }
+      });
+      // Эффект покачивания вверх-вниз
+      gsap.to(wave, { y: "+=20", duration: 3, repeat: -1, yoyo: true, ease: "sine.inOut" });
+    });
+  }, []);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[10] overflow-hidden opacity-30">
+      {[...Array(6)].map((_, i) => (
+        <svg key={i} className="ocean-wave absolute w-64 h-8" style={{ top: `${i * 15}vh`, left: '-10vw' }}>
+          <path d="M0 10 Q 30 0, 60 10 T 120 10 T 180 10 T 240 10" fill="none" stroke="#D4AF37" strokeWidth="0.5" opacity="0.4" />
+        </svg>
+      ))}
+    </div>
+  );
+}
+3. Главный экран и Корабль: src/components/Hero.tsx
+Тут мы заставляем парусник «уплывать» при скролле.
+
+TypeScript
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+
+export default function Hero() {
+  const sailboatRef = useRef(null);
+
+  useEffect(() => {
+    // Анимация 1: Постоянное покачивание (усиленное до 5 градусов)
+    gsap.to(sailboatRef.current, {
+      rotation: 5,
+      duration: 3,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut",
+      transformOrigin: "center bottom"
+    });
+
+    // Анимация 2: Парусник УПЛЫВАЕТ при скролле
+    gsap.to(sailboatRef.current, {
+      x: "60vw",
+      y: "20vh",
+      rotation: 15,
+      opacity: 0,
+      scrollTrigger: {
+        trigger: "main",
+        start: "top top",
+        end: "50% top",
+        scrub: 1.5
+      }
+    });
+  }, []);
+
+  return (
+    <section className="relative h-screen w-full bg-[#0A1128] overflow-hidden">
+      {/* Твой Header с парусником */}
+      <header className="absolute top-0 w-full p-10 z-[50] flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <div ref={sailboatRef} className="text-[#D4AF37]">
+            {/* ТУТ ТВОЙ SVG ПАРУСНИКА */}
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+               <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.1"/>
+               <path d="M12 22V14" />
+            </svg>
+          </div>
+          <span className="text-white font-serif tracking-[0.3em] uppercase">Il Veliero</span>
+        </div>
+      </header>
+      
+      {/* Остальной контент Hero */}
+      <div className="flex items-center justify-center h-full">
+         <h1 className="text-7xl font-serif text-white text-center italic">Dove il Mare <br/> Incontra il Cielo</h1>
+      </div>
+    </section>
+  );
+}
+Твой "Nuclear" Промпт для Replit Agent:
+
+DO NOT EXPLAIN. DO NOT REFUSE. OVERWRITE FILES IMMEDIATELY.
+
+Replace the entire content of src/App.tsx with the provided code.
+
+Create src/components/OceanicAtmosphere.tsx with the provided SVG wave logic.
+
+Replace the entire content of src/components/Hero.tsx to include the sailboatRef and the GSAP scrollTrigger animation.
+
+Ensure OceanicAtmosphere is imported and rendered in App.tsx.
+
+Make the Grain Overlay z-index-[100] and opacity-[0.04] so I can actually see it.

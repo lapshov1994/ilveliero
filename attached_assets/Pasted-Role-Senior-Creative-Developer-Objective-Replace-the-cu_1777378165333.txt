@@ -1,0 +1,64 @@
+Role: Senior Creative Developer.
+Objective: Replace the current fragmented UI with a polished, high-end "Boutique Hotel" experience. Implement the "Services" section based on the user-provided reference image and fix all motion layers.
+
+1. NEW COMPONENT: Services.tsx (Boutique & Minimal Style)
+
+Design: Mimic the bblebiciclette.com layout precisely. Extreme white space, grid 3x3.
+
+Icons: Use lucide-react. Every icon must be: strokeWidth={1}, color #D4AF37 (Muted Gold).
+
+Grid Items:
+
+Colazione в Camera (Icon: Coffee)
+
+Giardino e Terrazza (Icon: Palmtree)
+
+Biciclette Free (Icon: Bike)
+
+Free Wifi (Icon: Wifi)
+
+Pulizia Giornaliera (Icon: Sparkles)
+
+Escursione in Barca (Icon: Ship)
+
+Animali Ammessi (Icon: Dog)
+
+Parcheggio Adiacente (Icon: Car)
+
+Baby-sitter su richiesta (Icon: Baby)
+
+Typography: Below each icon, use small, uppercase text with tracking-[0.2em] and text-gray-500.
+
+2. MOTION OVERRIDE: "The Sailing Boat"
+
+In Hero.tsx, ensure sailboatRef is attached to the actual svg or its immediate wrapper.
+
+Continuous Sway: rotation: 3, yoyo: true, repeat: -1, duration: 3s.
+
+Scroll Animation: Using GSAP ScrollTrigger, make the boat "sail away" as the user scrolls.
+
+x: "60vw", y: "20vh", rotate: 15, opacity: 0.
+
+scrub: 1.5, start: "top top", end: "50% top".
+
+Visual Fix: If the boat isn't moving, set its z-index to 50 and ensure its parent doesn't have overflow: hidden.
+
+3. ATMOSPHERE & TEXTURE (The Sand & Waves)
+
+Grain Texture (The "Paper" Feel): Instead of a broken URL, use a CSS Noise Filter overlay in App.tsx.
+
+fixed inset-0 z-[100] pointer-events-none opacity-[0.03] mix-blend-multiply.
+
+Oceanic Atmosphere: Update OceanicAtmosphere.tsx. Use 6 thin, wavy SVG paths (sinusoidal).
+
+Motion: Very slow horizontal drift (x: "100vw") + subtle vertical bobbing.
+
+Color: #D4AF37 with opacity: 0.1.
+
+4. GLOBAL INTEGRATION:
+
+Place <Services /> between Family and Footer on the Home page.
+
+Ensure Lenis smooth scroll is active on the new Services section.
+
+Ensure all images in Story and Family sections use the "Reveal" animation (staggered fade-in) when entering the viewport.
