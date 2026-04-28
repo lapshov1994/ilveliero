@@ -10,9 +10,9 @@ export default function InnerPageHeader() {
   useEffect(() => {
     if (sailboatRef.current) {
       gsap.to(sailboatRef.current, {
-        rotation: 20,
-        duration: 2,
-        ease: 'power1.inOut',
+        rotation: 6,
+        duration: 4.5,
+        ease: 'sine.inOut',
         repeat: -1,
         yoyo: true,
         transformOrigin: 'center bottom',

@@ -108,7 +108,6 @@ export default function Hero() {
             <div
               ref={sailboatRef}
               className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110"
-              style={{ border: '3px solid red' }}
             >
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
                 <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
