@@ -1,17 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { MapPin, Sparkles, Sun, Heart, ChevronDown, Play, Star } from "lucide-react";
+import { MapPin, Sparkles, Sun, Heart, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function LandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
-  const heroSubtitleRef = useRef<HTMLParagraphElement>(null);
   const heroBookingRef = useRef<HTMLDivElement>(null);
   const heroLine1Ref = useRef<HTMLDivElement>(null);
   const heroLine2Ref = useRef<HTMLDivElement>(null);
@@ -38,19 +35,13 @@ export default function LandingPage() {
     }
     requestAnimationFrame(raf);
 
-    // Scroll listener for header
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-
     // GSAP Intro Timeline (cinematic entrance on load)
     const introTl = gsap.timeline({ defaults: { ease: "power3.out" } });
     if (heroBgRef.current) {
       introTl.fromTo(
         heroBgRef.current,
-        { scale: 1.15 },
-        { scale: 1, duration: 2.5, ease: "power2.out" }
+        { scale: 1.1 },
+        { scale: 1, duration: 3, ease: "power2.out" }
       );
     }
     if (heroLine1Ref.current && heroLine2Ref.current) {
@@ -58,23 +49,15 @@ export default function LandingPage() {
         [heroLine1Ref.current, heroLine2Ref.current],
         { y: 100 },
         { y: 0, duration: 1.2, stagger: 0.15 },
-        "-=1.5"
-      );
-    }
-    if (heroSubtitleRef.current) {
-      introTl.fromTo(
-        heroSubtitleRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 1 },
-        "-=1"
+        "-=2"
       );
     }
     if (heroBookingRef.current) {
       introTl.fromTo(
         heroBookingRef.current,
-        { opacity: 0, y: 30 },
+        { opacity: 0, y: 20 },
         { opacity: 1, y: 0, duration: 1 },
-        "-=0.8"
+        "-=1"
       );
     }
 
@@ -187,80 +170,37 @@ export default function LandingPage() {
 
     return () => {
       lenis.destroy();
-      window.removeEventListener("scroll", handleScroll);
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-secondary/30 selection:text-foreground overflow-x-hidden">
-      {/* 1. Header/Nav */}
-      <header
-        ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled ? "bg-white shadow-sm py-4" : "bg-transparent py-6"
-        }`}
-      >
-        <div className="container mx-auto px-6 md:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Sailboat SVG Logo */}
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className={isScrolled ? "text-primary" : "text-white"}
-            >
-              <path d="M16 8L24 22H8L16 8Z" fill="currentColor" />
-              <path d="M16 26C11.5817 26 8 22.4183 8 18H24C24 22.4183 20.4183 26 16 26Z" fill="currentColor" />
-              <circle cx="16" cy="4" r="1" fill="currentColor" />
-              <circle cx="11" cy="6" r="1" fill="currentColor" />
-              <circle cx="21" cy="6" r="1" fill="currentColor" />
-            </svg>
-            <span
-              className={`font-serif italic text-xl md:text-2xl font-semibold tracking-wide transition-colors ${
-                isScrolled ? "text-primary" : "text-white"
-              }`}
-            >
-              il veliero
-            </span>
+      {/* 1. Header — always transparent, sits over the photo */}
+      <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
+        <div className="flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
+            <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" />
+            <path d="M12 22V14" />
+          </svg>
+          <div className="text-lg tracking-[0.2em] font-serif uppercase">
+            il veliero <span className="text-[#D4AF37] ml-1 text-xs">★★★</span>
           </div>
-
-          <nav className="hidden md:flex items-center gap-8">
-            {["Camere", "Giardino", "Posizione"].map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase()}`}
-                className={`text-sm tracking-widest uppercase transition-colors hover:opacity-70 ${
-                  isScrolled ? "text-primary" : "text-white"
-                }`}
-                data-testid={`link-${item.toLowerCase()}`}
-              >
-                {item}
-              </a>
-            ))}
-            <Button
-              variant="outline"
-              className={`rounded-none uppercase tracking-widest text-xs px-6 py-5 transition-colors ${
-                isScrolled
-                  ? "border-primary text-primary hover:bg-primary hover:text-white"
-                  : "border-white text-white hover:bg-white hover:text-primary"
-              }`}
-              data-testid="btn-prenota-header"
-            >
-              Prenota
-            </Button>
-          </nav>
+        </div>
+        <div
+          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors"
+          data-testid="btn-menu"
+        >
+          Menu
         </div>
       </header>
 
       {/* 2. Hero Section */}
-      <section className="hero-section relative h-screen w-full overflow-hidden bg-[#0A1128]">
-        {/* Parallax Background — Real Photo */}
+      <section className="hero-section relative w-full h-screen overflow-hidden bg-[#0A1128]">
+        {/* Background Media */}
         <div
           ref={heroBgRef}
-          className="absolute top-0 left-0 w-full h-[120%] -top-[10%] bg-cover bg-center"
+          className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')",
@@ -269,80 +209,56 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-black/40" />
         </div>
 
-        {/* Hero Content */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center">
-          <p
-            ref={heroSubtitleRef}
-            className="text-secondary uppercase tracking-[0.3em] text-xs md:text-sm font-medium mb-8 opacity-0"
-          >
-            San Vito Lo Capo, Sicilia
-          </p>
-
-          <div ref={heading1Ref} className="font-serif text-white text-5xl md:text-7xl lg:text-8xl leading-tight mb-4">
-            <div className="overflow-hidden">
-              <div ref={heroLine1Ref} className="reveal-line" style={{ transform: "translateY(100%)" }}>
-                Dove il Mare
-              </div>
-            </div>
-            <div className="overflow-hidden">
-              <div ref={heroLine2Ref} className="reveal-line italic text-secondary/90" style={{ transform: "translateY(100%)" }}>
-                Incontra il Cielo
-              </div>
-            </div>
+        {/* Main Content — shifted slightly above center for visual balance */}
+        <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">
+          <div className="overflow-hidden mb-2">
+            <h1
+              ref={heroLine1Ref}
+              className="text-5xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-sm"
+              style={{ transform: "translateY(100%)" }}
+            >
+              Dove il Mare
+            </h1>
           </div>
-
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-44 left-1/2 -translate-x-1/2 animate-bounce text-white/50">
-            <ChevronDown size={24} strokeWidth={1} />
+          <div className="overflow-hidden mb-12">
+            <h1
+              ref={heroLine2Ref}
+              className="text-5xl md:text-7xl font-serif text-white italic font-light tracking-tight drop-shadow-sm"
+              style={{ transform: "translateY(100%)" }}
+            >
+              Incontra il Cielo
+            </h1>
           </div>
         </div>
 
-        {/* Glassmorphism Booking Widget — inside hero at bottom */}
+        {/* Booking Widget — slim, elegant, full-width with padding */}
         <div
           ref={heroBookingRef}
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 w-11/12 max-w-4xl opacity-0"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-5xl bg-black/20 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0"
         >
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex-1 flex justify-around w-full px-4 py-2 text-white text-sm">
-              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
-                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Arrivo</span>
-                <input
-                  type="date"
-                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer w-32"
-                  data-testid="input-checkin"
-                />
-              </div>
-              <div className="w-px bg-white/20 mx-4 self-stretch" />
-              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
-                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Partenza</span>
-                <input
-                  type="date"
-                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer w-32"
-                  data-testid="input-checkout"
-                />
-              </div>
-              <div className="w-px bg-white/20 mx-4 self-stretch" />
-              <div className="flex flex-col cursor-pointer hover:text-secondary transition-colors">
-                <span className="text-[10px] text-white/60 uppercase tracking-widest mb-1">Ospiti</span>
-                <select
-                  className="bg-transparent border-none outline-none text-white text-sm cursor-pointer appearance-none"
-                  data-testid="select-guests"
-                >
-                  <option value="1" className="text-primary bg-white">1 Ospite</option>
-                  <option value="2" className="text-primary bg-white">2 Adulti</option>
-                  <option value="3" className="text-primary bg-white">3 Ospiti</option>
-                  <option value="4" className="text-primary bg-white">4 Ospiti</option>
-                </select>
-              </div>
+          <div className="flex-1 flex justify-around w-full px-6 py-4 text-white text-sm items-center">
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkin">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Arrivo</span>
+              <span className="font-light tracking-wide">28.04.2026</span>
             </div>
-
-            <button
-              className="bg-accent text-primary px-8 py-4 uppercase text-xs tracking-widest font-bold hover:bg-white transition-colors duration-300 w-full md:w-auto mt-4 md:mt-0"
-              data-testid="btn-verify-availability"
-            >
-              Prenota Ora
-            </button>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkout">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Partenza</span>
+              <span className="font-light tracking-wide">30.04.2026</span>
+            </div>
+            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-guests">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Ospiti</span>
+              <span className="font-light tracking-wide">2 Adulti</span>
+            </div>
           </div>
+
+          <button
+            className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium hover:bg-white transition-all duration-500 w-full md:w-auto"
+            data-testid="btn-prenota"
+          >
+            Prenota Ora
+          </button>
         </div>
       </section>
 
