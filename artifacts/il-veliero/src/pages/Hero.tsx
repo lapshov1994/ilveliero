@@ -50,15 +50,20 @@ export default function Hero() {
       },
     });
 
-    // Sailboat sway on its wrapper div — diagnostic visible
+    // "Sailing" effect — boat drifts away as the user scrolls down
     if (sailboatRef.current) {
       gsap.to(sailboatRef.current, {
-        rotation: 20,
-        duration: 2,
-        ease: 'power1.inOut',
-        repeat: -1,
-        yoyo: true,
-        transformOrigin: 'center bottom',
+        x: '50vw',
+        y: '30vh',
+        rotation: 12,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: 'main',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.5,
+        },
       });
     }
 
@@ -100,7 +105,11 @@ export default function Hero() {
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
         <div className="flex items-center gap-4 group cursor-pointer relative z-50">
           <div className="relative">
-            <div ref={sailboatRef} className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110">
+            <div
+              ref={sailboatRef}
+              className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110"
+              style={{ border: '3px solid red' }}
+            >
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
                 <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
                 <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
