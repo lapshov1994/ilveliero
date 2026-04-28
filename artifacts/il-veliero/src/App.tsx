@@ -23,10 +23,6 @@ import Blog from '@/pages/Blog';
 gsap.registerPlugin(ScrollTrigger);
 
 function HomePage() {
-  // The #voyager-track wrapper defines the scroll range over which the
-  // background SailingVoyager drifts diagonally. Family lives between
-  // Story and Services in the natural reading order, so wrapping all three
-  // gives the voyager a long, calm trajectory across the editorial body.
   return (
     <>
       <Hero />
@@ -80,8 +76,6 @@ export default function App() {
           />
           {/* Global overlays */}
           <Cursor />
-          {/* SailingVoyager (z-2) sits behind the wave layer (z-5) so the
-              gold horizon strokes drift in front of the ghostly watermark. */}
           <SailingVoyager />
           <OceanicAtmosphere />
           <Navigation />
