@@ -1,0 +1,45 @@
+Role: You are an Award-Winning Digital Art Director and Senior Creative Frontend Developer.
+
+Context: The existing site structure and layout (image_0.png through image_11.png) are finalized and perfect. DO NOT change any layout grid, typography, or existing color schemes.
+
+Task: Implement the following specific premium details to elevate the site to a "Quiet Luxury" and "Artisanal" standard. These details must be subtle and elegant.
+
+1. Grain & Texture Overlay (The Artisanal Touch):
+
+In the root file (App.jsx or App.tsx), add a fixed, full-screen overlay div that covers the entire site.
+
+Apply a base64 encoded noise pattern texture to this div via CSS.
+
+Settings: Position fixed, inset-0, z-index: 100 (above all content), pointer-events-none (crucial), and opacity: 0.02 (extremely faint).
+
+Purpose: This subtle texture kills the "digital plastic" feel of pure white backgrounds and makes them feel like premium, handmade paper.
+
+2. Sailboat Logo Details & Micro-Interaction (Hero Header):
+
+Locate the "il veliero" logo group in the Header component (Hero.jsx/tsx).
+
+Detail 1 (Micro-Sway): Use GSAP to apply a continuous, very slow, gentle swaying animation (rotate: 1.2deg) to the sailboat SVG icon itself. Set it to infinite loop and yoyo with a long duration (3s).
+
+Detail 2 (Ripple Hover): When hovering over the entire logo group (icon and text), use an ::after pseudo-element on the SVG container to create a subtle expanding circle (ripple) that starts from beneath the boat, expands, and fades out (scale 0.5 to 1.5, opacity 1 to 0). This ripples once per hover.
+
+Purpose: Shows obsessive attention to detail with the primary symbol.
+
+3. Global Micro-Animations: Wind Lines & Marquee Reset:
+
+Wind Lines (Components/WindLines.jsx): Create a new component that injects 5-7 extremely thin, horizontal lines onto the screen. They should be absolutely positioned, low opacity (0.1), and have a gradient color from transparent -> sand-yellow -> transparent.
+
+Using GSAP, animate these lines to drift slowly (15s duration) horizontally across the viewport from random start positions to create a sense of "sea breeze." They should appear randomly every 10 seconds.
+
+Marquee Check: Ensure the marquee text (image_7.png) is scrolling extremely slowly and has will-change: transform applied for performance.
+
+4. Button Micro-Interactions (The "Fill" Effect):
+
+Update all gold CTA buttons ("Prenota Ora", "Verifica Disponibilità").
+
+Remove basic color changes.
+
+Implement a full background-color "Fill" effect. On hover, the gold background remains, but a secondary layer (e.g., pure white) slides in from the left to fill the button completely. Simultaneously, the button text (Navy Blue) shifts slightly (3px) to the right. Use clean, duration-500 transitions.
+
+5. Parallax Depth Validation (Story Section):
+
+Confirm that the gsap.to logic with scrub: true is correctly applied to the image containers in the Story section. Ensure the images are moving slightly slower than the scroll speed to create a deep, multilayered parallax effect. Increase the y shift amount to 80px if it’s currently too subtle.

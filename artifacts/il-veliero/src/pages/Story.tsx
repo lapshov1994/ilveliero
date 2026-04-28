@@ -13,7 +13,7 @@ export default function Story() {
 
   useEffect(() => {
     gsap.to(image1Ref.current, {
-      y: 50,
+      y: 80,
       ease: "none",
       scrollTrigger: {
         trigger: containerRef.current,

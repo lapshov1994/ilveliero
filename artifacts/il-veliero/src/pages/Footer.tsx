@@ -16,8 +16,9 @@ export default function Footer() {
               <span className="italic text-[#D4AF37]">viaggio qui.</span>
             </h2>
           </div>
-          <button className="mt-10 md:mt-0 bg-[#D4AF37] text-[#0A1128] px-10 py-5 uppercase text-xs tracking-[0.2em] font-bold hover:bg-white transition-all duration-500 w-full md:w-auto text-center">
-            Verifica Disponibilità
+          <button className="mt-10 md:mt-0 bg-[#D4AF37] text-[#0A1128] px-10 py-5 uppercase text-xs tracking-[0.2em] font-bold w-full md:w-auto text-center relative overflow-hidden group">
+            <span className="relative z-10 inline-block transition-transform duration-300 group-hover:translate-x-[3px]">Verifica Disponibilità</span>
+            <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
           </button>
         </div>
 

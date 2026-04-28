@@ -11,6 +11,7 @@ export default function Hero() {
   const heroLine2Ref = useRef<HTMLHeadingElement>(null);
   const marqueeRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLDivElement>(null);
+  const logoSvgRef = useRef<SVGSVGElement>(null);
   const scrollProgressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,13 +47,14 @@ export default function Hero() {
       },
     });
 
-    // Logo gentle sway
-    gsap.to(logoRef.current, {
-      rotation: 1.5,
-      duration: 2.5,
+    // Logo sway on SVG only — not the whole header group
+    gsap.to(logoSvgRef.current, {
+      rotation: 1.2,
+      duration: 3,
       ease: 'power1.inOut',
       repeat: -1,
       yoyo: true,
+      transformOrigin: '50% 80%',
     });
 
     // Scroll progress bar
@@ -71,7 +73,8 @@ export default function Hero() {
     if (marqueeRef.current) {
       const inner = marqueeRef.current.querySelector<HTMLElement>('.marquee-inner');
       if (inner) {
-        gsap.to(inner, { xPercent: -50, ease: 'none', duration: 24, repeat: -1 });
+        inner.style.willChange = 'transform';
+        gsap.to(inner, { xPercent: -50, ease: 'none', duration: 35, repeat: -1 });
       }
     }
 
@@ -92,11 +95,14 @@ export default function Hero() {
       <header className="absolute top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white">
         <div ref={logoRef} className="group relative flex items-center gap-3 cursor-pointer">
           <div className="relative">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 transition-transform duration-700 group-hover:scale-110">
+            <svg ref={logoSvgRef} width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 transition-transform duration-700 group-hover:scale-110">
               <path d="M12 3L20 15H4L12 3Z" stroke="#D4AF37" strokeWidth="1" fill="currentColor" fillOpacity="0.1"/>
               <path d="M12 21V15" stroke="#D4AF37" strokeWidth="1"/>
               <path d="M4 15C4 18.3137 7.58172 21 12 21C16.4183 21 20 18.3137 20 15" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2"/>
             </svg>
+            {/* Ripple ring on hover */}
+            <span className="absolute inset-0 rounded-full border border-[#D4AF37]/60 scale-50 opacity-0 group-hover:scale-150 group-hover:opacity-0 transition-all duration-700 ease-out pointer-events-none" />
+            {/* Wave line under keel */}
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-px bg-[#D4AF37] opacity-0 group-hover:opacity-40 group-hover:w-12 transition-all duration-700" />
           </div>
           <div className="flex flex-col">

@@ -9,21 +9,25 @@ export default function WindLines() {
 
     lines.forEach((line) => {
       gsap.to(line, {
-        x: '100vw',
-        duration: gsap.utils.random(10, 20),
+        x: '110vw',
+        duration: 15,
         repeat: -1,
         ease: 'none',
-        delay: gsap.utils.random(0, 10),
+        delay: gsap.utils.random(0, 12),
         onRepeat: () => {
-          gsap.set(line, { y: gsap.utils.random(0, 100) + 'vh', x: '-10vw' });
+          gsap.set(line, {
+            y: gsap.utils.random(0, 100) + 'vh',
+            x: '-20vw',
+            width: gsap.utils.random(60, 160),
+          });
         },
       });
     });
   }, []);
 
   return (
-    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden opacity-20">
-      {[...Array(5)].map((_, i) => (
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-[5] overflow-hidden opacity-[0.1]">
+      {[...Array(6)].map((_, i) => (
         <div
           key={i}
           className="wind-line absolute h-px w-20 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
