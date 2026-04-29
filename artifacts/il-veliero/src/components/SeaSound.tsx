@@ -88,7 +88,10 @@ export default function SeaSound() {
       if (!buffer) return;
 
       const now = ctx.currentTime + 0.02;
-      const sliceDur = 0.9 + Math.random() * 0.7; // 0.9..1.6s
+      // Each cry is kept short (0.54..0.96s) so consecutive cries
+      // never bleed into one another — the user wanted them clearly
+      // separated, not slurred together.
+      const sliceDur = 0.54 + Math.random() * 0.42;
       const maxStart = Math.max(0, buffer.duration - sliceDur - 0.05);
       const startOffset = Math.random() * maxStart;
 
@@ -365,12 +368,16 @@ export default function SeaSound() {
       // Putting a finger on the screen IS deliberate engagement.
       bumpIntensity(0.20);
 
-      // First touch wakes the audio system. The SECOND touch fires a
-      // seagull cry instantly — clear the pending 1s "first cry"
-      // timer so the cry doesn't double up a moment later. If the
-      // buffer is still decoding, retry every 80ms until it's ready.
+      // First touch wakes the audio system. Specific subsequent
+      // touches (#2, #5, #9, #12) fire a seagull cry instantly —
+      // these are the touches at which the user is most likely
+      // engaged, so the bird answers them. Any pending "first cry"
+      // timer is cancelled so the cry doesn't double up a moment
+      // later. If the buffer is still decoding, retry every 80ms
+      // until it's ready.
       touchCountRef.current += 1;
-      if (touchCountRef.current === 2) {
+      const gullTouchCounts = new Set([2, 5, 9, 12]);
+      if (gullTouchCounts.has(touchCountRef.current)) {
         if (gullTimerRef.current) {
           clearTimeout(gullTimerRef.current);
           gullTimerRef.current = null;
@@ -378,15 +385,15 @@ export default function SeaSound() {
         const ctx = ctxRef.current;
         const gm = gullMasterRef.current;
         if (ctx && gm) {
-          const fireOnSecondTouch = () => {
+          const fireOnTouch = () => {
             if (gullBufferRef.current) {
               playSeagull(ctx, gm);
               scheduleNextGull();
             } else {
-              gullTimerRef.current = setTimeout(fireOnSecondTouch, 80);
+              gullTimerRef.current = setTimeout(fireOnTouch, 80);
             }
           };
-          fireOnSecondTouch();
+          fireOnTouch();
         }
       }
     };
