@@ -59,56 +59,71 @@ export default function SandFilter() {
     // Progress targets the "Prenota Ora" CTA button: at the very first
     // pixel of scroll the sand is 0%, and it reaches 100% precisely
     // when that button has been scrolled up to the top edge of the
-    // viewport. We re-measure the button's document-Y on every resize
-    // so the mapping stays correct across orientation changes and
-    // mobile address-bar collapses.
+    // viewport. We re-measure the button's document-Y on every resize.
     let endScroll = 1; // never divide by zero
+    let lastApplied = -1;
     let rafId = 0;
+    let alive = true;
 
     const measure = () => {
+      // Prefer the in-hero CTA. There are several "Prenota" CTAs on the
+      // home page (booking widget, reviews section, footer) but the
+      // first one in DOM order is the Hero booking widget, which is
+      // exactly the anchor the user described.
       const btn = document.querySelector<HTMLElement>('[data-testid="btn-prenota"]');
       if (btn) {
         const r = btn.getBoundingClientRect();
         // Document-Y of the button = its viewport-Y plus current scroll.
-        endScroll = Math.max(1, r.top + window.scrollY);
+        // Use the documentElement's scrollTop too, in case window.scrollY
+        // is briefly stale under Lenis.
+        const sy = window.scrollY || document.documentElement.scrollTop || 0;
+        endScroll = Math.max(1, r.top + sy);
       } else {
-        // Fallback: one full viewport of scroll.
         endScroll = window.innerHeight;
       }
     };
 
-    const apply = () => {
-      rafId = 0;
-      // Map scrollY [0 .. endScroll] → opacity [0 .. 1] linearly,
-      // clamped on both ends.
-      const t = Math.min(1, Math.max(0, window.scrollY / endScroll));
-      wrap.style.opacity = String(t);
-    };
-
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(apply);
+    // Continuous rAF tick — does NOT depend on the native 'scroll'
+    // event firing. Lenis smooth-scroll occasionally swallows or
+    // coalesces scroll events under fast wheel / touch flicks, which
+    // is what made the previous listener feel binary. A per-frame
+    // poll is cheap (one number compare + one style write at most)
+    // and guarantees the opacity tracks scroll exactly.
+    const tick = () => {
+      if (!alive) return;
+      const sy = window.scrollY || document.documentElement.scrollTop || 0;
+      const tRaw = Math.min(1, Math.max(0, sy / endScroll));
+      // Perceptual ramp — a pure-linear opacity curve looks like a
+      // hard switch because the sand textures only become visible
+      // around opacity ~0.4. A sqrt curve front-loads the visible
+      // growth so the very first scroll already shows real grain.
+      const t = Math.sqrt(tRaw);
+      // Skip the style write when nothing changed (saves layout work
+      // when the page is idle).
+      if (Math.abs(t - lastApplied) > 0.001) {
+        wrap.style.opacity = String(t);
+        lastApplied = t;
+      }
+      rafId = requestAnimationFrame(tick);
     };
 
     const onResize = () => {
       measure();
-      apply();
     };
 
     // Measure immediately, again after first paint, and once more
-    // after the hero intro animation lands (~1s) so any layout shift
-    // from the booking widget's fade-in is captured.
+    // after the hero intro animation lands (~1.2s) so any layout
+    // shift from the booking widget's fade-in is captured.
     measure();
-    apply();
-    requestAnimationFrame(() => { measure(); apply(); });
-    const settleTimer = window.setTimeout(() => { measure(); apply(); }, 1200);
+    requestAnimationFrame(measure);
+    const settleTimer = window.setTimeout(measure, 1200);
 
-    window.addEventListener('scroll', onScroll, { passive: true });
+    rafId = requestAnimationFrame(tick);
     window.addEventListener('resize', onResize);
     window.addEventListener('load', onResize);
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      alive = false;
       window.removeEventListener('resize', onResize);
       window.removeEventListener('load', onResize);
       window.clearTimeout(settleTimer);
