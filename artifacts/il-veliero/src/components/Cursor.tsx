@@ -57,62 +57,72 @@ export default function Cursor() {
       weight: number;
     };
 
-    // Forms are flowing horizontal tildes — one, two, or three full
-    // oscillations of a sine-like brush stroke that sits ON the
-    // surface. Reference: classic flat ocean-ripple iconography
-    // (long ~~~ doodles, tapered, painterly). All amplitudes are
-    // symmetric around y=0, so the wave reads as a flat sea line.
+    // Forms are CURLY brush-stroke ripples laid PERPENDICULAR across
+    // the motion line — each one looks like a band of disturbed water
+    // crossing the wake of an invisible hull. They use cubic Bézier
+    // (C/S) curves so the line genuinely loops and weaves rather than
+    // oscillating like a textbook sine. All amplitudes are symmetric
+    // around y=0, so the centre of each ripple stays on the path.
     const WAVE_FORMS: Form[] = [
-      // 1. Single full tilde (one up-down cycle), medium length. Most
-      //    common form — the "default ripple".
+      // 1. Two-loop curl — a gentle S-with-an-S, the "default ripple".
       {
-        crestD: 'M -22 0 Q -14 -7 -7 -1 Q 0 6 7 1 Q 14 -6 22 0',
-        halfLen: 22, halfAmp: 8, weight: 3.2,
+        crestD: 'M -24 0 C -18 -9 -10 -10 -6 -2 C -2 7 4 8 8 1 C 12 -6 18 -7 24 0',
+        halfLen: 24, halfAmp: 10, weight: 3.0,
       },
-      // 2. Long flowing two-and-a-half cycle ripple (the big ~~~).
+      // 2. Long four-loop ripple — flowing serpentine across the wake.
       {
-        crestD: 'M -42 0 Q -34 -6 -26 -1 Q -18 5 -10 0 Q -2 -6 6 -1 Q 14 5 22 0 Q 30 -5 42 0',
-        halfLen: 42, halfAmp: 7, weight: 2.8,
+        crestD: 'M -46 0 C -38 -8 -32 -9 -26 -2 C -20 6 -14 7 -8 1 C -2 -6 4 -8 10 -1 C 16 6 22 7 28 1 C 34 -5 40 -5 46 0',
+        halfLen: 46, halfAmp: 9, weight: 2.7,
       },
-      // 3. Short single bump — a quick crest, used for micro-moves.
+      // 3. Tight single curl — quick coiled flick for micro-moves.
       {
-        crestD: 'M -14 0 Q -7 -6 0 0 Q 7 6 14 0',
-        halfLen: 14, halfAmp: 7, weight: 2.6,
+        crestD: 'M -14 0 C -10 -8 -2 -10 0 -2 C 2 8 10 8 14 0',
+        halfLen: 14, halfAmp: 9, weight: 2.6,
       },
-      // 4. Wide gentle one-and-a-half cycle.
+      // 4. Wide three-loop swell — open lazy meander.
       {
-        crestD: 'M -32 0 Q -22 -6 -12 0 Q -2 6 8 0 Q 18 -6 32 0',
-        halfLen: 32, halfAmp: 7, weight: 3.0,
+        crestD: 'M -32 0 C -24 -6 -18 -8 -12 -1 C -6 6 -2 7 4 0 C 10 -7 16 -7 22 -1 C 28 5 30 4 32 0',
+        halfLen: 32, halfAmp: 8, weight: 2.9,
       },
-      // 5. Asymmetric long swell — bigger left crest, smaller right.
+      // 5. Asymmetric breaking curl — big lobe on the left, tail right.
       {
-        crestD: 'M -36 0 Q -26 -10 -14 -2 Q -2 8 8 1 Q 18 -4 36 0',
-        halfLen: 36, halfAmp: 11, weight: 3.4,
+        crestD: 'M -34 0 C -28 -13 -16 -14 -10 -3 C -4 7 2 9 8 2 C 14 -3 22 -3 30 1 C 33 2 34 3 34 4',
+        halfLen: 34, halfAmp: 14, weight: 3.3,
       },
-      // 6. LONG calm horizon — three small cycles, low amplitude.
+      // 6. Long calm horizon — five small loops, low amp, peaceful.
       {
-        crestD: 'M -48 0 Q -40 -4 -32 0 Q -24 4 -16 0 Q -8 -4 0 0 Q 8 4 16 0 Q 24 -4 32 0 Q 40 4 48 0',
-        halfLen: 48, halfAmp: 5, weight: 2.4,
+        crestD: 'M -50 0 C -44 -4 -38 -5 -32 -1 C -26 3 -22 4 -16 0 C -10 -4 -6 -5 0 -1 C 6 3 10 4 16 0 C 22 -4 26 -5 32 -1 C 38 3 44 4 50 0',
+        halfLen: 50, halfAmp: 6, weight: 2.4,
       },
-      // 7. Big bold single crest — a strong wash.
+      // 7. Big bold double curl — a strong wash with two heavy lobes.
       {
-        crestD: 'M -28 0 Q -14 -12 0 0 Q 14 12 28 0',
-        halfLen: 28, halfAmp: 13, weight: 4.0,
+        crestD: 'M -28 0 C -20 -14 -8 -14 -2 -3 C 4 7 12 8 18 0 C 24 -7 28 -5 28 -2',
+        halfLen: 28, halfAmp: 14, weight: 3.7,
       },
-      // 8. Tiny dash — almost a comma, thinnest stroke.
+      // 8. Tiny coil — almost a treble-clef squiggle.
       {
-        crestD: 'M -10 0 Q -3 -4 4 -1 Q 8 0 10 1',
-        halfLen: 10, halfAmp: 5, weight: 2.2,
+        crestD: 'M -12 0 C -8 -7 -2 -8 0 -2 C 2 5 8 6 12 1',
+        halfLen: 12, halfAmp: 7, weight: 2.3,
       },
-      // 9. Two-cycle medium tilde — a confident "~~".
+      // 9. Two-cycle confident "~" with deeper troughs.
       {
-        crestD: 'M -28 0 Q -20 -7 -12 -1 Q -4 5 4 0 Q 12 -6 20 0 Q 26 4 28 1',
-        halfLen: 28, halfAmp: 8, weight: 3.0,
+        crestD: 'M -28 0 C -22 -10 -14 -11 -8 -2 C -2 8 4 9 10 1 C 16 -7 22 -7 28 0',
+        halfLen: 28, halfAmp: 11, weight: 3.0,
       },
-      // 10. Off-axis flowing curl — drops at the right end, brush-stroke feel.
+      // 10. Off-axis flowing curl — drifts down at the right end.
       {
-        crestD: 'M -30 0 Q -22 -6 -12 -2 Q -2 4 8 0 Q 18 -4 26 2 Q 30 4 32 6',
-        halfLen: 30, halfAmp: 8, weight: 3.2,
+        crestD: 'M -30 0 C -22 -8 -14 -9 -8 -1 C -2 7 4 8 12 2 C 20 -3 26 0 30 6',
+        halfLen: 30, halfAmp: 9, weight: 3.1,
+      },
+      // 11. Spiral-style triple loop — every other lobe inverted.
+      {
+        crestD: 'M -32 0 C -26 -8 -18 -10 -14 -2 C -10 7 -4 8 0 1 C 4 -6 10 -8 16 0 C 22 8 28 7 32 1',
+        halfLen: 32, halfAmp: 10, weight: 3.0,
+      },
+      // 12. Choppy short three-loop — closely-spaced little lobes.
+      {
+        crestD: 'M -22 0 C -18 -7 -12 -8 -8 -1 C -4 6 0 6 4 0 C 8 -6 14 -7 18 -1 C 21 4 22 4 22 4',
+        halfLen: 22, halfAmp: 8, weight: 2.8,
       },
     ];
 
@@ -178,11 +188,13 @@ export default function Cursor() {
       const form = pickForm(opts.preferLarge);
       const palette = pickPalette();
 
-      // Wave's long axis ALONG the motion direction — each ripple
-      // becomes a tilde laid down ON the finger's path, so the trail
-      // reads as a stream of waves following the finger, not as
-      // sidelong sea-lines being cut by it.
-      const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI);
+      // Wave's long axis is laid PERPENDICULAR to the motion line —
+      // each ripple becomes a curly band of disturbed water across
+      // the wake, like the line a hull leaves behind it. A small
+      // random tilt (±10°) breaks the perfect orthogonal so the trail
+      // looks like real water, not a stamped pattern.
+      const wobbleDeg = (Math.random() - 0.5) * 20;
+      const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI) + 90 + wobbleDeg;
 
       // Per-spawn scale variation. Pointer waves: 0.85..1.25. Scroll
       // waves can additionally take a scaleBoost so individual swells
