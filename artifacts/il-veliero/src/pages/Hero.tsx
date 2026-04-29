@@ -181,14 +181,19 @@ export default function Hero() {
       <section className="hero-section relative z-10 w-full h-screen overflow-hidden bg-[#0A1128]">
         <div
           ref={heroBgRef}
-          className="absolute inset-0 w-full h-full overflow-hidden opacity-95"
+          className="absolute inset-0 w-full h-full overflow-hidden"
         >
           {/* The poster image is bundled and loads instantly so the hero is
               never blank while the video bytes stream in. The video itself
               is 1.6 MB H.264 with `+faststart` so playback can begin from
-              the first downloaded chunks. */}
+              the first downloaded chunks.
+
+              object-position is shifted on mobile so the most interesting
+              part of the 16:9 frame (the breakfast table + door) lands in
+              the centre of the portrait viewport instead of the empty
+              wall on the right. Desktop keeps default centre framing. */}
           <video
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover object-[50%_38%] md:object-center"
             src={`${import.meta.env.BASE_URL}video/hero.mp4`}
             poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
             autoPlay
@@ -210,6 +215,12 @@ export default function Hero() {
               if (p && typeof p.catch === 'function') p.catch(() => undefined);
             }}
           />
+          {/* Soft top + bottom vignettes for legibility of the logo and
+              the booking widget — much subtler than the old bg-black/40
+              the user removed, just enough to keep white type readable
+              against bright daylight frames. */}
+          <div className="absolute inset-x-0 top-0 h-40 md:h-48 bg-gradient-to-b from-[#0A1128]/55 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-56 md:h-64 bg-gradient-to-t from-[#0A1128]/65 to-transparent pointer-events-none" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">
