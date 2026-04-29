@@ -58,25 +58,26 @@ export default function SandFilter() {
         gsap.set(wrapperRef.current, { opacity: 1 });
         return;
       }
-      gsap.set(wrapperRef.current, { opacity: 0 });
-      // Explicit pixel-based end so the calculation is deterministic
-      // and immune to the iframe / hot-reload sizing quirks that were
-      // making the trigger appear "broken" (sand staying at 0 even
-      // after the user had scrolled well past the supposed end).
-      const heroH = (hero as HTMLElement).offsetHeight;
+      // Key insight from repeated user feedback: ANY 0 → 1 transition is
+      // perceived as a visible "appearance event", regardless of how
+      // long the scroll range is. The fix is twofold:
+      //   1) Set a very small BASELINE opacity (0.12) so the sand is
+      //      always faintly there — the eye never witnesses a "from
+      //      nothing" moment, only a continuous tonal shift.
+      //   2) Stretch the ramp over a FULL viewport of scroll (~100vh)
+      //      so the per-pixel delta is ~0.0007 — physiologically
+      //      imperceptible — and add 1.5s scrub smoothing on top so
+      //      even rapid wheel flicks land softly.
+      const SAND_BASE_OPACITY = 0.12;
+      gsap.set(wrapperRef.current, { opacity: SAND_BASE_OPACITY });
       gsap.to(wrapperRef.current, {
         opacity: 1,
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // Start: very first pixel of scroll.
-          // End:   ~half the hero, which is the moment the booking
-          //        widget pinned at `bottom-4` of the hero comes into
-          //        the centre of the viewport. By that point the sand
-          //        is at 100%.
           start: 'top top',
-          end: () => `+=${Math.round(heroH * 0.5)}`,
-          scrub: 1,
+          end: () => `+=${window.innerHeight}`,
+          scrub: 1.5,
           invalidateOnRefresh: true,
         },
       });

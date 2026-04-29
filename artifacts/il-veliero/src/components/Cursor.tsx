@@ -43,8 +43,14 @@ export default function Cursor() {
     let dirX = 0;
     let dirY = 1;
 
-    const setX = gsap.quickTo(wrap, 'x', { duration: 0.18, ease: 'power3.out' });
-    const setY = gsap.quickTo(wrap, 'y', { duration: 0.18, ease: 'power3.out' });
+    // Smoother, less "snappy" follower. The previous power3.out / 0.18s
+    // pairing produced a sharp catch-up at the end of every move which
+    // reads on touch screens as both "lagging behind the finger" AND
+    // "jumping" — the ship would noticeably overshoot and then snap.
+    // power2.out with a longer duration gives a buttery glide that never
+    // overshoots and feels glued to the input.
+    const setX = gsap.quickTo(wrap, 'x', { duration: 0.45, ease: 'power2.out' });
+    const setY = gsap.quickTo(wrap, 'y', { duration: 0.45, ease: 'power2.out' });
 
     const rockTween = gsap.to(ship, {
       rotation: 5,

@@ -188,12 +188,19 @@ export default function Hero() {
               is 1.6 MB H.264 with `+faststart` so playback can begin from
               the first downloaded chunks.
 
-              object-position is shifted on mobile so the most interesting
-              part of the 16:9 frame (the breakfast table + door) lands in
-              the centre of the portrait viewport instead of the empty
-              wall on the right. Desktop keeps default centre framing. */}
+              Mobile (< md): the 16:9 video is shown LETTERBOXED — full
+              width, native 16:9 aspect, centred vertically on the navy
+              hero background. This keeps every pixel at native resolution
+              instead of upscaling 3× to fill a portrait viewport (which
+              was making the footage look soft / low-quality). Title and
+              booking widget are absolutely positioned over the same
+              navy/letterbox stack and adapt automatically.
+
+              Desktop (md+): the video keeps full-cover behaviour and is
+              gently re-centred horizontally so the breakfast table and
+              door land in frame instead of the empty wall on the right. */}
           <video
-            className="absolute inset-0 w-full h-full object-cover object-[18%_45%] md:object-[22%_50%]"
+            className="absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 aspect-video object-cover md:left-0 md:top-0 md:translate-x-0 md:translate-y-0 md:w-full md:h-full md:aspect-auto md:object-[22%_50%]"
             src={`${import.meta.env.BASE_URL}video/hero.mp4`}
             poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
             autoPlay
