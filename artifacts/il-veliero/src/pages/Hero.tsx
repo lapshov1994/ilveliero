@@ -128,14 +128,14 @@ export default function Hero() {
       {/* Scroll progress bar — fixed at very top */}
       <div
         ref={scrollProgressRef}
-        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[60]"
+        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[155]"
       />
 
       {/* Header — fixed so the sailboat stays in viewport while it sails away.
           Adds a glassmorphic backdrop once the user scrolls past the hero so
           the white text stays readable on light sections below. */}
       <header
-        className={`fixed top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center text-white transition-all duration-500 ${
+        className={`fixed top-0 left-0 w-full px-8 py-6 z-[150] flex justify-between items-center text-white transition-all duration-500 ${
           headerScrolled ? 'bg-[#0A1128]/75 backdrop-blur-md' : ''
         }`}
       >
