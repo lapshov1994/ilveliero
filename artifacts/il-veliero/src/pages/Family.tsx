@@ -75,11 +75,6 @@ export default function Family() {
   return (
     <section id="about" ref={containerRef} className="relative bg-[#F9F9F9] text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden">
 
-      {/* Watermark */}
-      <div className="absolute top-20 right-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
-        03
-      </div>
-
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 relative items-center">
 
         {/* Left column: Text + Review (5 cols) */}

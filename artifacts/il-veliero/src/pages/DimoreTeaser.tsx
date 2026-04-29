@@ -373,26 +373,29 @@ export default function DimoreTeaser() {
             keeps the room title aligned to the top of the photo, which
             is the look the user expects. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-start">
+          {/* Carousel container — aspect-[4/3] (was 4/5) matches the
+              native landscape proportion of the room photography, and
+              the inner <img> uses object-cover so the photo fills the
+              frame edge-to-edge with no white letterbox bands above or
+              below. The original "show the photo whole, never crop"
+              behaviour is still available via the fullscreen lightbox
+              button in the corner — the lightbox keeps object-contain. */}
           <div
             ref={carouselRef}
             id={`room-panel-${activeRoom}`}
             role="tabpanel"
-            className="relative z-[110] isolate aspect-[4/5] w-full overflow-hidden bg-[#0A1128]/5 select-none"
+            className="relative z-[110] isolate aspect-[4/3] w-full overflow-hidden bg-[#0A1128]/5 select-none"
             data-testid="room-carousel"
           >
             <div
               ref={photoLayerRef}
               key={`${activeRoom}-${currentPhoto}`}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0"
             >
-              {/* object-contain — show the room photo in full, never
-                  crop. The carousel still keeps its consistent 4:5
-                  outer footprint so the page layout stays stable as
-                  the guest cycles through photos of mixed aspect. */}
               <img
                 src={room.photos[currentPhoto]}
                 alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
-                className="max-w-full max-h-full w-auto h-auto object-contain"
+                className="w-full h-full object-cover"
                 draggable={false}
               />
             </div>

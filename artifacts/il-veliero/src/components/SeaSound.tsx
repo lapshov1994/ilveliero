@@ -3,26 +3,26 @@ import { useEffect, useRef } from 'react';
 /**
  * SeaSound — invisible.
  *
- * Trigger rules (per latest user request):
- *   • A trigger fires on touch, click, AND on desktop wheel/scroll
- *     so that audio plays both on tap and on scroll-listing.
- *   • A throttle of 700 ms between triggers prevents the surf bursts
- *     from merging into one continuous wash while the user scrolls.
- *   • Every trigger plays a 1.5-second surf wash with a slow fade
- *     in / fade out so it sounds like a real wave, not a chopped clip.
- *   • Every SECOND trigger also plays a real seagull cry on top of
- *     the surf — i.e. the gull is heard every other touch, never on
- *     consecutive ones.
+ * Trigger rules (current user spec):
+ *   • A trigger fires on EVERY tap (pointerdown), every mouse movement
+ *     (pointermove), every wheel/scroll event, and every keypress.
+ *   • Triggers are throttled to one every 1.5 s — matching the surf
+ *     wash duration — so as the user moves the mouse continuously the
+ *     site plays one wave per 1.5 s, not a chopped continuous wash.
+ *   • Each accepted trigger plays a 1.5 s surf wash with a smooth
+ *     fade-in / fade-out so it sounds like a real wave breaking.
+ *   • Every SECOND accepted trigger ALSO plays a real seagull cry on
+ *     top of the surf — the gull is heard every other gesture, never
+ *     on consecutive ones.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
-// Throttle a touch wider than the surf's perceived attack so two
-// quick gestures during a scroll never sound like a single chopped
-// burst. With SURF_DURATION ≈ 2.5 s the wash trails off naturally
-// inside this window and a fresh trigger lands as a clearly second
-// wave, not a clip-edit.
-const MIN_GAP_MS = 1100;
-const SURF_DURATION = 2.5;
+// One trigger per 1.5 s — i.e. exactly the surf duration. The previous
+// wave finishes its decay just as the next wave starts, so continuous
+// pointermove activity reads as a steady but natural-sounding ocean
+// loop instead of a clipped staccato of half-formed waves.
+const MIN_GAP_MS = 1500;
+const SURF_DURATION = 1.5;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -61,7 +61,7 @@ export default function SeaSound() {
 
       const ctx = new Ctor();
       ctxRef.current = ctx;
-      noiseBufferRef.current = makeNoiseBuffer(ctx, 4.5);
+      noiseBufferRef.current = makeNoiseBuffer(ctx, 4.0);
 
       if (ctx.state === 'suspended') {
         try {
@@ -82,7 +82,7 @@ export default function SeaSound() {
       return ctx;
     };
 
-    /** Long, naturally-shaped surf wash. */
+    /** Naturally-shaped 1.5 s surf wash. */
     const playSurf = (ctx: AudioContext) => {
       const noise = noiseBufferRef.current;
       if (!noise) return;
@@ -93,20 +93,19 @@ export default function SeaSound() {
       src.buffer = noise;
       const offset = Math.random() * Math.max(0, noise.duration - dur - 0.05);
 
-      // Softer surf:
-      //   • lowpass dropped to 580 Hz so the noise reads as deep
-      //     ocean rumble rather than wind-on-mic crackle;
-      //   • peak gain reduced to 0.28 — a gentle wash, not a hiss;
-      //   • fade-in / fade-out lengthened to ~0.9 s each so the wash
-      //     swells in and decays out smoothly with no audible cut.
+      // Soft, deep ocean-rumble character:
+      //   • lowpass at 600 Hz so the noise reads as deep wash, not hiss;
+      //   • peak gain 0.3 — gentle, never harsh;
+      //   • symmetric ~0.55 s fade in / ~0.65 s fade out so the wave
+      //     swells in and decays out smoothly.
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 580;
+      lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
-      const peak = 0.28;
-      const fadeIn = Math.min(0.95, dur * 0.4);
-      const fadeOut = Math.min(1.05, dur * 0.45);
+      const peak = 0.3;
+      const fadeIn = Math.min(0.55, dur * 0.4);
+      const fadeOut = Math.min(0.65, dur * 0.45);
       const sustainStart = now + fadeIn;
       const sustainEnd = now + dur - fadeOut;
 
@@ -189,7 +188,7 @@ export default function SeaSound() {
       lastFiredRef.current = now;
       triggerCountRef.current += 1;
       // Gull on every SECOND accepted trigger — i.e. 2nd, 4th, 6th… —
-      // so consecutive taps never produce two gull cries in a row.
+      // so consecutive gestures never produce two gull cries in a row.
       const playGullThisTime = triggerCountRef.current % 2 === 0;
 
       void ensureContext().then((ctx) => {
@@ -202,17 +201,29 @@ export default function SeaSound() {
       });
     };
 
-    // pointerdown covers BOTH touch and mouse-click in one event,
-    // and wheel covers desktop trackpad / mouse-wheel scrolling.
-    // Both are passive — we never preventDefault.
-    window.addEventListener('pointerdown', onGesture, { passive: true });
-    window.addEventListener('wheel', onGesture, { passive: true });
-    window.addEventListener('keydown', onGesture, { passive: true });
+    // Listeners — every reasonable user input feeds the same throttled
+    // handler so the site reacts to BOTH desktop mouse motion and
+    // mobile touch:
+    //   • pointerdown   — every tap / click
+    //   • pointermove   — every mouse / trackpad motion (throttled)
+    //   • wheel         — desktop wheel/trackpad scroll
+    //   • scroll        — fallback for smooth-scroll libs (Lenis) that
+    //                      may swallow wheel events on the document
+    //   • keydown       — keyboard navigation (Tab, arrow keys, etc.)
+    // All listeners are passive — we never preventDefault.
+    const opts: AddEventListenerOptions = { passive: true, capture: true };
+    window.addEventListener('pointerdown', onGesture, opts);
+    window.addEventListener('pointermove', onGesture, opts);
+    window.addEventListener('wheel', onGesture, opts);
+    window.addEventListener('scroll', onGesture, opts);
+    window.addEventListener('keydown', onGesture, opts);
 
     return () => {
-      window.removeEventListener('pointerdown', onGesture);
-      window.removeEventListener('wheel', onGesture);
-      window.removeEventListener('keydown', onGesture);
+      window.removeEventListener('pointerdown', onGesture, opts);
+      window.removeEventListener('pointermove', onGesture, opts);
+      window.removeEventListener('wheel', onGesture, opts);
+      window.removeEventListener('scroll', onGesture, opts);
+      window.removeEventListener('keydown', onGesture, opts);
       const ctx = ctxRef.current;
       if (ctx) {
         try {

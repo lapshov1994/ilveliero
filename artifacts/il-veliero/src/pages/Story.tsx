@@ -93,11 +93,6 @@ export default function Story() {
       ref={containerRef}
       className="majolica-bg relative bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
     >
-      {/* Background watermark number */}
-      <div className="absolute top-10 left-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
-        01
-      </div>
-
       <div className="max-w-7xl mx-auto relative">
 
         {/* Section heading */}
