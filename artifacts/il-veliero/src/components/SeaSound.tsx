@@ -14,6 +14,11 @@ import { useEffect, useRef } from 'react';
  *
  * Audio is fully synthesised — no asset files.
  */
+// Real seagull recording — European Herring Gull (Larus argentatus),
+// xeno-canto XC707075 via Wikimedia Commons. Played as a one-shot
+// sample so the cry is unmistakably a real bird, not a synth.
+const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
+
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterRef = useRef<GainNode | null>(null);
@@ -22,6 +27,9 @@ export default function SeaSound() {
   // and clearly audible the moment the user starts interacting,
   // instead of being buried under the swelling noise floor.
   const gullMasterRef = useRef<GainNode | null>(null);
+  // Decoded seagull buffer — fetched once on first activation, reused
+  // for every cry so playback is instant and never re-decodes.
+  const gullBufferRef = useRef<AudioBuffer | null>(null);
   const startedRef = useRef(false);
   const intensityRef = useRef(0);
   const decayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -63,85 +71,73 @@ export default function SeaSound() {
     };
 
     /**
-     * Schedule a single seagull call: 2–4 short, descending bandpass
-     * chirps, with one or two slight detune wobbles to suggest a real
-     * bird. The cry is panned to a random side of the stereo field
-     * so consecutive cries feel like they come from different birds.
+     * Play one seagull cry from the loaded recording. We pick a
+     * random ~0.9–1.6s slice of the file, apply a tiny pitch detune
+     * and random stereo placement so consecutive cries feel like
+     * different birds in different parts of the sky. A short
+     * fade-in/fade-out prevents clicks at the slice boundaries.
      */
     const playSeagull = (ctx: AudioContext, dest: AudioNode) => {
-      const now = ctx.currentTime + 0.05;
-      const numChirps = 3 + Math.floor(Math.random() * 3); // 3..5 — multi-chirp cry
-      const baseFreq = 720 + Math.random() * 320; // bird-base pitch
+      const buffer = gullBufferRef.current;
+      if (!buffer) return;
 
-      // Stereo placement (random side, near or far).
+      const now = ctx.currentTime + 0.02;
+      const sliceDur = 0.9 + Math.random() * 0.7; // 0.9..1.6s
+      const maxStart = Math.max(0, buffer.duration - sliceDur - 0.05);
+      const startOffset = Math.random() * maxStart;
+
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      // Subtle pitch variation so each cry differs (±2 semitones).
+      const rate = 0.88 + Math.random() * 0.24;
+      src.playbackRate.value = rate;
+
+      // The `duration` argument of start() is in BUFFER time — it
+      // controls how many seconds of source audio are consumed. The
+      // resulting playback length in CONTEXT time is bufferDur/rate,
+      // because higher playbackRate consumes the buffer faster. We
+      // also clamp gain ramps and stop() to the same context-time
+      // length so fades land exactly on the audio tail.
+      const bufferDur = sliceDur; // seconds of source audio to consume
+      const ctxDur = bufferDur / rate; // resulting play length in ctx seconds
+
       const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      if (pan) pan.pan.value = (Math.random() * 2 - 1) * 0.75;
+
+      // "Distance" — closer vs farther cries.
+      const distance = 0.55 + Math.random() * 0.45;
+      const peakGain = 0.95 * distance;
+
+      // Fade tail length scaled to the actual playback length so very
+      // short cries still get a clean release.
+      const fadeTail = Math.min(0.18, ctxDur * 0.25);
+
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(peakGain, now + 0.04);
+      g.gain.setValueAtTime(peakGain, now + Math.max(0.05, ctxDur - fadeTail));
+      g.gain.exponentialRampToValueAtTime(0.0005, now + ctxDur);
+
       if (pan) {
-        pan.pan.value = (Math.random() * 2 - 1) * 0.75;
-        pan.connect(dest);
-      }
-      const gullDest: AudioNode = pan ?? dest;
-
-      // Distance attenuation — random "far away" vs "closer" cries.
-      // Peak gain is HIGH (0.18..0.32) so the cry punches clearly
-      // through the surf — this is what the user wants to hear.
-      const distance = 0.6 + Math.random() * 0.4; // 0.6..1
-      const peakGain = 0.32 * distance;
-
-      let cursor = now;
-      for (let i = 0; i < numChirps; i++) {
-        // Longer chirps (0.18..0.32s) so each "kee" is clearly bird-
-        // shaped, not a clicky blip.
-        const dur = 0.18 + Math.random() * 0.14;
-        const startT = cursor;
-        const startF = baseFreq + (Math.random() - 0.5) * 140;
-        const endF = startF * (0.50 + Math.random() * 0.20);
-
-        const osc = ctx.createOscillator();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(startF, startT);
-        osc.frequency.exponentialRampToValueAtTime(Math.max(140, endF), startT + dur);
-
-        // Slight vibrato so the chirp doesn't sound robotic.
-        const vibrato = ctx.createOscillator();
-        vibrato.frequency.value = 18 + Math.random() * 10;
-        const vibratoGain = ctx.createGain();
-        vibratoGain.gain.value = 14 + Math.random() * 10;
-        vibrato.connect(vibratoGain);
-        vibratoGain.connect(osc.frequency);
-
-        const bp = ctx.createBiquadFilter();
-        bp.type = 'bandpass';
-        bp.frequency.value = startF;
-        bp.Q.value = 3 + Math.random() * 2;
-
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, startT);
-        g.gain.exponentialRampToValueAtTime(peakGain, startT + 0.025);
-        // Hold near peak briefly, then fall — gives the chirp a real
-        // body instead of an instant decay.
-        g.gain.exponentialRampToValueAtTime(peakGain * 0.5, startT + dur * 0.6);
-        g.gain.exponentialRampToValueAtTime(0.0005, startT + dur);
-
-        osc.connect(bp).connect(g).connect(gullDest);
-        vibrato.start(startT);
-        osc.start(startT);
-        vibrato.stop(startT + dur + 0.05);
-        osc.stop(startT + dur + 0.05);
-
-        cursor += dur + 0.04 + Math.random() * 0.10;
+        src.connect(g).connect(pan).connect(dest);
+      } else {
+        src.connect(g).connect(dest);
       }
 
-      // Disconnect the panner once the cry is done so it doesn't pile
-      // up across many calls.
-      if (pan) {
-        setTimeout(() => {
-          try {
-            pan.disconnect();
-          } catch {
-            /* ignore */
-          }
-        }, 2500);
-      }
+      src.start(now, startOffset, bufferDur + 0.05);
+      src.stop(now + ctxDur + 0.05);
+
+      // Disconnect the per-call nodes once the cry is done so they
+      // don't pile up across many calls.
+      setTimeout(() => {
+        try {
+          src.disconnect();
+          g.disconnect();
+          if (pan) pan.disconnect();
+        } catch {
+          /* ignore */
+        }
+      }, (ctxDur + 0.5) * 1000);
     };
 
     /**
@@ -263,6 +259,18 @@ export default function SeaSound() {
         ctx.resume().catch(() => undefined);
       }
 
+      // Fetch & decode the real seagull recording. Done once on first
+      // activation so subsequent cries are instant. If the fetch
+      // fails (offline, etc.), the scheduler simply skips calls
+      // because gullBufferRef stays null.
+      fetch(SEAGULL_URL)
+        .then((r) => r.arrayBuffer())
+        .then((ab) => ctx.decodeAudioData(ab))
+        .then((decoded) => {
+          gullBufferRef.current = decoded;
+        })
+        .catch(() => undefined);
+
       // Decay loop. Runs at ~20Hz. Each tick:
       //   - intensity decays towards 0 (→ true silence when idle)
       //   - surf master gain follows intensity smoothly
@@ -292,17 +300,24 @@ export default function SeaSound() {
       }, 50);
 
       // Kick the seagull scheduler off once the soundscape is built.
-      // First cry comes very quickly (1.5–3s after the user starts
-      // interacting) so the seaside character is established right
-      // away — the user explicitly asked to HEAR the gulls.
-      gullTimerRef.current = setTimeout(() => {
+      // First cry comes ~1 second after the user starts interacting —
+      // the seaside character is established almost immediately. We
+      // wait for the buffer to be decoded; if it's still loading,
+      // poll briefly until it's ready (the file is small, so this
+      // typically resolves within the first few hundred ms).
+      const fireFirstGull = () => {
         const c = ctxRef.current;
         const gm = gullMasterRef.current;
-        if (c && gm && intensityRef.current > 0.05) {
-          playSeagull(c, gm);
+        if (!c || !gm) return;
+        if (gullBufferRef.current) {
+          if (intensityRef.current > 0.05) playSeagull(c, gm);
+          scheduleNextGull();
+        } else {
+          // Buffer still loading — try again shortly.
+          gullTimerRef.current = setTimeout(fireFirstGull, 150);
         }
-        scheduleNextGull();
-      }, 1500 + Math.random() * 1500);
+      };
+      gullTimerRef.current = setTimeout(fireFirstGull, 1000);
     };
 
     /**
