@@ -67,14 +67,15 @@ export default function SandFilter() {
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // Spans exactly the hero (one viewport): when the page is at
-          // the very top — sand is fully transparent; by the time the
-          // hero has scrolled out and the booking / story section
-          // arrives, sand is at full density.
+          // From the very top (scrollY 0, sand fully transparent) to
+          // half a hero (scrollY ≈ 50vh, sand fully opaque). At that
+          // scroll position the booking widget anchored at the bottom
+          // of the hero is centred in the viewport — i.e. "the middle
+          // of the booking", which is exactly where the user wants the
+          // sand to have reached 100%. Linear ramp + light scrub keeps
+          // the buildup smooth and stutter-free.
           start: 'top top',
-          end: 'bottom top',
-          // Small scrub smoothing keeps the change buttery instead of
-          // snapping when the user scrolls in coarse steps.
+          end: '+=50%',
           scrub: 0.4,
         },
       });
