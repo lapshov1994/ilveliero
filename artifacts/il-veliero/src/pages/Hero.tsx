@@ -184,7 +184,7 @@ export default function Hero() {
       </header>
 
       {/* Full-screen hero */}
-      <section className="hero-section relative w-full h-screen overflow-hidden bg-[#0A1128]">
+      <section className="hero-section relative z-10 w-full h-screen overflow-hidden bg-[#0A1128]">
         <div
           ref={heroBgRef}
           className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
@@ -251,7 +251,7 @@ export default function Hero() {
       </section>
 
       {/* Marquee band */}
-      <section className="bg-[#0A1128] overflow-hidden py-4 border-y border-white/5">
+      <section className="relative z-10 bg-[#0A1128] overflow-hidden py-4 border-y border-white/5">
         <div ref={marqueeRef} className="relative flex whitespace-nowrap">
           <div className="marquee-inner flex text-[#5BB8E8] uppercase tracking-[0.2em] text-xs font-light">
             {[...Array(4)].map((_, i) => (

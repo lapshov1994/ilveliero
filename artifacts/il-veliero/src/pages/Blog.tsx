@@ -5,33 +5,49 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+// "Cosa fare a San Vito Lo Capo?" — the four core stories that also
+// appear as the home-page carousel above the footer. Landing on /blog
+// shows the long-form version of the same four pieces.
 const articles = [
   {
     id: '01',
     date: 'Aprile 2026',
-    category: 'Territorio',
-    title: 'La Sicilia attraverso gli occhi dei Valenti',
-    excerpt: 'Tre generazioni di ospitalità in un luogo fuori dal tempo. Vi raccontiamo come siamo arrivati a San Vito, e perché non siamo mai ripartiti.',
-    readTime: '5 min',
-    photo: 'https://images.unsplash.com/photo-1533939311960-40f6a4b5d3ab?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    id: '02',
-    date: 'Marzo 2026',
     category: 'Natura',
-    title: 'I sentieri segreti della Riserva dello Zingaro',
-    excerpt: 'Calette nascoste, profumo di finocchietto selvatico e il silenzio del Mediterraneo antico. Una guida autentica per chi vuole davvero esplorare.',
+    title: 'Riserva dello Zingaro, sette chilometri di costa intatta',
+    excerpt:
+      "Calette nascoste, profumo di finocchietto selvatico e il silenzio del Mediterraneo antico. Si entra all'alba, si esce solo dopo il bagno più lento dell'estate — una guida lenta per chi vuole davvero esplorare.",
     readTime: '7 min',
     photo: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?q=80&w=900&auto=format&fit=crop',
   },
   {
+    id: '02',
+    date: 'Marzo 2026',
+    category: 'Tramonto',
+    title: 'Camminare al Faro, trenta minuti di luce che cambia',
+    excerpt:
+      "Una passeggiata lenta lungo gli scogli, fino al faro bianco di Capo San Vito. Il sole scende dietro Monte Cofano e per qualche minuto il mare diventa rame. Il rituale che insegniamo a tutti i nostri ospiti.",
+    readTime: '4 min',
+    photo: 'https://images.unsplash.com/photo-1533939311960-40f6a4b5d3ab?q=80&w=900&auto=format&fit=crop',
+  },
+  {
     id: '03',
     date: 'Febbraio 2026',
-    category: 'Cultura',
-    title: "L'arte della colazione siciliana",
-    excerpt: "Granita di mandorla, brioscia col tuppo e caffè d'orzo. Ogni mattina da noi è un rituale lento. Vi spieghiamo come replicarlo a casa.",
-    readTime: '4 min',
+    category: 'Storia',
+    title: 'Tonnara di Scopello, il silenzio dei faraglioni',
+    excerpt:
+      "I faraglioni, le case dei pescatori, l'eco silenzioso di un mestiere che non c'è più. Vi accompagniamo dentro a una giornata fuori dal tempo, a venti minuti d'auto dalla nostra porta.",
+    readTime: '6 min',
     photo: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=900&auto=format&fit=crop',
+  },
+  {
+    id: '04',
+    date: 'Settembre 2026',
+    category: 'Sapori',
+    title: 'Cous Cous Fest, dieci giorni di Mediterraneo',
+    excerpt:
+      "Per dieci giorni a settembre, San Vito è capitale del Mediterraneo. Cuochi da tutto il mondo, musica fino a notte fonda e quel mare che fa da sfondo a un rituale gentile e antichissimo.",
+    readTime: '5 min',
+    photo: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?q=80&w=900&auto=format&fit=crop',
   },
 ];
 
@@ -61,8 +77,11 @@ export default function Blog() {
         <div className="max-w-7xl mx-auto">
           <span className="text-xs tracking-[0.2em] text-[#D4AF37] uppercase font-bold block mb-4">Il Diario</span>
           <h1 className="text-6xl md:text-8xl font-serif font-light leading-tight">
-            Storie<br/><span className="italic">di Sicilia</span>
+            Cosa fare a<br/><span className="italic">San Vito Lo Capo?</span>
           </h1>
+          <p className="mt-8 max-w-2xl text-base md:text-lg font-light text-gray-500 leading-relaxed">
+            Quattro storie scelte dalla famiglia Valenti — i luoghi, i ritmi e i sapori che insegniamo a tutti i nostri ospiti. Da leggere prima di arrivare, o la sera in terrazza.
+          </p>
         </div>
       </section>
 

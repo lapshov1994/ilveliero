@@ -74,7 +74,7 @@ export default function Services() {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white text-[#0A1128] py-32 md:py-48 px-6 lg:px-20"
+      className="relative z-10 bg-white text-[#0A1128] py-32 md:py-48 px-6 lg:px-20"
       data-testid="section-services"
     >
       <div className="max-w-6xl mx-auto">

@@ -84,7 +84,7 @@ export default function Story() {
   return (
     <section
       ref={containerRef}
-      className="majolica-bg relative bg-white text-[#0A1128] py-32 md:py-48 px-6 lg:px-20 overflow-hidden"
+      className="majolica-bg relative z-10 bg-white text-[#0A1128] py-32 md:py-48 px-6 lg:px-20 overflow-hidden"
     >
       {/* Background watermark number */}
       <div className="absolute top-10 left-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">

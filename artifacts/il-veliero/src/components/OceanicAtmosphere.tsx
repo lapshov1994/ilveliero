@@ -5,47 +5,36 @@ import { useNav } from './NavigationContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Hand-drawn cartoon wind glyph — multiple curls + tails.
-// Stroke is sky-blue so it reads on both light and dark backgrounds.
-const WIND_GLYPH_PATHS = [
-  // Variant A — two curls + lower tail
-  [
-    'M5 30 Q25 30 42 28 Q58 22 62 32 Q64 42 52 42 Q44 40 50 32',
-    'M55 46 Q70 46 85 46 Q95 42 96 50 Q95 56 88 54',
-    'M5 18 Q22 18 38 18',
-  ],
-  // Variant B — single big curl + two tails
-  [
-    'M5 25 Q22 25 36 22 Q52 14 58 26 Q60 38 46 38 Q36 36 44 26',
-    'M50 44 Q70 44 92 44',
-    'M3 38 Q20 38 32 38',
-  ],
-  // Variant C — small curl on the right with a long tail
-  [
-    'M5 28 Q30 28 55 28 Q70 28 78 24 Q88 18 92 28 Q92 36 82 34',
-    'M10 40 Q30 40 50 40',
-    'M5 16 Q22 16 36 16',
-  ],
-  // Variant D — twin spirals
-  [
-    'M3 22 Q18 22 30 18 Q42 12 46 22 Q46 30 38 30 Q32 28 38 22',
-    'M50 36 Q66 36 78 32 Q90 26 94 36 Q94 44 86 44 Q80 42 86 36',
-    'M5 48 Q22 48 36 48',
-  ],
+// Pure swirl / vortex glyphs — NO straight tails, only spirals and curls.
+// "Tumbleweed" feel — each glyph is a self-contained whirl.
+// Drawn in soft gray and blended with `multiply` so they fade to invisible
+// over dark text and dark photographs (effectively "text protection"
+// without needing per-element masks).
+const SWIRL_GLYPH_PATHS = [
+  // Variant A — tight inward spiral
+  ['M50 30 Q70 30 70 18 Q70 6 50 6 Q26 6 26 32 Q26 60 60 60 Q92 60 92 28 Q92 8 70 8'],
+  // Variant B — looping curl that crosses itself
+  ['M14 32 Q14 12 38 12 Q62 12 62 30 Q62 50 38 50 Q22 50 22 36 Q22 24 38 24 Q50 24 50 34'],
+  // Variant C — double whirl
+  ['M16 30 Q16 14 32 14 Q48 14 48 30 Q48 42 34 42 Q24 42 24 32', 'M58 30 Q58 14 74 14 Q90 14 90 30 Q90 42 76 42 Q66 42 66 32'],
+  // Variant D — open whirlpool with tighter inner loop
+  ['M84 32 Q84 12 54 12 Q24 12 24 36 Q24 56 50 56 Q72 56 72 38 Q72 26 56 26 Q46 26 46 36'],
+  // Variant E — small double curl
+  ['M24 24 Q24 14 36 14 Q48 14 48 24 Q48 32 38 32 Q30 32 30 26', 'M58 38 Q58 28 70 28 Q82 28 82 38 Q82 46 72 46 Q64 46 64 40'],
 ];
 
-// 22 wind glyphs scattered randomly across the whole viewport
-const WIND_WISPS = Array.from({ length: 22 }, (_, i) => {
-  const variantIdx = i % WIND_GLYPH_PATHS.length;
-  // Use prime-ish multipliers for pseudo-random scatter
+// Fewer, smaller, more random — 14 swirls scattered across the viewport.
+const WIND_WISPS = Array.from({ length: 14 }, (_, i) => {
+  const variantIdx = i % SWIRL_GLYPH_PATHS.length;
   return {
-    top: `${4 + ((i * 37) % 90)}vh`,
-    left: `${-(8 + ((i * 13) % 22))}vw`, // start off-screen left
-    size: 110 + ((i * 19) % 130),         // 110–240px (was 80–170)
-    delay: (i * 0.8) % 11,
-    dur: 14 + ((i * 11) % 16),            // 14–30s
-    scale: 0.9 + ((i * 23) % 40) / 100,   // 0.9–1.3
-    rotation: -12 + ((i * 17) % 24),
+    top: `${5 + ((i * 41) % 88)}vh`,
+    left: `${-(8 + ((i * 17) % 24))}vw`,
+    size: 60 + ((i * 23) % 55),           // 60–115 px (was 110–240)
+    delay: (i * 1.1) % 13,
+    dur: 22 + ((i * 13) % 18),            // 22–40 s (slower → more random feel)
+    scale: 0.85 + ((i * 29) % 40) / 100,  // 0.85–1.25
+    rotation: -25 + ((i * 23) % 50),      // wider rotation range for randomness
+    spinDir: i % 2 === 0 ? 1 : -1,
     variantIdx,
   };
 });
@@ -76,10 +65,13 @@ export default function OceanicAtmosphere() {
       const wisps = windLayerRef.current?.querySelectorAll<HTMLElement>('.wind-wisp') ?? [];
       wisps.forEach((wisp) => {
         const delay = parseFloat(wisp.dataset.delay || '0');
-        const dur = parseFloat(wisp.dataset.dur || '15');
+        const dur = parseFloat(wisp.dataset.dur || '25');
         const scale = parseFloat(wisp.dataset.scale || '1');
         const rotation = parseFloat(wisp.dataset.rotation || '0');
+        const spinDir = parseFloat(wisp.dataset.spin || '1');
         gsap.set(wisp, { x: 0, opacity: 0, scale, rotation });
+
+        // Slow horizontal drift across the viewport
         continuousTweens.push(
           gsap.to(wisp, {
             x: '130vw',
@@ -88,19 +80,31 @@ export default function OceanicAtmosphere() {
             ease: 'sine.inOut',
             delay,
             keyframes: {
-              opacity: [0, 0.85, 1, 0.95, 0],
+              opacity: [0, 0.45, 0.55, 0.45, 0],
               easeEach: 'none',
             },
           })
         );
+
+        // Tumbleweed-like vertical bob
         continuousTweens.push(
           gsap.to(wisp, {
-            y: '+=18',
-            duration: 3 + (Math.random() * 1.8),
+            y: '+=24',
+            duration: 2.6 + Math.random() * 2,
             repeat: -1,
             yoyo: true,
             ease: 'sine.inOut',
             delay: delay * 0.4,
+          })
+        );
+
+        // Continuous slow rotation of the swirl itself — adds tumbling feel
+        continuousTweens.push(
+          gsap.to(wisp, {
+            rotation: `+=${spinDir * 360}`,
+            duration: 18 + Math.random() * 8,
+            repeat: -1,
+            ease: 'none',
           })
         );
       });
@@ -162,13 +166,18 @@ export default function OceanicAtmosphere() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 pointer-events-none z-[5] overflow-hidden"
+      className="fixed inset-0 pointer-events-none z-[1] overflow-hidden"
       aria-hidden="true"
     >
-      {/* Wind layer — hand-drawn cartoon curls scattered across the whole viewport */}
-      <div ref={windLayerRef} className="absolute inset-0">
+      {/* Wind layer — gray swirls / vortices, multiply-blended so they
+          disappear over dark text and dark photographs. */}
+      <div
+        ref={windLayerRef}
+        className="absolute inset-0"
+        style={{ mixBlendMode: 'multiply' }}
+      >
         {WIND_WISPS.map((w, i) => {
-          const paths = WIND_GLYPH_PATHS[w.variantIdx];
+          const paths = SWIRL_GLYPH_PATHS[w.variantIdx];
           return (
             <div
               key={`wind-${i}`}
@@ -177,17 +186,18 @@ export default function OceanicAtmosphere() {
               data-dur={w.dur}
               data-scale={w.scale}
               data-rotation={w.rotation}
+              data-spin={w.spinDir}
               style={{
                 top: w.top,
                 left: w.left,
                 width: `${w.size}px`,
-                height: `${Math.round(w.size * 0.55)}px`,
+                height: `${w.size}px`,
               }}
             >
               <svg
                 width="100%"
                 height="100%"
-                viewBox="0 0 100 60"
+                viewBox="0 0 100 64"
                 preserveAspectRatio="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -196,11 +206,11 @@ export default function OceanicAtmosphere() {
                     key={j}
                     d={d}
                     fill="none"
-                    stroke="#5BB8E8"
-                    strokeWidth="2.4"
+                    stroke="#9CA3AF"
+                    strokeWidth="1.4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    opacity="0.95"
+                    opacity="0.9"
                   />
                 ))}
               </svg>

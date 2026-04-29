@@ -33,6 +33,15 @@ const rooms = [
     photo: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=900&auto=format&fit=crop',
     accent: 'Superior · Giardino',
   },
+  {
+    id: '04',
+    name: 'Tramontana',
+    subtitle: "Il Vento dalla Montagna",
+    size: '30 m²',
+    features: ['Vista su Monte Monaco', 'Soffitti a volta', 'Camino in pietra'],
+    photo: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=900&auto=format&fit=crop',
+    accent: 'Classic · Vista monte',
+  },
 ];
 
 export default function Rooms() {

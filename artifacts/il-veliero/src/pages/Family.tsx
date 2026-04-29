@@ -72,7 +72,7 @@ export default function Family() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative bg-[#F9F9F9] text-[#0A1128] py-32 px-6 lg:px-20 overflow-hidden">
+    <section id="about" ref={containerRef} className="relative z-10 bg-[#F9F9F9] text-[#0A1128] py-32 px-6 lg:px-20 overflow-hidden">
 
       {/* Watermark */}
       <div className="absolute top-20 right-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">

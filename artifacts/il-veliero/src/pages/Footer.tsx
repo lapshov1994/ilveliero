@@ -1,26 +1,141 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { Link } from 'wouter';
+
+const SVLC_CARDS = [
+  {
+    n: '01',
+    kicker: 'Natura',
+    title: 'Riserva dello Zingaro',
+    body:
+      "Sette chilometri di costa intatta, calette nascoste e il profumo del finocchietto selvatico al mattino. Si entra all'alba, si esce solo dopo il bagno più lento dell'estate.",
+  },
+  {
+    n: '02',
+    kicker: 'Tramonto',
+    title: 'Camminare al Faro',
+    body:
+      "Trenta minuti di passeggiata lenta lungo gli scogli, fino al faro bianco di Capo San Vito. Il sole scende dietro Monte Cofano e per qualche minuto il mare diventa rame.",
+  },
+  {
+    n: '03',
+    kicker: 'Storia',
+    title: 'Tonnara di Scopello',
+    body:
+      "I faraglioni, le case dei pescatori, l'eco silenzioso di un mestiere che non c'è più. Una giornata fuori dal tempo, a venti minuti d'auto dalla nostra porta.",
+  },
+  {
+    n: '04',
+    kicker: 'Sapori',
+    title: 'Cous Cous Fest, settembre',
+    body:
+      "Per dieci giorni, San Vito è capitale del Mediterraneo. Cuochi da tutto il mondo, musica, e quel mare che fa da sfondo a un rituale gentile e antichissimo.",
+  },
+];
 
 export default function Footer() {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const scrollByCard = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>('[data-card]');
+    const step = card ? card.offsetWidth + 24 : 360;
+    el.scrollBy({ left: step * dir, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="bg-[#0A1128] text-white pt-24 pb-12 px-6 lg:px-20 relative overflow-hidden">
+    <footer
+      id="footer"
+      className="bg-[#0A1128] text-white pt-24 pb-12 px-6 lg:px-20 relative z-10 overflow-hidden"
+    >
 
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
 
-        {/* Big CTA */}
-        <div className="mb-24 flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-16">
-          <div>
-            <h2 className="text-5xl md:text-7xl font-serif font-light leading-tight">
-              Inizia il tuo <br/>
-              <span className="italic text-[#D4AF37]">viaggio qui.</span>
-            </h2>
+        {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline */}
+        <section
+          className="mb-24 border-b border-white/10 pb-20"
+          data-testid="cosa-fare-section"
+        >
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+            <div>
+              <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] block mb-4 font-bold">
+                Il diario di San Vito
+              </span>
+              <h2 className="text-4xl md:text-6xl font-serif font-light leading-tight">
+                Cosa fare a <br className="hidden md:block" />
+                <span className="italic text-[#D4AF37]">San Vito Lo Capo?</span>
+              </h2>
+            </div>
+            <div className="flex items-end gap-6">
+              <div className="hidden md:flex gap-3">
+                <button
+                  onClick={() => scrollByCard(-1)}
+                  aria-label="Scorri a sinistra"
+                  className="w-12 h-12 border border-white/20 hover:border-[#D4AF37] hover:text-[#D4AF37] text-white/70 transition-colors duration-300 flex items-center justify-center text-xl font-thin"
+                  data-testid="carousel-prev"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => scrollByCard(1)}
+                  aria-label="Scorri a destra"
+                  className="w-12 h-12 border border-white/20 hover:border-[#D4AF37] hover:text-[#D4AF37] text-white/70 transition-colors duration-300 flex items-center justify-center text-xl font-thin"
+                  data-testid="carousel-next"
+                >
+                  →
+                </button>
+              </div>
+              <Link
+                href="/blog"
+                className="text-[10px] tracking-[0.3em] uppercase text-white/60 hover:text-[#D4AF37] transition-colors duration-300 border-b border-white/30 hover:border-[#D4AF37] pb-1"
+                data-testid="link-cosa-fare-all"
+              >
+                Tutti gli articoli →
+              </Link>
+            </div>
           </div>
-          <button className="mt-10 md:mt-0 bg-[#D4AF37] text-[#0A1128] px-10 py-5 uppercase text-xs tracking-[0.2em] font-bold w-full md:w-auto text-center relative overflow-hidden group">
-            <span className="relative z-10 inline-block transition-transform duration-300 group-hover:translate-x-[3px]">Verifica Disponibilità</span>
-            <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-          </button>
-        </div>
+
+          {/* Horizontal scrollable track */}
+          <div
+            ref={trackRef}
+            className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth -mx-6 px-6 lg:-mx-20 lg:px-20"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(212,175,55,0.4) transparent',
+            }}
+            data-testid="carousel-track"
+          >
+            {SVLC_CARDS.map((c) => (
+              <Link
+                key={c.n}
+                href="/blog"
+                data-card
+                data-testid={`card-${c.n}`}
+                className="snap-start shrink-0 w-[80vw] sm:w-[360px] md:w-[380px] bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-[#D4AF37]/40 p-8 md:p-10 transition-all duration-500 group flex flex-col"
+              >
+                <div className="flex items-baseline justify-between mb-8">
+                  <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] font-bold">
+                    {c.kicker}
+                  </span>
+                  <span className="text-5xl font-serif text-white/15 leading-none select-none">
+                    {c.n}
+                  </span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-serif text-white leading-tight mb-5 group-hover:text-[#D4AF37] transition-colors duration-500">
+                  {c.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-white/60 font-light flex-1">
+                  {c.body}
+                </p>
+                <span className="mt-8 text-[10px] tracking-[0.3em] uppercase text-white/40 group-hover:text-[#D4AF37] transition-colors duration-500 inline-flex items-center gap-3">
+                  Leggi <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* Info grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 text-sm font-light text-white/60">

@@ -1,17 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'wouter';
+import React, { useEffect, useRef } from 'react';
+import { Link, useLocation } from 'wouter';
 import gsap from 'gsap';
 import { useNav } from './NavigationContext';
 
+type SubItem = { title: string; meta?: string; href?: string };
+
 type Section =
-  | { kind: 'list'; label: string; items: { title: string; meta?: string; href?: string }[] }
-  | { kind: 'gallery'; label: string; count: number }
-  | { kind: 'text'; label: string; body: React.ReactNode };
+  | { kind: 'list'; label: string; href: string; items: SubItem[] }
+  | { kind: 'gallery'; label: string; href: string; count: number }
+  | { kind: 'anchor'; label: string; anchor: string; body: React.ReactNode };
 
 const SECTIONS: Section[] = [
   {
     kind: 'list',
     label: 'Blog',
+    href: '/blog',
     items: [
       { title: 'I venti del Mediterraneo, raccontati al tramonto', meta: '5 min · 12.04.2026', href: '/blog' },
       { title: 'San Vito Lo Capo in primavera, una guida intima', meta: '7 min · 28.03.2026', href: '/blog' },
@@ -22,6 +25,7 @@ const SECTIONS: Section[] = [
   {
     kind: 'list',
     label: 'Camere',
+    href: '/rooms',
     items: [
       { title: 'Scirocco', meta: 'Vista mare · 35 m²', href: '/rooms' },
       { title: 'Mistral', meta: 'Terrazza privata · 28 m²', href: '/rooms' },
@@ -32,24 +36,26 @@ const SECTIONS: Section[] = [
   {
     kind: 'gallery',
     label: 'Galleria',
+    href: '/gallery',
     count: 40,
   },
   {
-    kind: 'text',
+    kind: 'anchor',
     label: 'About',
+    anchor: 'about',
     body: (
       <p className="text-white/70 leading-relaxed text-sm md:text-base font-light max-w-2xl">
         Il Veliero è un albergo diffuso a conduzione familiare, nel cuore di
         San Vito Lo Capo. La famiglia Valenti accoglie i suoi ospiti dal
         1987 con l'autenticità di chi conosce ogni vento, ogni vicolo e ogni
-        sapore di questa terra. Tre dimore, tre anime, una sola promessa —
-        farvi sentire a casa, davanti al mare.
+        sapore di questa terra.
       </p>
     ),
   },
   {
-    kind: 'text',
-    label: 'Contatti',
+    kind: 'anchor',
+    label: 'Contact us',
+    anchor: 'footer',
     body: (
       <div className="text-white/70 text-sm md:text-base font-light space-y-3 leading-relaxed">
         <div>
@@ -73,7 +79,7 @@ export default function Navigation() {
   const { isOpen, close } = useNav();
   const overlayRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!overlayRef.current) return;
@@ -97,13 +103,10 @@ export default function Navigation() {
     } else {
       document.body.style.overflow = '';
       tlRef.current.reverse();
-      // Reset the open accordion when the menu closes so it starts
-      // fresh next time.
-      setOpenIdx(null);
     }
   }, [isOpen]);
 
-  // Escape-key closes the overlay (basic dialog accessibility).
+  // Escape closes
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -112,6 +115,28 @@ export default function Navigation() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, close]);
+
+  // Smooth-scroll to an in-page anchor. If the user is on a different page,
+  // navigate home first, then scroll on the next frame.
+  const scrollToAnchor = (anchorId: string) => {
+    close();
+    const doScroll = () => {
+      // Wait one frame so the menu close animation begins and the target
+      // node is mounted.
+      requestAnimationFrame(() => {
+        const el = document.getElementById(anchorId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    };
+    if (window.location.pathname.replace(/\/$/, '') !== (import.meta.env.BASE_URL || '/').replace(/\/$/, '')) {
+      setLocation('/');
+      // Allow the home page to mount its sections before scrolling.
+      setTimeout(doScroll, 350);
+    } else {
+      doScroll();
+    }
+  };
 
   return (
     <div
@@ -128,7 +153,7 @@ export default function Navigation() {
       }}
       data-testid="nav-overlay"
     >
-      {/* Close button — fixed top-right */}
+      {/* Close button */}
       <button
         onClick={close}
         className="fixed top-6 right-6 md:top-8 md:right-8 text-white/60 hover:text-[#D4AF37] transition-colors text-xs tracking-[0.3em] uppercase flex items-center gap-3 group z-10 bg-[#0A1128]/70 backdrop-blur-sm px-3 py-2"
@@ -143,103 +168,113 @@ export default function Navigation() {
         <Link
           href="/"
           onClick={close}
-          className="block text-3xl md:text-5xl font-serif text-white/80 hover:text-[#D4AF37] transition-colors duration-500 tracking-tight mb-2 py-4 border-b border-white/10"
+          className="block text-3xl md:text-5xl font-serif text-white/80 hover:text-[#D4AF37] transition-colors duration-500 tracking-tight py-4 border-b border-white/10"
           data-testid="nav-link-home"
         >
           <span className="inline-block hover:translate-x-3 transition-transform duration-500">Home</span>
         </Link>
 
-        {/* Accordion sections */}
-        {SECTIONS.map((section, i) => {
-          const isOpenSection = openIdx === i;
+        {/* Flat list — every section is fully visible. Clicking the big
+            label navigates / scrolls; sub-items appear immediately below. */}
+        {SECTIONS.map((section) => {
+          const labelClass =
+            'group inline-block text-3xl md:text-5xl font-serif tracking-tight text-white/80 hover:text-[#D4AF37] transition-colors duration-500';
+
+          const labelNode = section.kind === 'anchor' ? (
+            <button
+              type="button"
+              onClick={() => scrollToAnchor(section.anchor)}
+              className={`${labelClass} text-left`}
+              data-testid={`nav-link-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <span className="inline-block group-hover:translate-x-3 transition-transform duration-500">
+                {section.label}
+              </span>
+            </button>
+          ) : (
+            <Link
+              href={section.href}
+              onClick={close}
+              className={labelClass}
+              data-testid={`nav-link-${section.label.toLowerCase()}`}
+            >
+              <span className="inline-block group-hover:translate-x-3 transition-transform duration-500">
+                {section.label}
+              </span>
+            </Link>
+          );
+
           return (
             <div
               key={section.label}
-              className="border-b border-white/10"
-              data-testid={`nav-section-${section.label.toLowerCase()}`}
+              className="border-b border-white/10 py-6 md:py-8"
+              data-testid={`nav-section-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
             >
-              <button
-                id={`nav-toggle-${i}`}
-                onClick={() => setOpenIdx(isOpenSection ? null : i)}
-                aria-expanded={isOpenSection}
-                aria-controls={`nav-panel-${i}`}
-                className="w-full text-left py-4 md:py-5 flex justify-between items-center group"
-                data-testid={`nav-toggle-${section.label.toLowerCase()}`}
-              >
-                <span className={`text-3xl md:text-5xl font-serif tracking-tight transition-colors duration-500 ${isOpenSection ? 'text-[#D4AF37]' : 'text-white/80 group-hover:text-[#D4AF37]'}`}>
-                  {section.label}
-                </span>
-                <span className={`text-[#D4AF37] text-2xl md:text-3xl font-thin transition-transform duration-500 ${isOpenSection ? 'rotate-45' : ''}`}>
-                  +
-                </span>
-              </button>
+              {labelNode}
 
-              <div
-                id={`nav-panel-${i}`}
-                role="region"
-                aria-labelledby={`nav-toggle-${i}`}
-                hidden={!isOpenSection}
-                className={`overflow-hidden transition-all duration-700 ease-out ${
-                  isOpenSection ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0'
-                }`}
-              >
-                <div className="pb-8 md:pb-10 pt-2">
-                  {section.kind === 'list' && (
-                    <ul className="space-y-1">
-                      {section.items.map((item, j) => (
-                        <li key={`${section.label}-${j}`}>
-                          {item.href ? (
-                            <Link
-                              href={item.href}
-                              onClick={close}
-                              className="group flex items-baseline justify-between gap-6 py-2.5 md:py-3 border-l-2 border-transparent hover:border-[#D4AF37] hover:pl-4 pl-2 transition-all duration-500"
-                            >
-                              <span className="text-base md:text-lg font-serif text-white/85 group-hover:text-white transition-colors">
-                                {item.title}
+              <div className="mt-5 md:mt-6">
+                {section.kind === 'list' && (
+                  <ul className="space-y-1">
+                    {section.items.map((item, j) => (
+                      <li key={`${section.label}-${j}`}>
+                        {item.href ? (
+                          <Link
+                            href={item.href}
+                            onClick={close}
+                            className="group flex items-baseline justify-between gap-6 py-2.5 md:py-3 border-l-2 border-transparent hover:border-[#D4AF37] hover:pl-4 pl-2 transition-all duration-500"
+                          >
+                            <span className="text-base md:text-lg font-serif text-white/80 group-hover:text-white transition-colors">
+                              {item.title}
+                            </span>
+                            {item.meta && (
+                              <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
+                                {item.meta}
                               </span>
-                              {item.meta && (
-                                <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
-                                  {item.meta}
-                                </span>
-                              )}
-                            </Link>
-                          ) : (
-                            <div className="flex items-baseline justify-between gap-6 py-2.5 md:py-3 pl-2">
-                              <span className="text-base md:text-lg font-serif text-white/85">
-                                {item.title}
+                            )}
+                          </Link>
+                        ) : (
+                          <div className="flex items-baseline justify-between gap-6 py-2.5 md:py-3 pl-2">
+                            <span className="text-base md:text-lg font-serif text-white/80">
+                              {item.title}
+                            </span>
+                            {item.meta && (
+                              <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
+                                {item.meta}
                               </span>
-                              {item.meta && (
-                                <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
-                                  {item.meta}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
-                  {section.kind === 'gallery' && (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
+                {section.kind === 'gallery' && (
+                  <Link
+                    href={section.href}
+                    onClick={close}
+                    className="block"
+                    aria-label="Apri la galleria completa"
+                  >
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2">
                       {Array.from({ length: section.count }, (_, j) => (
                         <div
                           key={`thumb-${j}`}
-                          className="aspect-square bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/40 transition-colors duration-500 flex items-center justify-center group cursor-pointer"
+                          className="aspect-square bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/40 transition-colors duration-500 flex items-center justify-center group"
                           data-testid={`gallery-thumb-${j + 1}`}
                         >
-                          <span className="text-[9px] tracking-[0.2em] uppercase text-white/30 font-light group-hover:text-[#D4AF37] transition-colors">
-                            Foto {String(j + 1).padStart(2, '0')}
+                          <span className="text-[8px] tracking-[0.15em] uppercase text-white/30 font-light group-hover:text-[#D4AF37] transition-colors">
+                            {String(j + 1).padStart(2, '0')}
                           </span>
                         </div>
                       ))}
                     </div>
-                  )}
+                  </Link>
+                )}
 
-                  {section.kind === 'text' && (
-                    <div className="pl-2">{section.body}</div>
-                  )}
-                </div>
+                {section.kind === 'anchor' && (
+                  <div className="pl-2">{section.body}</div>
+                )}
               </div>
             </div>
           );

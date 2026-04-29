@@ -3,11 +3,13 @@ import gsap from 'gsap';
 import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 /**
- * Cursor — the user's pointer becomes a tiny gold sailing ship.
- * Below the ship a small set of sky-blue waves is generated STRICTLY
- * underneath it, on which the ship gently rocks. After ~2 seconds of
- * inactivity (no mousemove / no click) the whole composition fades out;
- * any new movement brings it back.
+ * Cursor — the user's pointer (or finger on touch) becomes a tiny gold
+ * sailing ship. A wide, sky-blue wave wake stretches out under and behind
+ * the ship — three times longer / wider than before, still tied to the
+ * ship so it always reads as "the ship's wake" on the screen plane.
+ *
+ * Visible on mobile too: touchstart/touchmove keep the ship under the
+ * finger, touchend triggers the same idle-fade as mouse inactivity.
  */
 export default function Cursor() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -27,7 +29,7 @@ export default function Cursor() {
     const setX = gsap.quickTo(wrap, 'x', { duration: 0.18, ease: 'power3.out' });
     const setY = gsap.quickTo(wrap, 'y', { duration: 0.18, ease: 'power3.out' });
 
-    // Continuous gentle rocking of the ship — wave-like
+    // Continuous gentle rocking of the ship
     const rockTween = gsap.to(ship, {
       rotation: 5,
       duration: 1.4,
@@ -37,7 +39,7 @@ export default function Cursor() {
       transformOrigin: 'center bottom',
     });
 
-    // Subtle vertical bob so the ship feels lifted by the waves
+    // Subtle vertical bob
     const bobTween = gsap.to(ship, {
       y: -2,
       duration: 1.4,
@@ -46,17 +48,15 @@ export default function Cursor() {
       ease: 'sine.inOut',
     });
 
-    // Waves wobble independently for a richer feel
+    // Waves wobble independently, slightly out of phase with the ship
     const waveTween = gsap.to(waves, {
-      y: 1.4,
+      y: 1.6,
       duration: 1.0,
       yoyo: true,
       repeat: -1,
       ease: 'sine.inOut',
     });
 
-    // Always cancel any in-flight opacity tween before scheduling a new
-    // one so user motion can never be hidden by a stale fade-out.
     const reveal = () => {
       gsap.killTweensOf(wrap, 'opacity');
       gsap.to(wrap, { opacity: 1, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
@@ -75,16 +75,28 @@ export default function Cursor() {
       }, 1800);
     };
 
-    const onMove = (e: MouseEvent) => {
-      setX(e.clientX);
-      setY(e.clientY);
+    const moveTo = (x: number, y: number) => {
+      setX(x);
+      setY(y);
       reveal();
       scheduleHide();
     };
 
-    // Robust viewport-exit detection: pointerleave on document doesn't
-    // fire reliably across all browsers, so we listen to mouseout with a
-    // null relatedTarget AND window blur.
+    const onMove = (e: MouseEvent) => moveTo(e.clientX, e.clientY);
+
+    // Touch handlers — make the ship ride the user's finger on mobile.
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      moveTo(t.clientX, t.clientY);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (!t) return;
+      moveTo(t.clientX, t.clientY);
+    };
+    const onTouchEnd = () => scheduleHide();
+
     const onMouseOut = (e: MouseEvent) => {
       if (!e.relatedTarget && !(e as MouseEvent & { toElement?: Element }).toElement) {
         if (idleTimer) clearTimeout(idleTimer);
@@ -100,13 +112,13 @@ export default function Cursor() {
       if (!splashRef.current) return;
       gsap.fromTo(
         splashRef.current,
-        { attr: { r: 2 }, opacity: 0.65 },
-        { attr: { r: 28 }, opacity: 0, duration: 0.7, ease: 'power2.out' }
+        { attr: { r: 4 }, opacity: 0.7 },
+        { attr: { r: 80 }, opacity: 0, duration: 0.9, ease: 'power2.out' }
       );
       gsap.fromTo(
         waves,
         { scaleX: 1, scaleY: 1 },
-        { scaleX: 1.25, scaleY: 1.4, duration: 0.25, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: 'center top' }
+        { scaleX: 1.2, scaleY: 1.4, duration: 0.28, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: 'center top' }
       );
       reveal();
       scheduleHide();
@@ -116,12 +128,20 @@ export default function Cursor() {
     window.addEventListener('click', onClick);
     window.addEventListener('mouseout', onMouseOut);
     window.addEventListener('blur', onBlur);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchcancel', onTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('click', onClick);
       window.removeEventListener('mouseout', onMouseOut);
       window.removeEventListener('blur', onBlur);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
       if (idleTimer) clearTimeout(idleTimer);
       gsap.killTweensOf(wrap);
       rockTween.kill();
@@ -131,7 +151,7 @@ export default function Cursor() {
   }, []);
 
   return (
-    <div className="hidden md:block pointer-events-none fixed inset-0 z-[9999]" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-0 z-[9999]" aria-hidden="true">
       <div
         ref={wrapRef}
         className="fixed top-0 left-0 opacity-0"
@@ -167,31 +187,43 @@ export default function Cursor() {
           />
         </div>
 
-        {/* Waves — strictly under the ship hull */}
+        {/* Wave wake — three times wider than before, drawn on the screen
+            plane directly under the hull. */}
         <svg
           ref={wavesRef}
-          width="50"
-          height="14"
-          viewBox="0 0 50 14"
-          className="absolute left-1/2 -translate-x-1/2 -bottom-3"
+          width="160"
+          height="36"
+          viewBox="0 0 160 36"
+          className="absolute left-1/2 -translate-x-1/2 -bottom-5"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <circle ref={splashRef} cx="25" cy="6" r="2" fill="none" stroke="#5BB8E8" strokeWidth="1" opacity="0" />
+          <circle ref={splashRef} cx="80" cy="14" r="4" fill="none" stroke="#5BB8E8" strokeWidth="1.4" opacity="0" />
+          {/* Foreground wave — strongest, longest */}
           <path
-            d="M2 6 Q9 3 16 6 T30 6 T44 6 T48 6"
+            d="M4 14 Q14 9 24 14 T44 14 T64 14 T84 14 T104 14 T124 14 T144 14 T156 14"
+            fill="none"
+            stroke="#5BB8E8"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            opacity="0.95"
+          />
+          {/* Mid wave */}
+          <path
+            d="M8 22 Q20 17 32 22 T56 22 T80 22 T104 22 T128 22 T152 22"
             fill="none"
             stroke="#5BB8E8"
             strokeWidth="1.4"
             strokeLinecap="round"
-            opacity="0.95"
+            opacity="0.7"
           />
+          {/* Far wave — softest, faintest */}
           <path
-            d="M4 11 Q12 8 20 11 T36 11 T46 11"
+            d="M14 30 Q28 26 42 30 T70 30 T98 30 T126 30 T148 30"
             fill="none"
             stroke="#5BB8E8"
             strokeWidth="1.1"
             strokeLinecap="round"
-            opacity="0.55"
+            opacity="0.4"
           />
         </svg>
       </div>

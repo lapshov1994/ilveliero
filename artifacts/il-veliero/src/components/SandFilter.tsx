@@ -23,18 +23,6 @@ const SAND_TEXTURE_FINE =
   "<rect width='100%' height='100%' filter='url(%23sf)'/>" +
   "</svg>\")";
 
-// Vertical mask that softens the filter at the very top (so hero text /
-// marquee headings stay readable when the filter is active) and softens
-// the bottom 25% of the viewport by 15% (per request — so editorial
-// imagery in the lower sections stays cleaner).
-const SAND_MASK_GRADIENT =
-  'linear-gradient(to bottom, ' +
-  'rgba(0,0,0,0.55) 0%, ' +
-  'rgba(0,0,0,0.92) 18%, ' +
-  'rgba(0,0,0,1) 45%, ' +
-  'rgba(0,0,0,1) 70%, ' +
-  'rgba(0,0,0,0.85) 100%)';
-
 export default function SandFilter() {
   const layerRef = useRef<HTMLDivElement>(null);
   const coarseRef = useRef<HTMLDivElement>(null);
@@ -45,12 +33,11 @@ export default function SandFilter() {
     if (!layerRef.current) return;
 
     const ctx = gsap.context(() => {
-      // 15% lower than the previous starting opacities (was 0.55 / 0.35).
-      gsap.set(coarseRef.current, { opacity: 0.46, scale: 1, x: 0, y: 0 });
-      gsap.set(fineRef.current, { opacity: 0.3, x: 0, y: 0 });
+      gsap.set(coarseRef.current, { opacity: 0.55, scale: 1, x: 0, y: 0 });
+      gsap.set(fineRef.current, { opacity: 0.35, x: 0, y: 0 });
 
       gsap.to(coarseRef.current, {
-        opacity: 0.72,
+        opacity: 0.85,
         duration: 3.6,
         repeat: -1,
         yoyo: true,
@@ -66,7 +53,7 @@ export default function SandFilter() {
       });
 
       gsap.to(fineRef.current, {
-        opacity: 0.5,
+        opacity: 0.6,
         duration: 2.4,
         repeat: -1,
         yoyo: true,
@@ -84,9 +71,8 @@ export default function SandFilter() {
       const hero = document.querySelector('.hero-section');
       if (hero) {
         gsap.set(layerRef.current, { opacity: 0 });
-        // Cap reveal at 0.85 so hero text / marquee at the top stay readable
         gsap.to(layerRef.current, {
-          opacity: 0.85,
+          opacity: 1,
           ease: 'none',
           scrollTrigger: {
             trigger: hero,
@@ -96,45 +82,7 @@ export default function SandFilter() {
           },
         });
       } else {
-        gsap.set(layerRef.current, { opacity: 0.85 });
-      }
-
-      // Per the brief: also keep a localised sand reveal on the FIRST
-      // editorial image at the bottom of the home page (DimoreTeaser).
-      // To avoid two ScrollTriggers fighting for the same opacity
-      // property on `layerRef`, we use a SEPARATE overlay layer (`boostRef`
-      // via the .sand-boost child) which scrubs independently from 0 to 1
-      // and back to 0. The base layer's hero-driven opacity stays intact.
-      const dimoreImg = document.querySelector(
-        '#dimore-teaser .first-bottom-image'
-      );
-      const boost = layerRef.current?.querySelector('.sand-boost');
-      if (dimoreImg && boost) {
-        gsap.set(boost, { opacity: 0 });
-        gsap.fromTo(
-          boost,
-          { opacity: 0 },
-          {
-            opacity: 0.45,
-            ease: 'sine.out',
-            scrollTrigger: {
-              trigger: dimoreImg,
-              start: 'top 90%',
-              end: 'top 35%',
-              scrub: true,
-            },
-          }
-        );
-        gsap.to(boost, {
-          opacity: 0,
-          ease: 'sine.in',
-          scrollTrigger: {
-            trigger: dimoreImg,
-            start: 'bottom 60%',
-            end: 'bottom 10%',
-            scrub: true,
-          },
-        });
+        gsap.set(layerRef.current, { opacity: 1 });
       }
     });
 
@@ -145,10 +93,6 @@ export default function SandFilter() {
     <div
       ref={layerRef}
       className="fixed inset-0 z-[90] pointer-events-none"
-      style={{
-        WebkitMaskImage: SAND_MASK_GRADIENT,
-        maskImage: SAND_MASK_GRADIENT,
-      }}
       aria-hidden="true"
       data-testid="sand-filter"
     >
@@ -170,18 +114,6 @@ export default function SandFilter() {
           backgroundRepeat: 'repeat',
           backgroundSize: '180px 180px',
           mixBlendMode: 'overlay',
-        }}
-      />
-      {/* Localised "boost" overlay — only animated by the dimore-teaser
-          ScrollTrigger so it never fights with the base hero reveal. */}
-      <div
-        className="sand-boost absolute -inset-8"
-        style={{
-          backgroundImage: SAND_TEXTURE,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '320px 320px',
-          mixBlendMode: 'multiply',
-          opacity: 0,
         }}
       />
     </div>
