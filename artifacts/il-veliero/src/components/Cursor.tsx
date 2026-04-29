@@ -4,26 +4,23 @@ import gsap from 'gsap';
 /**
  * Cursor — there is NO visible cursor sprite. Instead, the user's pointer
  * silently disturbs the surface of the sea: every meaningful move spawns
- * one or two ripples that drift backwards along the motion line and
- * dissipate. Vertical scroll independently disturbs the sea across the
- * full width of the viewport, so both pointer and scroll feel like they
- * touch water.
+ * one or two flowing tilde-style wave strokes that drift backwards along
+ * the motion line and dissipate.
+ *
+ * Visual reference: classic ocean-ripple iconography — flat horizontal
+ * sine "tildes" (~), painterly brush strokes with rounded ends, in a
+ * cyan / teal / navy palette with rare gold sun-glints.
  *
  * Design notes:
  *   - No ship, no mascot, no hard "cursor" object — the surface itself
  *     is the cursor.
- *   - Waves come in many shapes (gentle arcs, choppy crests, long
- *     swells, foam-tipped curls, splash-rings) and many tones (deep
- *     navy, sky blue, sea-foam, warm gold) so consecutive waves never
- *     read as a copy-paste pattern.
- *   - Foam dashes and tiny spray dots are sprinkled in at random for
- *     extra realism without ever turning the page into a particle
- *     storm.
- *   - Scroll-driven waves are emitted at random horizontal positions
- *     across the viewport, perpendicular to the scroll direction, and
- *     drift in the scroll direction before fading. They use the same
- *     library of wave forms but are biased towards larger swells so
- *     the page feels like an open sea, not a puddle.
+ *   - Waves come in many shapes (single bumps, two/three-cycle ripples,
+ *     wide low horizons, asymmetric curls) and many tones so
+ *     consecutive waves never read as a copy-paste pattern.
+ *   - Each wave is drawn as TWO coaxial strokes — a wide translucent
+ *     halo and a crisp main stroke on top — to suggest the soft edge
+ *     of a real ink/brush stroke.
+ *   - Strictly pointer-driven: scrolling does not generate ripples.
  */
 export default function Cursor() {
   const trailLayerRef = useRef<HTMLDivElement>(null);
@@ -60,70 +57,62 @@ export default function Cursor() {
       weight: number;
     };
 
+    // Forms are flowing horizontal tildes — one, two, or three full
+    // oscillations of a sine-like brush stroke that sits ON the
+    // surface. Reference: classic flat ocean-ripple iconography
+    // (long ~~~ doodles, tapered, painterly). All amplitudes are
+    // symmetric around y=0, so the wave reads as a flat sea line.
     const WAVE_FORMS: Form[] = [
-      // 1. Wide shallow arc with two pronounced bumps near the centre.
+      // 1. Single full tilde (one up-down cycle), medium length. Most
+      //    common form — the "default ripple".
       {
-        crestD: 'M -34 4 Q -24 -2 -16 -1 Q -8 -8 0 -2 Q 8 -8 16 -1 Q 24 -2 34 4',
-        foamD: 'M -10 -5 L -6 -6  M 6 -6 L 10 -5',
-        halfLen: 34, halfAmp: 9, weight: 1.2,
+        crestD: 'M -22 0 Q -14 -7 -7 -1 Q 0 6 7 1 Q 14 -6 22 0',
+        halfLen: 22, halfAmp: 8, weight: 3.2,
       },
-      // 2. Long sweep with a single big swell.
+      // 2. Long flowing two-and-a-half cycle ripple (the big ~~~).
       {
-        crestD: 'M -36 5 Q -22 -1 -10 -2 Q -2 -10 8 -3 Q 18 0 36 5',
-        foamD: 'M -2 -7 L 4 -8',
-        halfLen: 36, halfAmp: 10, weight: 1.3,
+        crestD: 'M -42 0 Q -34 -6 -26 -1 Q -18 5 -10 0 Q -2 -6 6 -1 Q 14 5 22 0 Q 30 -5 42 0',
+        halfLen: 42, halfAmp: 7, weight: 2.8,
       },
-      // 3. Three short choppy crests, like fresh wash close to the hull.
+      // 3. Short single bump — a quick crest, used for micro-moves.
       {
-        crestD: 'M -28 3 Q -22 -2 -16 -3 Q -10 -7 -4 -2 Q 0 -8 6 -3 Q 12 -8 18 -3 Q 24 -2 28 3',
-        foamD: 'M -16 -5 L -12 -6  M 4 -6 L 8 -7  M 16 -5 L 20 -6',
-        halfLen: 28, halfAmp: 8, weight: 1.0,
+        crestD: 'M -14 0 Q -7 -6 0 0 Q 7 6 14 0',
+        halfLen: 14, halfAmp: 7, weight: 2.6,
       },
-      // 4. Asymmetric curl — heavy crest on the left.
+      // 4. Wide gentle one-and-a-half cycle.
       {
-        crestD: 'M -30 5 Q -20 -3 -14 -4 Q -8 -11 -2 -3 Q 6 0 16 1 Q 24 3 30 5',
-        foamD: 'M -10 -8 L -4 -7',
-        halfLen: 30, halfAmp: 11, weight: 1.2,
+        crestD: 'M -32 0 Q -22 -6 -12 0 Q -2 6 8 0 Q 18 -6 32 0',
+        halfLen: 32, halfAmp: 7, weight: 3.0,
       },
-      // 5. Gentle low spread with subtle double dip — calm wake.
+      // 5. Asymmetric long swell — bigger left crest, smaller right.
       {
-        crestD: 'M -32 2 Q -22 -1 -14 -2 Q -6 -5 0 -2 Q 6 -5 14 -2 Q 22 -1 32 2',
-        halfLen: 32, halfAmp: 5, weight: 0.9,
+        crestD: 'M -36 0 Q -26 -10 -14 -2 Q -2 8 8 1 Q 18 -4 36 0',
+        halfLen: 36, halfAmp: 11, weight: 3.4,
       },
-      // 6. LONG open-sea swell — wide, very low amplitude, single graceful crest.
+      // 6. LONG calm horizon — three small cycles, low amplitude.
       {
-        crestD: 'M -56 4 Q -34 1 -16 -2 Q 0 -6 16 -2 Q 34 1 56 4',
-        halfLen: 56, halfAmp: 8, weight: 1.5,
+        crestD: 'M -48 0 Q -40 -4 -32 0 Q -24 4 -16 0 Q -8 -4 0 0 Q 8 4 16 0 Q 24 -4 32 0 Q 40 4 48 0',
+        halfLen: 48, halfAmp: 5, weight: 2.4,
       },
-      // 7. Big asymmetric breaker — a long dropping curve with foam scatter.
+      // 7. Big bold single crest — a strong wash.
       {
-        crestD: 'M -48 6 Q -28 1 -10 -3 Q 0 -10 12 -4 Q 26 0 48 7',
-        foamD: 'M -6 -8 L 0 -9  M 4 -8 L 10 -9',
-        halfLen: 48, halfAmp: 12, weight: 1.4,
+        crestD: 'M -28 0 Q -14 -12 0 0 Q 14 12 28 0',
+        halfLen: 28, halfAmp: 13, weight: 4.0,
       },
-      // 8. Spray ring — a near-flat baseline plus a constellation of tiny dots above it.
+      // 8. Tiny dash — almost a comma, thinnest stroke.
       {
-        crestD: 'M -22 1 Q -10 -2 0 -2 Q 10 -2 22 1',
-        sprayDots: [
-          { x: -12, y: -7, r: 0.8 },
-          { x: -4, y: -10, r: 1.0 },
-          { x: 3, y: -9, r: 0.7 },
-          { x: 10, y: -7, r: 0.9 },
-          { x: -1, y: -12, r: 0.6 },
-        ],
-        halfLen: 22, halfAmp: 12, weight: 0.9,
+        crestD: 'M -10 0 Q -3 -4 4 -1 Q 8 0 10 1',
+        halfLen: 10, halfAmp: 5, weight: 2.2,
       },
-      // 9. Tiny ripple — a delicate near-sine, very low amplitude. Used for
-      //    pointer micro-motion so subtle moves still leave a trace.
+      // 9. Two-cycle medium tilde — a confident "~~".
       {
-        crestD: 'M -16 1 Q -8 -1 0 -2 Q 8 -1 16 1',
-        halfLen: 16, halfAmp: 3, weight: 0.7,
+        crestD: 'M -28 0 Q -20 -7 -12 -1 Q -4 5 4 0 Q 12 -6 20 0 Q 26 4 28 1',
+        halfLen: 28, halfAmp: 8, weight: 3.0,
       },
-      // 10. Twin crest — two equal swells separated by a calm trough.
+      // 10. Off-axis flowing curl — drops at the right end, brush-stroke feel.
       {
-        crestD: 'M -38 3 Q -28 0 -22 -1 Q -16 -7 -10 -2 Q -2 0 2 0 Q 8 0 10 -2 Q 16 -7 22 -1 Q 28 0 38 3',
-        foamD: 'M -12 -5 L -8 -6  M 8 -6 L 12 -5',
-        halfLen: 38, halfAmp: 8, weight: 1.2,
+        crestD: 'M -30 0 Q -22 -6 -12 -2 Q -2 4 8 0 Q 18 -4 26 2 Q 30 4 32 6',
+        halfLen: 30, halfAmp: 8, weight: 3.2,
       },
     ];
 
@@ -208,31 +197,23 @@ export default function Cursor() {
       wave.style.willChange = 'transform, opacity';
       wave.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(${scale})`;
 
-      const echoWeight = (form.weight * 0.6).toFixed(2);
+      // Two coaxial strokes give the painterly brush feel from the
+      // reference: a wider, very translucent halo behind, and a
+      // crisper main stroke on top. Both share rounded caps so the
+      // ends taper softly off the page like an inked brush stroke.
+      const haloWeight = (form.weight * 1.9).toFixed(2);
       const mainWeight = form.weight.toFixed(2);
-
-      const foamMarkup = form.foamD
-        ? `<path d="${form.foamD}" fill="none" stroke="${palette.foam}" stroke-width="0.85" stroke-linecap="round" opacity="0.6" />`
-        : '';
-
-      const sprayMarkup = form.sprayDots
-        ? form.sprayDots
-            .map((d) => `<circle cx="${d.x}" cy="${d.y}" r="${d.r}" fill="${palette.foam}" opacity="0.65" />`)
-            .join('')
-        : '';
 
       wave.innerHTML = `
         <svg
           width="${svgWidth.toFixed(1)}"
           height="${svgHeight.toFixed(1)}"
-          viewBox="${-form.halfLen - 6} ${-form.halfAmp - 4} ${form.halfLen * 2 + 12} ${form.halfAmp * 2 + 12}"
+          viewBox="${-form.halfLen - 6} ${-form.halfAmp - 6} ${form.halfLen * 2 + 12} ${form.halfAmp * 2 + 12}"
           xmlns="http://www.w3.org/2000/svg"
           overflow="visible"
         >
-          <path d="${form.crestD}" fill="none" stroke="${palette.echo}" stroke-width="${echoWeight}" stroke-linecap="round" opacity="0.45" transform="translate(0.6, 2.4)" />
-          <path d="${form.crestD}" fill="none" stroke="${palette.main}" stroke-width="${mainWeight}" stroke-linecap="round" stroke-linejoin="round" opacity="0.92" />
-          ${foamMarkup}
-          ${sprayMarkup}
+          <path d="${form.crestD}" fill="none" stroke="${palette.echo}" stroke-width="${haloWeight}" stroke-linecap="round" stroke-linejoin="round" opacity="0.22" />
+          <path d="${form.crestD}" fill="none" stroke="${palette.main}" stroke-width="${mainWeight}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />
         </svg>
       `;
 
