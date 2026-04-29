@@ -129,7 +129,7 @@ export default function Cursor() {
       { main: '#7AC8E8', echo: '#A8DDEE', foam: '#FFFFFF' }, // sea-foam
       { main: '#1F4E7A', echo: '#3A6E94', foam: '#CFE6F4' }, // navy depth
       { main: '#2E91C2', echo: '#5BB8E8', foam: '#FFFFFF' }, // mid blue
-      { main: '#D4AF37', echo: '#E8C45A', foam: '#FFF6D6' }, // warm gold (rare — sun-glint)
+      { main: '#0A1128', echo: '#1F4E7A', foam: '#CFE6F4' }, // brand deep navy
     ];
 
     let lastFormIdx = -1;
@@ -152,11 +152,11 @@ export default function Cursor() {
     };
 
     const pickPalette = (): Palette => {
-      // Gold is rare (≈1 in 12) so it reads as a special highlight not
-      // the dominant tone.
-      if (Math.random() < 0.08) return SEA_PALETTES[5];
-      let idx = Math.floor(Math.random() * 5); // 0..4 — non-gold
-      if (idx === lastPaletteIdx) idx = (idx + 1) % 5;
+      // All sea tones — no warm/yellow accents. Even distribution so
+      // the surface reads as natural water (sky blue dominant, with
+      // teal / sea-foam / navy variations underneath).
+      let idx = Math.floor(Math.random() * SEA_PALETTES.length);
+      if (idx === lastPaletteIdx) idx = (idx + 1) % SEA_PALETTES.length;
       lastPaletteIdx = idx;
       return SEA_PALETTES[idx];
     };
@@ -178,8 +178,11 @@ export default function Cursor() {
       const form = pickForm(opts.preferLarge);
       const palette = pickPalette();
 
-      // Wave's long axis perpendicular to motion direction.
-      const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI) + 90;
+      // Wave's long axis ALONG the motion direction — each ripple
+      // becomes a tilde laid down ON the finger's path, so the trail
+      // reads as a stream of waves following the finger, not as
+      // sidelong sea-lines being cut by it.
+      const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI);
 
       // Per-spawn scale variation. Pointer waves: 0.85..1.25. Scroll
       // waves can additionally take a scaleBoost so individual swells
