@@ -10,7 +10,6 @@ import {
   Ship,
   Dog,
   Car,
-  Baby,
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -24,7 +23,6 @@ const SERVICES = [
   { Icon: Ship, label: 'Escursione in Barca' },
   { Icon: Dog, label: 'Animali Ammessi' },
   { Icon: Car, label: 'Parcheggio Adiacente' },
-  { Icon: Baby, label: 'Baby-sitter su richiesta' },
 ];
 
 export default function Services() {
@@ -74,12 +72,12 @@ export default function Services() {
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 bg-white text-[#0A1128] py-32 md:py-48 px-6 lg:px-20"
+      className="relative z-10 bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20"
       data-testid="section-services"
     >
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div ref={headingRef} className="text-center mb-24 md:mb-32">
+        <div ref={headingRef} className="text-center mb-14 md:mb-20">
           <span className="text-xs tracking-[0.3em] text-[#D4AF37] uppercase font-light block mb-6">
             I Nostri Servizi
           </span>
@@ -91,7 +89,7 @@ export default function Services() {
         {/* 2-per-row grid (denser, more compact) */}
         <div
           ref={gridRef}
-          className="grid grid-cols-2 gap-y-14 gap-x-8 md:gap-y-20 md:gap-x-16 max-w-3xl mx-auto"
+          className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8 md:gap-y-12 md:gap-x-10 max-w-4xl mx-auto"
         >
           {SERVICES.map(({ Icon, label }) => (
             <div

@@ -3,92 +3,42 @@ import { Link, useLocation } from 'wouter';
 import gsap from 'gsap';
 import { useNav } from './NavigationContext';
 
-type SubItem = { title: string; meta?: string; href?: string };
-
 type Section =
-  | { kind: 'list'; label: string; href: string; items: SubItem[] }
-  | { kind: 'gallery'; label: string; href: string; count: number }
-  | { kind: 'anchor'; label: string; anchor: string; body: React.ReactNode };
+  | { kind: 'link'; label: string; href: string; subtitle: string }
+  | { kind: 'anchor'; label: string; anchor: string; subtitle: string };
 
 const SECTIONS: Section[] = [
-  {
-    kind: 'list',
-    label: 'Blog',
-    href: '/blog',
-    items: [
-      { title: 'I venti del Mediterraneo, raccontati al tramonto', meta: '5 min · 12.04.2026', href: '/blog' },
-      { title: 'San Vito Lo Capo in primavera, una guida intima', meta: '7 min · 28.03.2026', href: '/blog' },
-      { title: 'La famiglia Valenti — quattro generazioni di ospitalità', meta: '4 min · 02.03.2026', href: '/blog' },
-      { title: 'Cous Cous Fest, oltre la festa: i sapori autentici', meta: '6 min · 15.02.2026', href: '/blog' },
-    ],
-  },
-  {
-    kind: 'list',
-    label: 'Camere',
-    href: '/rooms',
-    items: [
-      { title: 'Scirocco', meta: 'Vista mare · 35 m²', href: '/rooms' },
-      { title: 'Mistral', meta: 'Terrazza privata · 28 m²', href: '/rooms' },
-      { title: 'Gelsomino', meta: 'Giardino · 22 m²', href: '/rooms' },
-      { title: 'Tramontana', meta: 'Vista monte · 30 m²', href: '/rooms' },
-    ],
-  },
-  {
-    kind: 'gallery',
-    label: 'Galleria',
-    href: '/gallery',
-    count: 40,
-  },
-  {
-    kind: 'anchor',
-    label: 'About',
-    anchor: 'about',
-    body: (
-      <p className="text-white/70 leading-relaxed text-sm md:text-base font-light max-w-2xl">
-        Il Veliero è un albergo diffuso a conduzione familiare, nel cuore di
-        San Vito Lo Capo. La famiglia Valenti accoglie i suoi ospiti dal
-        1987 con l'autenticità di chi conosce ogni vento, ogni vicolo e ogni
-        sapore di questa terra.
-      </p>
-    ),
-  },
-  {
-    kind: 'anchor',
-    label: 'Contact us',
-    anchor: 'footer',
-    body: (
-      <div className="text-white/70 text-sm md:text-base font-light space-y-3 leading-relaxed">
-        <div>
-          <span className="block text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] mb-1">Indirizzo</span>
-          Via Savoia, 19 — 91010 San Vito Lo Capo (TP), Sicilia
-        </div>
-        <div>
-          <span className="block text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] mb-1">Telefono</span>
-          +39 0923 000 000
-        </div>
-        <div>
-          <span className="block text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] mb-1">Email</span>
-          info@ilveliero.it
-        </div>
-      </div>
-    ),
-  },
+  { kind: 'link', label: 'Blog', href: '/blog', subtitle: 'Cosa fare a San Vito Lo Capo' },
+  { kind: 'link', label: 'Camere', href: '/rooms', subtitle: 'Quattro dimore, quattro venti' },
+  { kind: 'link', label: 'Galleria', href: '/gallery', subtitle: 'Quaranta immagini di Sicilia' },
+  { kind: 'link', label: 'About', href: '/about', subtitle: "La nostra storia, dal 1987" },
+  { kind: 'anchor', label: 'Contact us', anchor: 'footer', subtitle: 'Indirizzo, telefono, email' },
 ];
 
 export default function Navigation() {
   const { isOpen, close } = useNav();
   const overlayRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<HTMLDivElement>(null);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!overlayRef.current) return;
+    if (!overlayRef.current || !itemsRef.current) return;
+    const items = itemsRef.current.querySelectorAll<HTMLElement>('.nav-row');
+
     tlRef.current = gsap.timeline({ paused: true })
       .fromTo(
         overlayRef.current,
         { yPercent: -100, opacity: 0 },
-        { yPercent: 0, opacity: 1, duration: 0.6, ease: 'power3.inOut' }
+        { yPercent: 0, opacity: 1, duration: 0.55, ease: 'power3.inOut' }
+      )
+      .fromTo(
+        items,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.45, ease: 'power3.out', stagger: 0.06 },
+        '-=0.2'
       );
+
     return () => {
       tlRef.current?.kill();
       tlRef.current = null;
@@ -116,25 +66,32 @@ export default function Navigation() {
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, close]);
 
-  // Smooth-scroll to an in-page anchor. If the user is on a different page,
-  // navigate home first, then scroll on the next frame.
+  // Smooth-scroll to in-page anchor. If the user is on a different route,
+  // navigate home first then poll for the target node — the home route mounts
+  // Hero/Story/etc. asynchronously and Lenis/GSAP take a couple of frames to
+  // settle, so we keep retrying for up to ~2s before giving up.
   const scrollToAnchor = (anchorId: string) => {
     close();
-    const doScroll = () => {
-      // Wait one frame so the menu close animation begins and the target
-      // node is mounted.
-      requestAnimationFrame(() => {
-        const el = document.getElementById(anchorId);
-        if (!el) return;
+    const MAX_ATTEMPTS = 120; // ~2s at 60fps
+    const tryScroll = (attempts = 0) => {
+      const el = document.getElementById(anchorId);
+      if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+        return;
+      }
+      if (attempts < MAX_ATTEMPTS) {
+        requestAnimationFrame(() => tryScroll(attempts + 1));
+      }
     };
-    if (window.location.pathname.replace(/\/$/, '') !== (import.meta.env.BASE_URL || '/').replace(/\/$/, '')) {
+    const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const onHome = window.location.pathname.replace(/\/$/, '') === baseUrl;
+    if (!onHome) {
       setLocation('/');
-      // Allow the home page to mount its sections before scrolling.
-      setTimeout(doScroll, 350);
+      // Wait one full frame past the route change before polling — this
+      // gives wouter time to swap the tree and Hero to begin mounting.
+      requestAnimationFrame(() => requestAnimationFrame(() => tryScroll()));
     } else {
-      doScroll();
+      tryScroll();
     }
   };
 
@@ -153,137 +110,90 @@ export default function Navigation() {
       }}
       data-testid="nav-overlay"
     >
-      {/* Close button */}
+      {/* Decorative rule */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/30 to-transparent" />
+
+      {/* Brand mark in top-left while menu is open */}
+      <div className="fixed top-6 left-8 md:top-8 md:left-12 text-white/60 text-[10px] tracking-[0.35em] uppercase">
+        Il Veliero
+      </div>
+
+      {/* In-overlay close control. The trigger in the page header sits
+          underneath this overlay (z-200), so on touch devices Escape is not
+          available; this duplicate close control keeps the menu reachable. */}
       <button
+        type="button"
         onClick={close}
-        className="fixed top-6 right-6 md:top-8 md:right-8 text-white/60 hover:text-[#D4AF37] transition-colors text-xs tracking-[0.3em] uppercase flex items-center gap-3 group z-10 bg-[#0A1128]/70 backdrop-blur-sm px-3 py-2"
+        aria-label="Chiudi menu"
         data-testid="btn-menu-close"
+        className="fixed top-5 right-6 md:top-7 md:right-10 inline-flex items-center gap-3 text-white hover:text-[#D4AF37] transition-colors cursor-pointer bg-transparent border-none p-2 z-[210]"
       >
-        <span className="group-hover:translate-x-1 transition-transform duration-300">Chiudi</span>
-        <span className="text-[#D4AF37] text-xl leading-none">×</span>
+        <span className="w-5 h-5 inline-flex" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <circle cx="12" cy="5" r="2.4" />
+            <line x1="12" y1="7.4" x2="12" y2="22" />
+            <line x1="7" y1="12" x2="17" y2="12" />
+            <path d="M5 15a7 7 0 0 0 14 0" />
+          </svg>
+        </span>
+        <span className="text-xs tracking-[0.25em] uppercase">Chiudi</span>
       </button>
 
-      <div className="max-w-4xl mx-auto px-6 md:px-10 pt-24 pb-32">
-        {/* Always-visible Home link at the top */}
-        <Link
-          href="/"
-          onClick={close}
-          className="block text-3xl md:text-5xl font-serif text-white/80 hover:text-[#D4AF37] transition-colors duration-500 tracking-tight py-4 border-b border-white/10"
-          data-testid="nav-link-home"
-        >
-          <span className="inline-block hover:translate-x-3 transition-transform duration-500">Home</span>
-        </Link>
+      {/* Five centered links */}
+      <div className="min-h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24 py-32">
+        <div className="w-full max-w-5xl mx-auto" ref={itemsRef}>
+          {SECTIONS.map((section, i) => {
+            const number = String(i + 1).padStart(2, '0');
+            const rowClass =
+              'nav-row group relative flex items-baseline justify-between gap-6 py-7 md:py-8 border-b border-white/10 hover:border-[#D4AF37]/40 transition-colors duration-500';
+            const numberClass = 'text-[10px] md:text-xs tracking-[0.35em] uppercase text-white/30 font-light shrink-0 w-10';
+            const labelClass =
+              'text-5xl md:text-7xl lg:text-8xl font-serif text-white font-light tracking-tight transition-colors duration-500 group-hover:text-[#D4AF37] inline-block';
+            const subClass = 'hidden md:block text-[11px] tracking-[0.25em] uppercase text-white/40 font-light text-right';
 
-        {/* Flat list — every section is fully visible. Clicking the big
-            label navigates / scrolls; sub-items appear immediately below. */}
-        {SECTIONS.map((section) => {
-          const labelClass =
-            'group inline-block text-3xl md:text-5xl font-serif tracking-tight text-white/80 hover:text-[#D4AF37] transition-colors duration-500';
+            const inner = (
+              <>
+                <span className={numberClass}>{number}</span>
+                <span className={`${labelClass} flex-1 ml-4 md:ml-8`}>
+                  <span className="inline-block transition-transform duration-500 group-hover:translate-x-3">
+                    {section.label}
+                  </span>
+                </span>
+                <span className={subClass}>{section.subtitle}</span>
+              </>
+            );
 
-          const labelNode = section.kind === 'anchor' ? (
-            <button
-              type="button"
-              onClick={() => scrollToAnchor(section.anchor)}
-              className={`${labelClass} text-left`}
-              data-testid={`nav-link-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              <span className="inline-block group-hover:translate-x-3 transition-transform duration-500">
-                {section.label}
-              </span>
-            </button>
-          ) : (
-            <Link
-              href={section.href}
-              onClick={close}
-              className={labelClass}
-              data-testid={`nav-link-${section.label.toLowerCase()}`}
-            >
-              <span className="inline-block group-hover:translate-x-3 transition-transform duration-500">
-                {section.label}
-              </span>
-            </Link>
-          );
+            if (section.kind === 'anchor') {
+              return (
+                <button
+                  key={section.label}
+                  type="button"
+                  onClick={() => scrollToAnchor(section.anchor)}
+                  className={`${rowClass} text-left w-full bg-transparent border-0 border-b border-white/10 cursor-pointer`}
+                  data-testid={`nav-link-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  {inner}
+                </button>
+              );
+            }
+            return (
+              <Link
+                key={section.label}
+                href={section.href}
+                onClick={close}
+                className={rowClass}
+                data-testid={`nav-link-${section.label.toLowerCase()}`}
+              >
+                {inner}
+              </Link>
+            );
+          })}
+        </div>
 
-          return (
-            <div
-              key={section.label}
-              className="border-b border-white/10 py-6 md:py-8"
-              data-testid={`nav-section-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              {labelNode}
-
-              <div className="mt-5 md:mt-6">
-                {section.kind === 'list' && (
-                  <ul className="space-y-1">
-                    {section.items.map((item, j) => (
-                      <li key={`${section.label}-${j}`}>
-                        {item.href ? (
-                          <Link
-                            href={item.href}
-                            onClick={close}
-                            className="group flex items-baseline justify-between gap-6 py-2.5 md:py-3 border-l-2 border-transparent hover:border-[#D4AF37] hover:pl-4 pl-2 transition-all duration-500"
-                          >
-                            <span className="text-base md:text-lg font-serif text-white/80 group-hover:text-white transition-colors">
-                              {item.title}
-                            </span>
-                            {item.meta && (
-                              <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
-                                {item.meta}
-                              </span>
-                            )}
-                          </Link>
-                        ) : (
-                          <div className="flex items-baseline justify-between gap-6 py-2.5 md:py-3 pl-2">
-                            <span className="text-base md:text-lg font-serif text-white/80">
-                              {item.title}
-                            </span>
-                            {item.meta && (
-                              <span className="text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-white/40 font-light shrink-0">
-                                {item.meta}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {section.kind === 'gallery' && (
-                  <Link
-                    href={section.href}
-                    onClick={close}
-                    className="block"
-                    aria-label="Apri la galleria completa"
-                  >
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 gap-2">
-                      {Array.from({ length: section.count }, (_, j) => (
-                        <div
-                          key={`thumb-${j}`}
-                          className="aspect-square bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/10 hover:border-[#D4AF37]/40 transition-colors duration-500 flex items-center justify-center group"
-                          data-testid={`gallery-thumb-${j + 1}`}
-                        >
-                          <span className="text-[8px] tracking-[0.15em] uppercase text-white/30 font-light group-hover:text-[#D4AF37] transition-colors">
-                            {String(j + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </Link>
-                )}
-
-                {section.kind === 'anchor' && (
-                  <div className="pl-2">{section.body}</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Bottom signature */}
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 text-white/30 text-[10px] tracking-[0.2em] uppercase">
-          <span>Il Veliero — San Vito Lo Capo</span>
-          <span className="text-[#D4AF37]/60">+39 0923 000 000</span>
+        {/* Footer signature inside menu */}
+        <div className="max-w-5xl mx-auto w-full mt-16 md:mt-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white/40 text-[10px] tracking-[0.3em] uppercase">
+          <span>San Vito Lo Capo · Sicilia</span>
+          <span className="text-[#D4AF37]/70">+39 0923 000 000</span>
         </div>
       </div>
     </div>

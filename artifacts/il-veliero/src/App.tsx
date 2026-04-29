@@ -19,6 +19,7 @@ import Footer from '@/pages/Footer';
 import Rooms from '@/pages/Rooms';
 import Gallery from '@/pages/Gallery';
 import Blog from '@/pages/Blog';
+import About from '@/pages/About';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -86,7 +87,9 @@ export default function App() {
               <Route path="/" component={HomePage} />
               <Route path="/rooms" component={Rooms} />
               <Route path="/gallery" component={Gallery} />
+              <Route path="/galleria" component={Gallery} />
               <Route path="/blog" component={Blog} />
+              <Route path="/about" component={About} />
             </Switch>
           </main>
         </div>

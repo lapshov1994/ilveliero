@@ -2,10 +2,11 @@ import React, { useRef, useEffect } from 'react';
 import { Link } from 'wouter';
 import gsap from 'gsap';
 import { useNav } from './NavigationContext';
+import MenuTrigger from './MenuTrigger';
 import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 export default function InnerPageHeader() {
-  const { toggle, isOpen } = useNav();
+  const { isOpen } = useNav();
   const sailboatRef = useRef<HTMLDivElement>(null);
   const swayRef = useRef<gsap.core.Tween | null>(null);
 
@@ -33,7 +34,7 @@ export default function InnerPageHeader() {
   }, [isOpen]);
 
   return (
-    <header className="fixed top-0 left-0 w-full px-8 py-6 z-50 flex justify-between items-center bg-white/95 backdrop-blur-sm border-b border-[#0A1128]/5">
+    <header className="fixed top-0 left-0 w-full px-8 py-6 z-[110] flex justify-between items-center bg-white/95 backdrop-blur-sm border-b border-[#0A1128]/5">
       <Link href="/" className="flex items-center gap-3 group cursor-pointer">
         <div className="relative z-50">
           <div ref={sailboatRef} className="relative z-50">
@@ -59,13 +60,7 @@ export default function InnerPageHeader() {
         </div>
       </Link>
 
-      <button
-        onClick={toggle}
-        className="text-xs tracking-widest uppercase text-[#0A1128] hover:text-[#D4AF37] transition-colors relative overflow-hidden group"
-      >
-        Menu
-        <span className="absolute bottom-0 left-0 w-full h-px bg-[#D4AF37] translate-x-[-105%] group-hover:translate-x-0 transition-transform duration-300 origin-left" />
-      </button>
+      <MenuTrigger className="text-[#0A1128] hover:text-[#D4AF37] transition-colors" />
     </header>
   );
 }

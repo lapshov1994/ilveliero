@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className="bg-[#0A1128] text-white pt-24 pb-12 px-6 lg:px-20 relative z-10 overflow-hidden"
+      className="bg-[#0A1128] text-white pt-20 pb-12 px-6 lg:px-20 relative z-[95] overflow-hidden"
     >
 
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
@@ -55,7 +55,7 @@ export default function Footer() {
 
         {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline */}
         <section
-          className="mb-24 border-b border-white/10 pb-20"
+          className="mb-16 border-b border-white/10 pb-14"
           data-testid="cosa-fare-section"
         >
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">

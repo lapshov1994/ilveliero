@@ -29,8 +29,16 @@ export default function SandFilter() {
   const fineRef = useRef<HTMLDivElement>(null);
   const [location] = useLocation();
 
+  // The sand filter is intentionally only present on the home page where it
+  // sits over the white "story" sections and the dark hero photograph. On
+  // inner pages (rooms / gallery / blog / about) the filter would either
+  // muddy the white text on the dark footer or sit over photographs the
+  // user wants to see clean.
+  const isHome = location === '/' || location === '';
+
   useEffect(() => {
     if (!layerRef.current) return;
+    if (!isHome) return;
 
     const ctx = gsap.context(() => {
       gsap.set(coarseRef.current, { opacity: 0.55, scale: 1, x: 0, y: 0 });
@@ -87,7 +95,9 @@ export default function SandFilter() {
     });
 
     return () => ctx.revert();
-  }, [location]);
+  }, [location, isHome]);
+
+  if (!isHome) return null;
 
   return (
     <div

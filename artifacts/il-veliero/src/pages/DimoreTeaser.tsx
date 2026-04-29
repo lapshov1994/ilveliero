@@ -31,7 +31,7 @@ export default function DimoreTeaser() {
     <section
       id="dimore-teaser"
       ref={containerRef}
-      className="relative z-10 bg-white text-[#0A1128] py-32 px-6 lg:px-20 overflow-hidden"
+      className="relative z-10 bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
     >
       <div className="absolute top-16 right-10 text-[18rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">04</div>
 

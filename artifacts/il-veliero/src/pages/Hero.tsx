@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import MenuTrigger from '@/components/MenuTrigger';
 import { useNav } from '@/components/NavigationContext';
 import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
-  const { toggle, isOpen } = useNav();
   const heroBgRef = useRef<HTMLDivElement>(null);
   const heroBookingRef = useRef<HTMLDivElement>(null);
   const heroLine1Ref = useRef<HTMLHeadingElement>(null);
@@ -21,6 +21,7 @@ export default function Hero() {
   const marqueeTweenRef = useRef<gsap.core.Tween | null>(null);
   const sailboatSwayTweenRef = useRef<gsap.core.Tween | null>(null);
   const [headerScrolled, setHeaderScrolled] = useState(false);
+  const { isOpen } = useNav();
 
   useEffect(() => {
     const onScroll = () => {
@@ -173,14 +174,7 @@ export default function Hero() {
             </span>
           </div>
         </div>
-        <button
-          onClick={toggle}
-          className="text-xs tracking-widest uppercase cursor-pointer hover:text-[#D4AF37] transition-colors relative overflow-hidden group bg-transparent border-none"
-          data-testid="btn-menu"
-        >
-          Menu
-          <span className="absolute bottom-0 left-0 w-full h-px bg-[#D4AF37] translate-x-[-105%] group-hover:translate-x-0 transition-transform duration-300 origin-left" />
-        </button>
+        <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
       </header>
 
       {/* Full-screen hero */}
