@@ -121,13 +121,16 @@ export default function Family() {
               text columns keep the warm grain. */}
           <div
             ref={imageWrapRef}
-            className="relative z-[110] isolate overflow-hidden aspect-[4/3] w-full"
+            className="relative z-[110] isolate w-full"
           >
+            {/* No fixed aspect / no crop — the photo is shown at its
+                natural proportions so the entrance reads exactly as
+                the camera captured it. */}
             <img
               ref={imageRef}
               src={doorImg}
               alt="L'ingresso de Il Veliero — porta in legno con ringhiera in ferro battuto"
-              className="w-full h-full object-cover"
+              className="block w-full h-auto"
             />
           </div>
           <div ref={addToRefs} className="mt-6 text-center md:text-left">

@@ -381,12 +381,16 @@ export default function DimoreTeaser() {
             <div
               ref={photoLayerRef}
               key={`${activeRoom}-${currentPhoto}`}
-              className="absolute inset-0"
+              className="absolute inset-0 flex items-center justify-center"
             >
+              {/* object-contain — show the room photo in full, never
+                  crop. The carousel still keeps its consistent 4:5
+                  outer footprint so the page layout stays stable as
+                  the guest cycles through photos of mixed aspect. */}
               <img
                 src={room.photos[currentPhoto]}
                 alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-full w-auto h-auto object-contain"
                 draggable={false}
               />
             </div>
