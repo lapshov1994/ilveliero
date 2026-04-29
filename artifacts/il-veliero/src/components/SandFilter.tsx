@@ -61,25 +61,28 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // power2.out — fast, visible growth from the very first pixel
-        // of scroll, then a soft approach to full opacity. Concretely,
-        // at 10% scroll opacity is already ~19%, at 25% it's ~44%,
-        // at 50% it's ~75%, and at 100% it lands cleanly at 1. So the
-        // user sees a real-time, continuously growing gradient on
-        // every micro-scroll instead of "nothing → suddenly full".
-        ease: 'power2.out',
+        // power2.in — barely-perceptible change for the first few
+        // pixels of scroll, then a steady, growing buildup that
+        // accelerates into the final third. Concretely:
+        //   10% scroll → ~1%   opacity   (subtle)
+        //   25% scroll → ~6%   opacity   (just visible)
+        //   50% scroll → ~25%  opacity   (clearly growing)
+        //   75% scroll → ~56%  opacity   (well established)
+        //  100% scroll → 100%  opacity   (full)
+        // This is exactly the "gradual at the start, ramping up as
+        // you scroll" behaviour the user asked for — never a jump,
+        // never a fast initial spike.
+        ease: 'power2.in',
         scrollTrigger: {
           trigger: hero,
-          // Tightened range: full opacity is reached at 35% of the
-          // hero (~305px on mobile), which is BEFORE the booking
-          // widget pinned at the bottom of the hero comes into the
-          // middle of the viewport. So by the time the user lands on
-          // the booking widget, the sand is already 100% — exactly
-          // what was asked for. `scrub: true` keeps the opacity tied
-          // 1:1 to the scroll position, with no catch-up animation
-          // and no start-delay that could read as a step.
+          // 100% lands at 40% of the hero (~350px on mobile),
+          // which is the moment the booking widget pinned at the
+          // bottom of the hero comes into the centre of the
+          // viewport. By the time the user reaches the booking,
+          // the sand is fully on. `scrub: true` ties the opacity
+          // 1:1 to scroll position with no inertia / catch-up.
           start: 'top top',
-          end: '+=35%',
+          end: '+=40%',
           scrub: true,
         },
       });
