@@ -16,27 +16,41 @@ export default function Story() {
   const text2Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    gsap.to(image1Ref.current, {
-      y: 100,
-      ease: "none",
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: true,
-      },
-    });
+    // Symmetric parallax: image starts ABOVE its centred resting position
+    // and ends BELOW it. The image element is sized h-[130%] with -top-[15%]
+    // so it has ~15% overflow on BOTH sides of the wrapper. As long as the
+    // tween range (-40..+40 px) stays smaller than the available overflow,
+    // the photo always covers the wrapper edge-to-edge — no exposed grey
+    // background can appear at the top or bottom.
+    gsap.fromTo(
+      image1Ref.current,
+      { y: -40 },
+      {
+        y: 40,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      }
+    );
 
-    gsap.to(image2Ref.current, {
-      y: -100,
-      ease: "none",
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top bottom",
-        end: "bottom top",
-        scrub: true,
-      },
-    });
+    gsap.fromTo(
+      image2Ref.current,
+      { y: 40 },
+      {
+        y: -40,
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: true,
+        },
+      }
+    );
 
     [text1Ref.current, text2Ref.current].forEach((text) => {
       if (!text) return;
@@ -119,7 +133,7 @@ export default function Story() {
                 ref={image1Ref}
                 src={shellsImg}
                 alt="Conchiglie, stelle marine e coralli — dettagli marinari de Il Veliero"
-                className="w-full h-[120%] object-cover scale-110"
+                className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
               />
             </div>
 
@@ -147,7 +161,7 @@ export default function Story() {
                 ref={image2Ref}
                 src={welcomeImg}
                 alt="Salvagente Welcome Aboard e poltroncina con cuscino veliero"
-                className="w-full h-[120%] object-cover scale-110"
+                className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
               />
             </div>
 
