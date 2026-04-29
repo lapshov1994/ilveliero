@@ -1,163 +1,205 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 /**
- * Cursor — the user's pointer becomes a tiny gold sailing ship. By default
- * the ship is alone on the page; only as it moves does it begin to leave a
- * wake.
+ * Cursor — there is NO visible cursor sprite. Instead, the user's pointer
+ * silently disturbs the surface of the sea: every meaningful move spawns
+ * one or two ripples that drift backwards along the motion line and
+ * dissipate. Vertical scroll independently disturbs the sea across the
+ * full width of the viewport, so both pointer and scroll feel like they
+ * touch water.
  *
- * Wake design (per latest feedback):
- *   - The wake is a true KILVATER: every ripple sits directly behind the
- *     hull on the line of motion, never to the side, never rotated for
- *     visual variety.
- *   - Each ripple is rotated only to align its long axis perpendicular to
- *     motion (so the wave reads as a wave, not as a streak), but never with
- *     extra "decorative" jitter.
- *   - Five hand-picked sine-shaped wave forms are randomly rotated through.
- *     They differ in length and amplitude, but every form is unmistakably
- *     a wave — no spirals, no asymmetric shapes, no chaos.
- *   - Ripples fade out gently in place with only a small straight push
- *     further behind the ship along the motion line. They do not drift
- *     sideways and they do not spin.
+ * Design notes:
+ *   - No ship, no mascot, no hard "cursor" object — the surface itself
+ *     is the cursor.
+ *   - Waves come in many shapes (gentle arcs, choppy crests, long
+ *     swells, foam-tipped curls, splash-rings) and many tones (deep
+ *     navy, sky blue, sea-foam, warm gold) so consecutive waves never
+ *     read as a copy-paste pattern.
+ *   - Foam dashes and tiny spray dots are sprinkled in at random for
+ *     extra realism without ever turning the page into a particle
+ *     storm.
+ *   - Scroll-driven waves are emitted at random horizontal positions
+ *     across the viewport, perpendicular to the scroll direction, and
+ *     drift in the scroll direction before fading. They use the same
+ *     library of wave forms but are biased towards larger swells so
+ *     the page feels like an open sea, not a puddle.
  */
 export default function Cursor() {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const shipRef = useRef<HTMLDivElement>(null);
   const trailLayerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    const ship = shipRef.current;
     const trailLayer = trailLayerRef.current;
-    if (!wrap || !ship || !trailLayer) return;
+    if (!trailLayer) return;
 
-    let idleTimer: ReturnType<typeof setTimeout> | null = null;
     let lastX = 0;
     let lastY = 0;
     let lastTrailX = 0;
     let lastTrailY = 0;
     let initialized = false;
-    // Persistent direction of travel — used so ripples emitted on micro-stops
-    // still align with the last meaningful motion.
     let dirX = 0;
     let dirY = 1;
 
-    // Smoother, less "snappy" follower. The previous power3.out / 0.18s
-    // pairing produced a sharp catch-up at the end of every move which
-    // reads on touch screens as both "lagging behind the finger" AND
-    // "jumping" — the ship would noticeably overshoot and then snap.
-    // power2.out with a longer duration gives a buttery glide that never
-    // overshoots and feels glued to the input.
-    const setX = gsap.quickTo(wrap, 'x', { duration: 0.45, ease: 'power2.out' });
-    const setY = gsap.quickTo(wrap, 'y', { duration: 0.45, ease: 'power2.out' });
-
-    const rockTween = gsap.to(ship, {
-      rotation: 5,
-      duration: 1.6,
-      yoyo: true,
-      repeat: -1,
-      ease: 'sine.inOut',
-      transformOrigin: 'center bottom',
-    });
-    const bobTween = gsap.to(ship, {
-      y: -2,
-      duration: 1.6,
-      yoyo: true,
-      repeat: -1,
-      ease: 'sine.inOut',
-    });
-
-    const reveal = () => {
-      gsap.killTweensOf(wrap, 'opacity');
-      gsap.to(wrap, { opacity: 1, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
-    };
-    const hideNow = () => {
-      gsap.killTweensOf(wrap, 'opacity');
-      gsap.to(wrap, { opacity: 0, duration: 0.5, ease: 'sine.in', overwrite: 'auto' });
-    };
-    const scheduleHide = () => {
-      if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        gsap.killTweensOf(wrap, 'opacity');
-        gsap.to(wrap, { opacity: 0, duration: 1.6, ease: 'sine.in', overwrite: 'auto' });
-      }, 1800);
-    };
-
     /**
-     * Five wake silhouettes designed to look like the curling wash off the
-     * stern of a small boat. Each is a CURVED arc (concave away from the
-     * ship) with one or more pronounced crest bumps along its length —
-     * not a tame horizontal sine. Together they form a varied but
-     * recognisable family of "real boat wake" ripples.
-     *
-     * The crest path (`crestD`) is the foreground, brighter line.
-     * The optional `foamD` line draws a couple of short broken foam
-     * highlights along the crest for extra realism.
+     * A library of wave forms, varying in shape, length and amplitude.
+     * Categories included:
+     *   - Gentle long swells (calm sea)
+     *   - Choppy short crests (fresh wind)
+     *   - Asymmetric curls (wave breaking)
+     *   - Splash-style dot rings (impact)
+     *   - Long sweeping arcs (open ocean)
      */
-    type Form = { crestD: string; foamD?: string; halfLen: number; halfAmp: number };
+    type Form = {
+      crestD: string;
+      foamD?: string;
+      sprayDots?: Array<{ x: number; y: number; r: number }>;
+      halfLen: number;
+      halfAmp: number;
+      // Visual weight — smaller forms get thinner strokes, big forms
+      // get heavier strokes so they read at distance.
+      weight: number;
+    };
+
     const WAVE_FORMS: Form[] = [
       // 1. Wide shallow arc with two pronounced bumps near the centre.
       {
         crestD: 'M -34 4 Q -24 -2 -16 -1 Q -8 -8 0 -2 Q 8 -8 16 -1 Q 24 -2 34 4',
-        foamD:  'M -10 -5 L -6 -6  M 6 -6 L 10 -5',
-        halfLen: 34, halfAmp: 9,
+        foamD: 'M -10 -5 L -6 -6  M 6 -6 L 10 -5',
+        halfLen: 34, halfAmp: 9, weight: 1.2,
       },
-      // 2. Long sweep with a single big swell to the right of centre.
+      // 2. Long sweep with a single big swell.
       {
         crestD: 'M -36 5 Q -22 -1 -10 -2 Q -2 -10 8 -3 Q 18 0 36 5',
-        foamD:  'M -2 -7 L 4 -8',
-        halfLen: 36, halfAmp: 10,
+        foamD: 'M -2 -7 L 4 -8',
+        halfLen: 36, halfAmp: 10, weight: 1.3,
       },
       // 3. Three short choppy crests, like fresh wash close to the hull.
       {
         crestD: 'M -28 3 Q -22 -2 -16 -3 Q -10 -7 -4 -2 Q 0 -8 6 -3 Q 12 -8 18 -3 Q 24 -2 28 3',
-        foamD:  'M -16 -5 L -12 -6  M 4 -6 L 8 -7  M 16 -5 L 20 -6',
-        halfLen: 28, halfAmp: 8,
+        foamD: 'M -16 -5 L -12 -6  M 4 -6 L 8 -7  M 16 -5 L 20 -6',
+        halfLen: 28, halfAmp: 8, weight: 1.0,
       },
-      // 4. Asymmetric curl — one heavy crest left of centre, tail trails right.
+      // 4. Asymmetric curl — heavy crest on the left.
       {
         crestD: 'M -30 5 Q -20 -3 -14 -4 Q -8 -11 -2 -3 Q 6 0 16 1 Q 24 3 30 5',
-        foamD:  'M -10 -8 L -4 -7',
-        halfLen: 30, halfAmp: 11,
+        foamD: 'M -10 -8 L -4 -7',
+        halfLen: 30, halfAmp: 11, weight: 1.2,
       },
-      // 5. Gentle low spread with a subtle double dip — the calm wake.
+      // 5. Gentle low spread with subtle double dip — calm wake.
       {
         crestD: 'M -32 2 Q -22 -1 -14 -2 Q -6 -5 0 -2 Q 6 -5 14 -2 Q 22 -1 32 2',
-        halfLen: 32, halfAmp: 5,
+        halfLen: 32, halfAmp: 5, weight: 0.9,
+      },
+      // 6. LONG open-sea swell — wide, very low amplitude, single graceful crest.
+      {
+        crestD: 'M -56 4 Q -34 1 -16 -2 Q 0 -6 16 -2 Q 34 1 56 4',
+        halfLen: 56, halfAmp: 8, weight: 1.5,
+      },
+      // 7. Big asymmetric breaker — a long dropping curve with foam scatter.
+      {
+        crestD: 'M -48 6 Q -28 1 -10 -3 Q 0 -10 12 -4 Q 26 0 48 7',
+        foamD: 'M -6 -8 L 0 -9  M 4 -8 L 10 -9',
+        halfLen: 48, halfAmp: 12, weight: 1.4,
+      },
+      // 8. Spray ring — a near-flat baseline plus a constellation of tiny dots above it.
+      {
+        crestD: 'M -22 1 Q -10 -2 0 -2 Q 10 -2 22 1',
+        sprayDots: [
+          { x: -12, y: -7, r: 0.8 },
+          { x: -4, y: -10, r: 1.0 },
+          { x: 3, y: -9, r: 0.7 },
+          { x: 10, y: -7, r: 0.9 },
+          { x: -1, y: -12, r: 0.6 },
+        ],
+        halfLen: 22, halfAmp: 12, weight: 0.9,
+      },
+      // 9. Tiny ripple — a delicate near-sine, very low amplitude. Used for
+      //    pointer micro-motion so subtle moves still leave a trace.
+      {
+        crestD: 'M -16 1 Q -8 -1 0 -2 Q 8 -1 16 1',
+        halfLen: 16, halfAmp: 3, weight: 0.7,
+      },
+      // 10. Twin crest — two equal swells separated by a calm trough.
+      {
+        crestD: 'M -38 3 Q -28 0 -22 -1 Q -16 -7 -10 -2 Q -2 0 2 0 Q 8 0 10 -2 Q 16 -7 22 -1 Q 28 0 38 3',
+        foamD: 'M -12 -5 L -8 -6  M 8 -6 L 12 -5',
+        halfLen: 38, halfAmp: 8, weight: 1.2,
       },
     ];
 
+    /**
+     * Sea palette. Each colour is paired with an "echo" colour for the
+     * faint shadow line that sits behind the main crest. Using a small
+     * but real palette gives the page a sense of varied depth and light
+     * across the surface.
+     */
+    type Palette = { main: string; echo: string; foam: string };
+    const SEA_PALETTES: Palette[] = [
+      { main: '#5BB8E8', echo: '#7AC8F0', foam: '#FFFFFF' }, // sky blue (brand)
+      { main: '#3A8AB8', echo: '#5AA8D8', foam: '#E8F5FB' }, // deeper teal
+      { main: '#7AC8E8', echo: '#A8DDEE', foam: '#FFFFFF' }, // sea-foam
+      { main: '#1F4E7A', echo: '#3A6E94', foam: '#CFE6F4' }, // navy depth
+      { main: '#2E91C2', echo: '#5BB8E8', foam: '#FFFFFF' }, // mid blue
+      { main: '#D4AF37', echo: '#E8C45A', foam: '#FFF6D6' }, // warm gold (rare — sun-glint)
+    ];
+
     let lastFormIdx = -1;
-    const pickForm = () => {
-      // Avoid picking the exact same form twice in a row so consecutive
-      // ripples are always at least slightly different.
-      let idx = Math.floor(Math.random() * WAVE_FORMS.length);
+    let lastPaletteIdx = -1;
+
+    const pickForm = (preferLarge: boolean = false): Form => {
+      // When preferLarge (scroll-driven), bias selection toward the
+      // bigger-amp / longer forms (#6, #7, #10) to make the open-sea
+      // feeling on scroll really land.
+      let idx: number;
+      if (preferLarge && Math.random() < 0.6) {
+        const big = [5, 6, 9]; // 0-indexed: forms 6, 7, 10
+        idx = big[Math.floor(Math.random() * big.length)];
+      } else {
+        idx = Math.floor(Math.random() * WAVE_FORMS.length);
+      }
       if (idx === lastFormIdx) idx = (idx + 1) % WAVE_FORMS.length;
       lastFormIdx = idx;
       return WAVE_FORMS[idx];
     };
 
-    /**
-     * Spawn one wave segment STRICTLY in the wake — directly behind the
-     * hull, on the line of motion, oriented perpendicular to motion, and
-     * with no rotational jitter or sideways drift.
-     */
-    const spawnWave = (anchorX: number, anchorY: number, mDirX: number, mDirY: number) => {
-      const form = pickForm();
+    const pickPalette = (): Palette => {
+      // Gold is rare (≈1 in 12) so it reads as a special highlight not
+      // the dominant tone.
+      if (Math.random() < 0.08) return SEA_PALETTES[5];
+      let idx = Math.floor(Math.random() * 5); // 0..4 — non-gold
+      if (idx === lastPaletteIdx) idx = (idx + 1) % 5;
+      lastPaletteIdx = idx;
+      return SEA_PALETTES[idx];
+    };
 
-      // The wave's long axis must be perpendicular to motion. atan2 gives
-      // motion angle; +90deg rotates the wave so its crest line crosses
-      // the wake.
+    /**
+     * Spawn one wave fragment.
+     *   - anchor (x, y) is the disturbed surface point
+     *   - mDir (dx, dy) is the direction the disturbance travels
+     *   - opts.preferLarge biases form selection toward bigger swells
+     *   - opts.scaleBoost multiplies the chosen form's natural scale
+     */
+    const spawnWave = (
+      anchorX: number,
+      anchorY: number,
+      mDirX: number,
+      mDirY: number,
+      opts: { preferLarge?: boolean; scaleBoost?: number; lifeBoost?: number } = {}
+    ) => {
+      const form = pickForm(opts.preferLarge);
+      const palette = pickPalette();
+
+      // Wave's long axis perpendicular to motion direction.
       const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI) + 90;
 
-      // Subtle uniform scale variation per spawn (0.9..1.15) so successive
-      // waves look like the same wake at slightly different distances —
-      // this is the ONLY size variation, kept small.
-      const scale = 0.9 + Math.random() * 0.25;
+      // Per-spawn scale variation. Pointer waves: 0.85..1.25. Scroll
+      // waves can additionally take a scaleBoost so individual swells
+      // feel large and oceanic.
+      const baseScale = 0.85 + Math.random() * 0.4;
+      const scale = baseScale * (opts.scaleBoost ?? 1);
 
-      const svgWidth = (form.halfLen * 2 + 6) * scale;
-      const svgHeight = form.halfAmp * 5 * scale;
+      const svgWidth = (form.halfLen * 2 + 8) * scale;
+      const svgHeight = (form.halfAmp * 6 + 4) * scale;
 
       const wave = document.createElement('div');
       wave.className = 'absolute pointer-events-none';
@@ -166,32 +208,40 @@ export default function Cursor() {
       wave.style.willChange = 'transform, opacity';
       wave.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(${scale})`;
 
-      // Build the SVG. Three layers: a faint shadow echo behind the main
-      // crest (gives the curl a sense of depth), the bright crest, and a
-      // few short foam dashes on top.
+      const echoWeight = (form.weight * 0.6).toFixed(2);
+      const mainWeight = form.weight.toFixed(2);
+
       const foamMarkup = form.foamD
-        ? `<path d="${form.foamD}" fill="none" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" opacity="0.55" />`
+        ? `<path d="${form.foamD}" fill="none" stroke="${palette.foam}" stroke-width="0.85" stroke-linecap="round" opacity="0.6" />`
         : '';
+
+      const sprayMarkup = form.sprayDots
+        ? form.sprayDots
+            .map((d) => `<circle cx="${d.x}" cy="${d.y}" r="${d.r}" fill="${palette.foam}" opacity="0.65" />`)
+            .join('')
+        : '';
+
       wave.innerHTML = `
         <svg
           width="${svgWidth.toFixed(1)}"
           height="${svgHeight.toFixed(1)}"
-          viewBox="${-form.halfLen - 4} ${-form.halfAmp - 2} ${form.halfLen * 2 + 8} ${form.halfAmp + 8}"
+          viewBox="${-form.halfLen - 6} ${-form.halfAmp - 4} ${form.halfLen * 2 + 12} ${form.halfAmp * 2 + 12}"
           xmlns="http://www.w3.org/2000/svg"
           overflow="visible"
         >
-          <path d="${form.crestD}" fill="none" stroke="#7AC8F0" stroke-width="0.8" stroke-linecap="round" opacity="0.4" transform="translate(0.6, 2.4)" />
-          <path d="${form.crestD}" fill="none" stroke="#5BB8E8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+          <path d="${form.crestD}" fill="none" stroke="${palette.echo}" stroke-width="${echoWeight}" stroke-linecap="round" opacity="0.45" transform="translate(0.6, 2.4)" />
+          <path d="${form.crestD}" fill="none" stroke="${palette.main}" stroke-width="${mainWeight}" stroke-linecap="round" stroke-linejoin="round" opacity="0.92" />
           ${foamMarkup}
+          ${sprayMarkup}
         </svg>
       `;
 
       trailLayer.appendChild(wave);
 
-      // Small straight push further behind the ship along the motion line —
-      // no perpendicular drift. This makes the trail read as a real wake
-      // settling away from the hull, not as a particle effect.
-      const pushBack = 14 + Math.random() * 10;
+      // Drift back along the motion line. Scroll waves drift further
+      // (lifeBoost) so they read as a continuous moving surface.
+      const pushBase = 14 + Math.random() * 10;
+      const pushBack = pushBase * (opts.lifeBoost ?? 1);
       const driftX = -mDirX * pushBack;
       const driftY = -mDirY * pushBack;
 
@@ -204,27 +254,23 @@ export default function Cursor() {
       gsap.to(wave, {
         x: driftX,
         y: driftY,
-        // The wave settles by gently widening as it dissipates — no
-        // rotation, no sideways jitter.
-        scale: scale * 1.18,
+        scale: scale * (1.18 + Math.random() * 0.12),
         opacity: 0,
-        duration: 1.4 + Math.random() * 0.3,
+        duration: (1.4 + Math.random() * 0.4) * (opts.lifeBoost ?? 1),
         delay: 0.08,
         ease: 'sine.out',
         onComplete: () => wave.remove(),
       });
     };
 
-    const moveTo = (x: number, y: number) => {
-      setX(x);
-      setY(y);
+    // ───────────────────────── Pointer-driven waves ─────────────────────────
 
+    const moveTo = (x: number, y: number) => {
       const dx = x - lastX;
       const dy = y - lastY;
       const dist = Math.hypot(dx, dy);
 
       if (initialized && dist > 0.5) {
-        // Update the persistent direction only on meaningful motion.
         dirX = dx / dist;
         dirY = dy / dist;
 
@@ -232,14 +278,25 @@ export default function Cursor() {
         const dyFromTrail = y - lastTrailY;
         const distFromTrail = Math.hypot(dxFromTrail, dyFromTrail);
 
-        // Fixed-ish spawn cadence so the wake reads as evenly spaced
-        // ripples behind the hull rather than as a chaotic particle burst.
-        if (distFromTrail > 22) {
-          // Anchor each ripple ~12px directly behind the hull along motion.
-          const trailOffset = 12;
-          const anchorX = x - dirX * trailOffset;
-          const anchorY = y - dirY * trailOffset + 4;
-          spawnWave(anchorX, anchorY, dirX, dirY);
+        // Slightly tighter cadence so the disturbed surface feels
+        // alive, but not so dense that waves visually overlap.
+        if (distFromTrail > 18) {
+          spawnWave(x, y, dirX, dirY);
+
+          // Occasionally emit a SECOND, smaller wave a tiny bit behind
+          // the first to suggest a more complex disturbance — gives
+          // pointer-trails a layered, "real water" texture.
+          if (Math.random() < 0.35) {
+            const echoOff = 6 + Math.random() * 4;
+            spawnWave(
+              x - dirX * echoOff,
+              y - dirY * echoOff,
+              dirX,
+              dirY,
+              { scaleBoost: 0.6 }
+            );
+          }
+
           lastTrailX = x;
           lastTrailY = y;
         }
@@ -251,9 +308,6 @@ export default function Cursor() {
       lastX = x;
       lastY = y;
       initialized = true;
-
-      reveal();
-      scheduleHide();
     };
 
     const onMove = (e: MouseEvent) => moveTo(e.clientX, e.clientY);
@@ -273,44 +327,69 @@ export default function Cursor() {
       if (!t) return;
       moveTo(t.clientX, t.clientY);
     };
-    const onTouchEnd = () => scheduleHide();
 
-    // NOTE: scroll-driven wake was intentionally removed. When the user
-    // scrolls with a trackpad while keeping the cursor still, ripples
-    // would pile up at the same screen point and overlap into an ugly
-    // stack. The ship leaves a wake only when it actually moves now.
+    // ───────────────────────── Scroll-driven waves ──────────────────────────
 
-    const onMouseOut = (e: MouseEvent) => {
-      if (!e.relatedTarget && !(e as MouseEvent & { toElement?: Element }).toElement) {
-        if (idleTimer) clearTimeout(idleTimer);
-        hideNow();
+    let lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    let scrollAccumulated = 0;
+    const SCROLL_SPAWN_PX = 120; // emit a wave roughly every 120px of scroll
+
+    const onScroll = () => {
+      const sy = window.scrollY || document.documentElement.scrollTop || 0;
+      const delta = sy - lastScrollY;
+      lastScrollY = sy;
+      if (delta === 0) return;
+
+      scrollAccumulated += Math.abs(delta);
+      if (scrollAccumulated < SCROLL_SPAWN_PX) return;
+      scrollAccumulated = 0;
+
+      // Direction: scroll-down = disturbance moves DOWN the page.
+      const sDirX = 0;
+      const sDirY = delta > 0 ? 1 : -1;
+
+      // Pick a random horizontal position across the viewport, biased
+      // away from the very edges so waves feel like they sit IN the
+      // page, not at the gutter.
+      const margin = Math.min(80, window.innerWidth * 0.1);
+      const x = margin + Math.random() * (window.innerWidth - margin * 2);
+      // Vertical: a comfortable middle band of the viewport — never
+      // too close to top header or bottom marquee where it would
+      // overlap text.
+      const yMin = window.innerHeight * 0.25;
+      const yMax = window.innerHeight * 0.75;
+      const y = yMin + Math.random() * (yMax - yMin);
+
+      spawnWave(x, y, sDirX, sDirY, {
+        preferLarge: true,
+        // Scroll waves are bigger and live longer — they should feel
+        // like an oceanic surface response, not a fleeting tick.
+        scaleBoost: 1.4 + Math.random() * 0.8,
+        lifeBoost: 1.4,
+      });
+
+      // Sometimes companion ripple a bit higher/lower — varied surface.
+      if (Math.random() < 0.5) {
+        const offX = (Math.random() - 0.5) * 220;
+        const offY = (Math.random() - 0.5) * 80;
+        spawnWave(x + offX, y + offY, sDirX, sDirY, {
+          preferLarge: false,
+          scaleBoost: 0.9 + Math.random() * 0.4,
+          lifeBoost: 1.2,
+        });
       }
-    };
-    const onBlur = () => {
-      if (idleTimer) clearTimeout(idleTimer);
-      hideNow();
     };
 
     window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseout', onMouseOut);
-    window.addEventListener('blur', onBlur);
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchend', onTouchEnd);
-    window.addEventListener('touchcancel', onTouchEnd);
+    window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseout', onMouseOut);
-      window.removeEventListener('blur', onBlur);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('touchcancel', onTouchEnd);
-      if (idleTimer) clearTimeout(idleTimer);
-      gsap.killTweensOf(wrap);
-      rockTween.kill();
-      bobTween.kill();
+      window.removeEventListener('scroll', onScroll);
       while (trailLayer.firstChild) trailLayer.removeChild(trailLayer.firstChild);
     };
   }, []);
@@ -322,37 +401,6 @@ export default function Cursor() {
         className="absolute inset-0 pointer-events-none"
         data-testid="cursor-wake-trail"
       />
-
-      <div
-        ref={wrapRef}
-        className="fixed top-0 left-0 opacity-0"
-        style={{
-          transform: 'translate3d(0,0,0) translate(-50%, -85%)',
-          willChange: 'transform, opacity',
-        }}
-      >
-        <div
-          ref={shipRef}
-          className="relative"
-          style={{ width: '34px', height: '38px' }}
-        >
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundColor: '#D4AF37',
-              filter: 'drop-shadow(0 2px 6px rgba(212,175,55,0.35))',
-              WebkitMaskImage: `url(${shipLogoUrl})`,
-              WebkitMaskRepeat: 'no-repeat',
-              WebkitMaskSize: 'contain',
-              WebkitMaskPosition: 'center bottom',
-              maskImage: `url(${shipLogoUrl})`,
-              maskRepeat: 'no-repeat',
-              maskSize: 'contain',
-              maskPosition: 'center bottom',
-            }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

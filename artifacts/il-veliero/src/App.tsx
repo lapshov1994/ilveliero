@@ -91,7 +91,7 @@ export default function App() {
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <NavProvider>
-        <div className="bg-white min-h-screen relative cursor-none md:cursor-none">
+        <div className="bg-white min-h-screen relative">
           {/* Grain texture — refined film grain (sits below menu overlay z-[200]) */}
           <div
             className="fixed inset-0 z-[100] pointer-events-none opacity-[0.06] mix-blend-multiply"
