@@ -64,9 +64,13 @@ export default function SandFilter() {
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          start: 'bottom 90%',
-          end: 'bottom 30%',
-          scrub: true,
+          // Stretch the fade over the full hero scroll length so the
+          // sand "settles in" very gradually: it starts the moment the
+          // user begins scrolling away from the top, and only reaches
+          // full density once the hero has completely left the viewport.
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2,
         },
       });
     });
