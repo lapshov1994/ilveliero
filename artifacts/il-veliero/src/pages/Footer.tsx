@@ -143,14 +143,14 @@ export default function Footer() {
                 href="/blog"
                 data-card
                 data-testid={`card-${c.n}`}
-                className="snap-start shrink-0 w-[80vw] sm:w-[360px] md:w-[380px] bg-white/[0.04] hover:bg-white/[0.07] border border-white/10 hover:border-[#D4AF37]/40 p-8 md:p-10 transition-all duration-500 group flex flex-col"
+                className="snap-start shrink-0 w-[80vw] sm:w-[360px] md:w-[380px] bg-[#0A1128] hover:bg-[#0E1633] border border-white/10 hover:border-[#D4AF37]/40 p-8 md:p-10 transition-all duration-500 group flex flex-col"
               >
-                <div className="flex items-baseline justify-between mb-8">
+                {/* Header — the large "01 / 02 / 03 / 04" numerals were
+                    removed at the user's request; only the colour-coded
+                    kicker remains. */}
+                <div className="flex items-baseline mb-8">
                   <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] font-bold">
                     {c.kicker}
-                  </span>
-                  <span className="text-5xl font-serif text-white/15 leading-none select-none">
-                    {c.n}
                   </span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-serif text-white leading-tight mb-5 group-hover:text-[#D4AF37] transition-colors duration-500">

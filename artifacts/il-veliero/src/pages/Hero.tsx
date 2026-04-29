@@ -294,8 +294,12 @@ export default function Hero() {
               <span className="font-light tracking-wide">2 Adulti</span>
             </div>
           </div>
+          {/* CTA button — kept the original sandy-gold finish (#D4AF37)
+              the user explicitly asked us to restore. The widget body
+              stays sky-blue so the booking strip still echoes the
+              marquee colour beneath it. */}
           <button
-            className="bg-[#0A1128] text-[#5BB8E8] px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
+            className="bg-[#D4AF37] text-black px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
             data-testid="btn-prenota"
           >
             <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">Prenota Ora</span>
@@ -304,8 +308,16 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Marquee band */}
-      <section className="relative z-10 bg-[#0A1128] overflow-hidden py-4 border-y border-white/5">
+      {/* Marquee band — also acts as the "hero end" anchor for the
+          SandFilter: at scroll = 0 the global sand layer starts where
+          this band ends so the video, the booking widget AND the
+          marquee itself are all sand-free; as the user scrolls past,
+          the sand "rises" up and eventually fills the viewport. */}
+      <section
+        className="relative z-10 bg-[#0A1128] overflow-hidden py-4 border-y border-white/5"
+        data-hero-end
+        data-testid="hero-marquee"
+      >
         <div ref={marqueeRef} className="relative flex whitespace-nowrap">
           <div className="marquee-inner flex text-[#5BB8E8] uppercase tracking-[0.2em] text-xs font-light">
             {[...Array(4)].map((_, i) => (

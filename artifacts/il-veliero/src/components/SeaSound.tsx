@@ -16,8 +16,13 @@ import { useEffect, useRef } from 'react';
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
-const MIN_GAP_MS = 700;
-const SURF_DURATION = 1.5;
+// Throttle a touch wider than the surf's perceived attack so two
+// quick gestures during a scroll never sound like a single chopped
+// burst. With SURF_DURATION ≈ 2.5 s the wash trails off naturally
+// inside this window and a fresh trigger lands as a clearly second
+// wave, not a clip-edit.
+const MIN_GAP_MS = 1100;
+const SURF_DURATION = 2.5;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -56,7 +61,7 @@ export default function SeaSound() {
 
       const ctx = new Ctor();
       ctxRef.current = ctx;
-      noiseBufferRef.current = makeNoiseBuffer(ctx, 3.0);
+      noiseBufferRef.current = makeNoiseBuffer(ctx, 4.5);
 
       if (ctx.state === 'suspended') {
         try {
@@ -88,14 +93,20 @@ export default function SeaSound() {
       src.buffer = noise;
       const offset = Math.random() * Math.max(0, noise.duration - dur - 0.05);
 
+      // Softer surf:
+      //   • lowpass dropped to 580 Hz so the noise reads as deep
+      //     ocean rumble rather than wind-on-mic crackle;
+      //   • peak gain reduced to 0.28 — a gentle wash, not a hiss;
+      //   • fade-in / fade-out lengthened to ~0.9 s each so the wash
+      //     swells in and decays out smoothly with no audible cut.
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 750;
-      lp.Q.value = 0.5;
+      lp.frequency.value = 580;
+      lp.Q.value = 0.4;
 
-      const peak = 0.4;
-      const fadeIn = 0.45;
-      const fadeOut = 0.55;
+      const peak = 0.28;
+      const fadeIn = Math.min(0.95, dur * 0.4);
+      const fadeOut = Math.min(1.05, dur * 0.45);
       const sustainStart = now + fadeIn;
       const sustainEnd = now + dur - fadeOut;
 

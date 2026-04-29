@@ -346,10 +346,6 @@ export default function DimoreTeaser() {
       className="relative bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
       data-testid="dimore-teaser"
     >
-      <div className="absolute top-16 right-10 text-[18rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
-        04
-      </div>
-
       <div className="max-w-7xl mx-auto relative">
         {/* ── Section header + room toggle ────────────────────────── */}
         <div ref={headerRef} className="mb-8 md:mb-12">
@@ -370,7 +366,13 @@ export default function DimoreTeaser() {
             (z-100). Isolate creates its own stacking context so only
             the carousel rises — the rest of the section keeps its
             warm grain. */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+        {/* items-start (was items-center) — with the per-room "Prenota …"
+            button and the "01 · 04" line removed, the right-hand text
+            column is shorter than the photo. items-center was producing
+            large empty bands above and below the room copy. items-start
+            keeps the room title aligned to the top of the photo, which
+            is the look the user expects. */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-start">
           <div
             ref={carouselRef}
             id={`room-panel-${activeRoom}`}
@@ -455,7 +457,7 @@ export default function DimoreTeaser() {
             </div>
           </div>
 
-          <div ref={textRef} className="flex flex-col justify-center">
+          <div ref={textRef} className="flex flex-col justify-start">
             <h3 className="text-3xl md:text-4xl font-serif mb-2">{room.name}</h3>
             <p className="text-sm tracking-[0.15em] uppercase text-[#0A1128]/50 mb-6">
               {room.tagline}
