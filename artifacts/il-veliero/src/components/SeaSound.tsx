@@ -3,60 +3,21 @@ import { useEffect, useRef } from 'react';
 /**
  * SeaSound — invisible.
  *
- * Trigger rules (current user spec):
- *   • A trigger fires on EVERY tap (pointerdown / touchstart / click),
- *     every keypress, every mouse movement (pointermove), every wheel
- *     event, and every scroll event.
- *   • Triggers are throttled to one every 3 s — i.e. ~1 s SHORTER
- *     than the 4 s surf wash. Successive waves therefore overlap by
- *     about a second and crossfade into one another, so under any
- *     continuous user activity the surf reads as one unbroken
- *     ocean loop instead of a chopped staccato of half-waves.
- *   • Each accepted trigger plays a 4 s surf wash with long
- *     ~1.4 s / ~1.6 s fades so a single isolated gesture also
- *     decays to silence smoothly.
- *   • Every SECOND accepted trigger ALSO plays a real seagull cry on
- *     top of the surf — the gull is heard every other gesture
- *     (~6 s apart under continuous activity), never on consecutive
- *     ones.
- *
- * Browser autoplay policy:
- *   Chrome and Safari only allow an AudioContext to start (or resume
- *   from suspended) inside a "user activation" event — i.e. a real
- *   tap / click / key press. pointermove, wheel and scroll do NOT
- *   count. So the context is created and resumed inside the
- *   ACTIVATING_EVENTS handler only; the PASSIVE_EVENTS handler just
- *   plays sound when the context is already running. Without this
- *   split a visitor who only hovers / scrolls (never clicks) would
- *   create the context but it would stay forever muted.
- *
- * Why eager init at mount:
- *   The AudioContext, the brown-noise pad, AND the seagull MP3 are
- *   all created / fetched / decoded at MOUNT time, while the context
- *   is still in `suspended` state (legal — only audio output is
- *   gated, decode and buffer creation are not). On the first
- *   activating gesture we just call `ctx.resume()` and play. Without
- *   this, the first tap had to wait for fetch + decode of a 595 kB
- *   MP3, which on a slow canvas iframe meant ~10 taps before the
- *   user heard anything.
+ * Simple spec:
+ *   • Every tap (click / touch / keypress) plays one 4-second
+ *     ocean-wave wash.
+ *   • Every SECOND tap also plays a real seagull cry on top.
+ *   • That's it. No throttling, no passive listeners, no eager
+ *     init — just react to taps.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
-
-// Surf wash is 4 s long. Triggers are throttled to 3 s — i.e. ~1 s
-// SHORTER than the wave itself — so a fresh wave starts while the
-// previous wave is still in its long fade-out tail. The two crossfade
-// over each other and the listener never hears a silent gap between
-// waves. Result: under continuous mouse / scroll activity the sound
-// reads as one unbroken ocean loop, exactly as the user requested.
-const MIN_GAP_MS = 3000;
 const SURF_DURATION = 4;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
   const gullBufferRef = useRef<AudioBuffer | null>(null);
   const noiseBufferRef = useRef<AudioBuffer | null>(null);
-  const lastFiredRef = useRef<number>(0);
-  const triggerCountRef = useRef<number>(0);
+  const tapCountRef = useRef<number>(0);
 
   useEffect(() => {
     /** Brown-noise buffer — sounds like ocean wash once low-passed. */
@@ -72,31 +33,7 @@ export default function SeaSound() {
       return buf;
     };
 
-    // ─── Eager initialisation at mount ───
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-    if (Ctor) {
-      const ctx = new Ctor();
-      ctxRef.current = ctx;
-      noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
-
-      // Fire-and-forget — gull is optional; surf still plays if this
-      // never finishes. By the time the user actually clicks (almost
-      // always >> 100 ms after mount), this will already be done.
-      void (async () => {
-        try {
-          const r = await fetch(SEAGULL_URL);
-          const ab = await r.arrayBuffer();
-          gullBufferRef.current = await ctx.decodeAudioData(ab);
-        } catch {
-          /* ignore — surf still plays */
-        }
-      })();
-    }
-
-    /** Naturally-shaped 4 s surf wash. */
+    /** One 4-second ocean-wave wash. */
     const playSurf = (ctx: AudioContext) => {
       const noise = noiseBufferRef.current;
       if (!noise) return;
@@ -107,35 +44,19 @@ export default function SeaSound() {
       src.buffer = noise;
       const offset = Math.random() * Math.max(0, noise.duration - dur - 0.05);
 
-      // Soft, deep ocean-rumble character:
-      //   • lowpass at 600 Hz so the noise reads as deep wash, not hiss;
-      //   • peak gain 0.55 — clearly audible on mobile speakers
-      //     without being harsh;
-      //   • fast 0.45 s fade-in so the FIRST wave is immediately
-      //     audible (used to be 1.4 s — almost inaudible on phones);
-      //   • long ~1.6 s fade-out tail. Combined with the 1 s overlap
-      //     between successive waves (MIN_GAP_MS = 3 s, SURF_DURATION
-      //     = 4 s) the tail of one wave crossfades into the head of
-      //     the next, so under continuous activity the listener
-      //     hears one unbroken ocean loop — never a chopped staccato.
-      //     The long fade-out also means a single isolated gesture
-      //     decays naturally to silence over ~1.6 s instead of
-      //     cutting off abruptly.
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
       lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
       const peak = 0.55;
-      const fadeIn = Math.min(0.45, dur * 0.15);
-      const fadeOut = Math.min(1.6, dur * 0.45);
-      const sustainStart = now + fadeIn;
-      const sustainEnd = now + dur - fadeOut;
+      const fadeIn = 0.4;
+      const fadeOut = 1.4;
 
       const g = ctx.createGain();
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(peak, sustainStart);
-      g.gain.setValueAtTime(peak, Math.max(sustainStart + 0.01, sustainEnd));
+      g.gain.exponentialRampToValueAtTime(peak, now + fadeIn);
+      g.gain.setValueAtTime(peak, now + dur - fadeOut);
       g.gain.exponentialRampToValueAtTime(0.0005, now + dur);
 
       src.connect(lp).connect(g).connect(ctx.destination);
@@ -153,7 +74,7 @@ export default function SeaSound() {
       }, (dur + 0.5) * 1000);
     };
 
-    /** One seagull cry, with pitch & stereo variation. */
+    /** One seagull cry. */
     const playGull = (ctx: AudioContext) => {
       const buffer = gullBufferRef.current;
       if (!buffer) return;
@@ -202,68 +123,56 @@ export default function SeaSound() {
     };
 
     /**
-     * "Real" user-activation events. Only these grant Chrome / Safari
-     * the right to RESUME an AudioContext under the autoplay policy.
+     * Single tap handler. Lazily builds the AudioContext on the first
+     * tap (so it's inside a user-activation event and the browser
+     * autoplay policy is happy), then plays a wave (and maybe a gull).
      */
-    const ACTIVATING_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'] as const;
+    const onTap = () => {
+      // Lazy init on first tap — guaranteed to be inside a user
+      // gesture, so AudioContext is allowed to start in `running`.
+      if (!ctxRef.current) {
+        const Ctor =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!Ctor) return;
+        const ctx = new Ctor();
+        ctxRef.current = ctx;
+        noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
+        // Fetch + decode seagull in the background — surf already
+        // works without it; gull will start playing as soon as the
+        // buffer is ready (usually before the 2nd tap).
+        void (async () => {
+          try {
+            const r = await fetch(SEAGULL_URL);
+            const ab = await r.arrayBuffer();
+            gullBufferRef.current = await ctx.decodeAudioData(ab);
+          } catch {
+            /* ignore */
+          }
+        })();
+      }
 
-    /**
-     * "Passive" events. These can also play surf, but ONLY if the
-     * context has already been resumed by an activating event.
-     */
-    const PASSIVE_EVENTS = ['pointermove', 'wheel', 'scroll'] as const;
-
-    /** Shared, throttled "play one wave (and maybe a gull)" routine. */
-    const playOnce = (ctx: AudioContext) => {
-      const now = performance.now();
-      if (now - lastFiredRef.current < MIN_GAP_MS) return;
-      lastFiredRef.current = now;
-      triggerCountRef.current += 1;
-      // Gull on every SECOND accepted trigger — so consecutive
-      // gestures never produce two gull cries in a row.
-      const playGullThisTime = triggerCountRef.current % 2 === 0;
-      playSurf(ctx);
-      if (playGullThisTime) playGull(ctx);
-    };
-
-    /**
-     * Activating handler. Resumes the (already pre-built) context if
-     * it is still suspended, then plays a wave. Because it runs
-     * synchronously inside a real user-activation event, Chrome /
-     * Safari will actually allow `ctx.resume()` to succeed.
-     */
-    const onActivatingGesture = () => {
       const ctx = ctxRef.current;
       if (!ctx) return;
       if (ctx.state === 'suspended') {
         ctx.resume().catch(() => undefined);
       }
-      playOnce(ctx);
-    };
 
-    /**
-     * Passive handler — fires on mouse motion, wheel, and scroll.
-     * It does NOT try to resume the context (that would be silently
-     * rejected by the browser autoplay policy). It only plays when
-     * the activating handler has already resumed the context.
-     */
-    const onPassiveGesture = () => {
-      const ctx = ctxRef.current;
-      if (!ctx || ctx.state !== 'running') return;
-      playOnce(ctx);
+      tapCountRef.current += 1;
+      playSurf(ctx);
+      // Every SECOND tap (2nd, 4th, 6th…) plays a gull on top.
+      if (tapCountRef.current % 2 === 0) playGull(ctx);
     };
 
     const opts: AddEventListenerOptions = { passive: true, capture: true };
-    ACTIVATING_EVENTS.forEach((evt) => window.addEventListener(evt, onActivatingGesture, opts));
-    PASSIVE_EVENTS.forEach((evt) => window.addEventListener(evt, onPassiveGesture, opts));
+    window.addEventListener('pointerdown', onTap, opts);
+    window.addEventListener('touchstart', onTap, opts);
+    window.addEventListener('keydown', onTap, opts);
 
     return () => {
-      ACTIVATING_EVENTS.forEach((evt) =>
-        window.removeEventListener(evt, onActivatingGesture, opts),
-      );
-      PASSIVE_EVENTS.forEach((evt) =>
-        window.removeEventListener(evt, onPassiveGesture, opts),
-      );
+      window.removeEventListener('pointerdown', onTap, opts);
+      window.removeEventListener('touchstart', onTap, opts);
+      window.removeEventListener('keydown', onTap, opts);
       const ctx = ctxRef.current;
       if (ctx) {
         try {
