@@ -109,7 +109,7 @@ export default function Story() {
 
           {/* Left block — Garden & Breakfast (7 cols) */}
           <div className="md:col-span-7 relative z-10">
-            <div ref={image1WrapRef} className="overflow-hidden aspect-[4/3] w-full bg-gray-100">
+            <div ref={image1WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[4/3] w-full bg-gray-100">
               <img
                 ref={image1Ref}
                 src={shellsImg}
@@ -133,7 +133,7 @@ export default function Story() {
 
           {/* Right block — Sea & Cleanliness (4 cols, shifted down) */}
           <div className="md:col-span-4 md:col-start-9 mt-14 md:mt-32 relative z-20">
-            <div ref={image2WrapRef} className="overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
+            <div ref={image2WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
                 src={welcomeImg}
