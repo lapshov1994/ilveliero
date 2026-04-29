@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Il Veliero Hotel</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Hero media preload. The poster is tiny (~117 KB) and is the
+         FIRST pixel-painted thing the visitor sees, so we ask the
+         browser to grab it with the highest priority so it lands
+         before the React bundle even runs. The hero.mp4 itself is
+         preloaded too so the download starts in parallel with the
+         HTML/JS parse instead of waiting for the <video> element to
+         mount; on a slow connection this can shave a couple of
+         seconds off the time-to-first-frame. -->
+    <link rel="preload" as="image" href="/video/hero-poster.jpg" fetchpriority="high">
+    <link rel="preload" as="video" href="/video/hero.mp4" type="video/mp4">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- One combined stylesheet for both faces. Loading the families
