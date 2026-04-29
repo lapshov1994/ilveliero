@@ -24,8 +24,17 @@ export default function Hero() {
   const { isOpen } = useNav();
 
   useEffect(() => {
+    // Header darkens once the hero section has been scrolled almost out
+    // of view. Computed from the section's actual bounding rect rather
+    // than a fixed percentage of the viewport, so the trigger is correct
+    // for both the short mobile aspect-[4/5] hero AND the full-screen
+    // desktop hero.
     const onScroll = () => {
-      setHeaderScrolled(window.scrollY > window.innerHeight * 0.6);
+      const heroEl = document.querySelector('.hero-section') as HTMLElement | null;
+      const heroBottom = heroEl
+        ? heroEl.getBoundingClientRect().bottom
+        : window.innerHeight * 0.4;
+      setHeaderScrolled(heroBottom < 80);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
@@ -135,11 +144,11 @@ export default function Hero() {
           Adds a glassmorphic backdrop once the user scrolls past the hero so
           the white text stays readable on light sections below. */}
       <header
-        className={`fixed top-0 left-0 w-full px-8 py-6 z-[150] flex justify-between items-center text-white transition-all duration-500 ${
+        className={`fixed top-0 left-0 w-full px-5 md:px-8 py-4 md:py-6 z-[150] flex justify-between items-center text-white transition-all duration-500 ${
           headerScrolled ? 'bg-[#0A1128]/75 backdrop-blur-md' : ''
         }`}
       >
-        <div className="flex items-center gap-4 group cursor-pointer relative z-50">
+        <div className="flex items-center gap-3 md:gap-4 group cursor-pointer relative z-50">
           <div className="relative">
             <div
               ref={sailboatRef}
@@ -147,7 +156,7 @@ export default function Hero() {
             >
               <div ref={sailboatSwayRef}>
                 <div
-                  className="w-10 h-10 drop-shadow-xl"
+                  className="w-8 h-8 md:w-10 md:h-10 drop-shadow-xl"
                   style={{
                     backgroundColor: 'white',
                     WebkitMaskImage: `url(${shipLogoUrl})`,
@@ -166,10 +175,10 @@ export default function Hero() {
             <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-125 group-hover:opacity-30 transition-all duration-700 delay-150 origin-center" />
           </div>
           <div className="flex flex-col flex-shrink-0">
-            <span className="text-xl tracking-[0.3em] font-serif uppercase text-white leading-none">
+            <span className="text-base md:text-xl tracking-[0.3em] font-serif uppercase text-white leading-none">
               il veliero
             </span>
-            <span className="text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1.5 opacity-80 font-light">
+            <span className="text-[9px] md:text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase mt-1 md:mt-1.5 opacity-80 font-light">
               Tradizione &amp; Vento
             </span>
           </div>
@@ -177,90 +186,90 @@ export default function Hero() {
         <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
       </header>
 
-      {/* Full-screen hero */}
-      <section className="hero-section relative z-10 w-full h-screen overflow-hidden bg-[#0A1128]">
-        <div
-          ref={heroBgRef}
-          className="absolute inset-0 w-full h-full overflow-hidden"
-        >
-          {/* The poster image is bundled and loads instantly so the hero is
-              never blank while the video bytes stream in. The video itself
-              is 1.6 MB H.264 with `+faststart` so playback can begin from
-              the first downloaded chunks.
-
-              Mobile (< md): the 16:9 video is shown LETTERBOXED — full
-              width, native 16:9 aspect, centred vertically on the navy
-              hero background. This keeps every pixel at native resolution
-              instead of upscaling 3× to fill a portrait viewport (which
-              was making the footage look soft / low-quality). Title and
-              booking widget are absolutely positioned over the same
-              navy/letterbox stack and adapt automatically.
-
-              Desktop (md+): the video keeps full-cover behaviour and is
-              gently re-centred horizontally so the breakfast table and
-              door land in frame instead of the empty wall on the right. */}
-          <video
-            className="absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 aspect-video object-cover md:left-0 md:top-0 md:translate-x-0 md:translate-y-0 md:w-full md:h-full md:aspect-auto md:object-[22%_50%]"
-            src={`${import.meta.env.BASE_URL}video/hero.mp4`}
-            poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            aria-hidden="true"
-            data-testid="hero-video"
-            onCanPlay={(e) => {
-              // Some headless / strict autoplay policies (especially on
-              // first visit) won't honour the `autoPlay` attribute. We
-              // force-trigger play once the browser confirms it can play
-              // — this is safe because the video is muted, which all
-              // browsers allow without a user gesture.
-              const v = e.currentTarget;
-              v.muted = true;
-              const p = v.play();
-              if (p && typeof p.catch === 'function') p.catch(() => undefined);
-            }}
-          />
-          {/* Soft top + bottom vignettes for legibility of the logo and
-              the booking widget — much subtler than the old bg-black/40
-              the user removed, just enough to keep white type readable
-              against bright daylight frames. */}
-          <div className="absolute inset-x-0 top-0 h-40 md:h-48 bg-gradient-to-b from-[#0A1128]/55 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-56 md:h-64 bg-gradient-to-t from-[#0A1128]/65 to-transparent pointer-events-none" />
-        </div>
-
-        {/* Title block. On mobile the layout is intentionally STACKED —
-            title at the top (just under the floating header), 16:9 video
-            letterbox in the middle, booking widget at the bottom — so
-            the hero reads as a clean three-band composition instead of
-            an empty navy strip with an orphaned header. On desktop we
-            keep the original centred-overlay treatment. */}
-        <div className="relative z-10 flex flex-col items-center h-full text-center px-4 justify-start pt-[18vh] md:justify-center md:pt-0 md:-mt-10">
-          <div className="overflow-hidden mb-2">
-            <h1
-              ref={heroLine1Ref}
-              className="text-5xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-sm"
-              style={{ transform: 'translateY(100%)' }}
-            >
-              Dove il Mare
-            </h1>
+      {/* Hero + booking-widget wrapper. The wrapper is `relative` so the
+          booking widget can position absolutely OVER the hero on desktop
+          (md:absolute md:bottom-8) while sitting in normal flow directly
+          BELOW the video on mobile. The wrapper carries the navy
+          background ONLY on mobile so the booking widget reads cleanly
+          against it without a stripe of white body bg showing through. */}
+      <div className="relative bg-[#0A1128] md:bg-transparent pb-4 md:pb-0">
+        {/* Hero section. Mobile: portrait aspect-[4/5] container (the
+            16:9 source is cropped to portrait, focus held slightly left
+            of centre so the breakfast table stays in frame). Desktop:
+            full-screen, original full-cover crop. */}
+        <section className="hero-section relative z-10 w-full overflow-hidden bg-[#0A1128] aspect-[4/5] md:aspect-auto md:h-screen">
+          <div
+            ref={heroBgRef}
+            className="absolute inset-0 w-full h-full overflow-hidden"
+          >
+            <video
+              className="absolute inset-0 w-full h-full object-cover object-[30%_50%] md:object-[22%_50%]"
+              src={`${import.meta.env.BASE_URL}video/hero.mp4`}
+              poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              aria-hidden="true"
+              data-testid="hero-video"
+              onCanPlay={(e) => {
+                // Some headless / strict autoplay policies (especially
+                // on first visit) won't honour the `autoPlay` attribute.
+                // We force-trigger play once the browser confirms it
+                // can play — safe because the video is muted, which
+                // all browsers allow without a user gesture.
+                const v = e.currentTarget;
+                v.muted = true;
+                const p = v.play();
+                if (p && typeof p.catch === 'function') p.catch(() => undefined);
+              }}
+            />
+            {/* Top vignette — slightly stronger on mobile so the white
+                logo + Tradizione tagline sit cleanly on top of bright
+                daylight frames. */}
+            <div className="absolute inset-x-0 top-0 h-32 md:h-48 bg-gradient-to-b from-[#0A1128]/65 md:from-[#0A1128]/55 to-transparent pointer-events-none" />
+            {/* Bottom vignette — softer on mobile because the navy area
+                below the video already meets it cleanly. */}
+            <div className="absolute inset-x-0 bottom-0 h-20 md:h-64 bg-gradient-to-t from-[#0A1128]/45 md:from-[#0A1128]/65 to-transparent pointer-events-none" />
           </div>
-          <div className="overflow-hidden mb-12">
-            <h1
-              ref={heroLine2Ref}
-              className="text-5xl md:text-7xl font-serif text-white italic font-light tracking-tight drop-shadow-sm"
-              style={{ transform: 'translateY(100%)' }}
-            >
-              Incontra il Cielo
-            </h1>
-          </div>
-        </div>
 
-        {/* Booking widget — stacks fully on mobile, inline bar on desktop */}
+          {/* Title overlay. Mobile: ONE row baseline-aligned just under
+              the header, sitting on top of the video. Desktop: original
+              two-line stacked centred treatment. The two h1 refs are
+              kept across both layouts so the GSAP intro tween still
+              animates them. */}
+          <div className="absolute inset-x-0 top-[26%] md:top-0 md:bottom-0 z-10 flex justify-center items-baseline gap-1.5 md:flex-col md:items-center md:justify-center md:gap-0 text-center px-3 md:px-4 md:-mt-10">
+            <div className="overflow-hidden md:mb-2">
+              <h1
+                ref={heroLine1Ref}
+                className="text-xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
+                style={{ transform: 'translateY(100%)' }}
+              >
+                Dove il Mare
+              </h1>
+            </div>
+            <div className="overflow-hidden md:mb-12">
+              <h1
+                ref={heroLine2Ref}
+                className="text-xl md:text-7xl font-serif italic text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
+                style={{ transform: 'translateY(100%)' }}
+              >
+                Incontra il Cielo
+              </h1>
+            </div>
+          </div>
+        </section>
+
+        {/* Booking widget. Mobile: relative positioning, sits flush
+            below the video with a small navy gutter on either side.
+            Desktop: absolute, overlays the hero bottom exactly as
+            before. A single element / single ref / single
+            data-testid is preserved so SandFilter and the GSAP intro
+            both keep working. */}
         <div
           ref={heroBookingRef}
-          className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-20 w-[92%] md:w-[95%] max-w-5xl bg-black/30 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0"
+          className="relative z-20 w-[92%] md:w-[95%] max-w-5xl mx-auto bg-black/30 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0 md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
         >
           <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-white text-sm gap-3 md:gap-0 md:items-center">
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
@@ -288,7 +297,7 @@ export default function Hero() {
             <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
           </button>
         </div>
-      </section>
+      </div>
 
       {/* Marquee band */}
       <section className="relative z-10 bg-[#0A1128] overflow-hidden py-4 border-y border-white/5">
