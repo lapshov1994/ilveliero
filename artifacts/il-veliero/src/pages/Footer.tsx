@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className="bg-[#0A1128] text-white pt-14 pb-10 px-6 lg:px-20 relative z-[95] overflow-hidden"
+      className="bg-[#0A1128] text-white pt-14 pb-10 px-6 lg:px-20 relative overflow-hidden"
     >
 
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
@@ -66,12 +66,26 @@ export default function Footer() {
         data-testid="footer-sand-texture"
       />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      {/* The outer max-w wrapper used to be `relative z-10`. The z-10
+          created a stacking context that trapped its descendants below
+          the global SandFilter (z-[105]) — even children with z-[110]
+          could not escape. We keep `relative` (so the absolute decorative
+          overlays above still position against the footer outer) and
+          drop the explicit z so this wrapper no longer creates a
+          stacking context. The content sits visually above the
+          decorative overlays via DOM order alone (they are written
+          first as siblings of the footer outer). */}
+      <div className="max-w-7xl mx-auto relative">
 
-        {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline */}
+        {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline.
+            z-[110] + isolate lifts this section above the global SandFilter
+            (z-[105]) so the cards are clearly visible — exactly the same
+            treatment the room photos elsewhere on the page get. The
+            heading and the rest of the footer remain at default z so
+            they keep their warm sand grain on top. */}
         <section
           id="cosa-fare"
-          className="mb-10 border-b border-white/10 pb-10"
+          className="relative z-[110] isolate mb-10 border-b border-white/10 pb-10"
           data-testid="cosa-fare-section"
         >
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">

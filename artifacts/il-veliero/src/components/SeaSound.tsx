@@ -3,21 +3,31 @@ import { useEffect, useRef } from 'react';
 /**
  * SeaSound — invisible.
  *
- * Simple rule: every touch (or click / first user gesture) plays
- *   - a 0.7-second burst of synthesised surf
- *   - the real seagull cry on top
- *
- * That's it. No scheduling, no intensity, no decay.
+ * Trigger rules (per latest user request):
+ *   • A trigger fires on touch, click, AND on desktop wheel/scroll
+ *     so that audio plays both on tap and on scroll-listing.
+ *   • A throttle of 700 ms between triggers prevents the surf bursts
+ *     from merging into one continuous wash while the user scrolls.
+ *   • Every trigger plays a 1.5-second surf wash with a slow fade
+ *     in / fade out so it sounds like a real wave, not a chopped clip.
+ *   • Every SECOND trigger also plays a real seagull cry on top of
+ *     the surf — i.e. the gull is heard every other touch, never on
+ *     consecutive ones.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
+
+const MIN_GAP_MS = 700;
+const SURF_DURATION = 1.5;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
   const gullBufferRef = useRef<AudioBuffer | null>(null);
   const noiseBufferRef = useRef<AudioBuffer | null>(null);
+  const lastFiredRef = useRef<number>(0);
+  const triggerCountRef = useRef<number>(0);
 
   useEffect(() => {
-    /** White-then-low-passed noise buffer — sounds like surf. */
+    /** Brown-noise buffer — sounds like ocean wash once low-passed. */
     const makeNoiseBuffer = (ctx: AudioContext, seconds: number): AudioBuffer => {
       const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
       const data = buf.getChannelData(0);
@@ -31,9 +41,10 @@ export default function SeaSound() {
     };
 
     /**
-     * Lazily create the AudioContext on the first user gesture
-     * (browsers reject context creation/resume otherwise) and
-     * decode the seagull MP3 once.
+     * Create the AudioContext and decode the seagull MP3 lazily, on
+     * the first user gesture. Browsers reject audio output before a
+     * user gesture, so this MUST happen inside an event handler call
+     * stack (it does — onGesture awaits this).
      */
     const ensureContext = async (): Promise<AudioContext | null> => {
       if (ctxRef.current) return ctxRef.current;
@@ -45,7 +56,7 @@ export default function SeaSound() {
 
       const ctx = new Ctor();
       ctxRef.current = ctx;
-      noiseBufferRef.current = makeNoiseBuffer(ctx, 1.5);
+      noiseBufferRef.current = makeNoiseBuffer(ctx, 3.0);
 
       if (ctx.state === 'suspended') {
         try {
@@ -55,42 +66,43 @@ export default function SeaSound() {
         }
       }
 
-      // Fetch + decode the seagull recording. First touch may fire
-      // before this resolves — that's fine, the cry will simply
-      // start playing on the next touch once the buffer is ready.
       try {
         const r = await fetch(SEAGULL_URL);
         const ab = await r.arrayBuffer();
         gullBufferRef.current = await ctx.decodeAudioData(ab);
       } catch {
-        /* ignore — surf still plays */
+        /* ignore — surf will still play */
       }
 
       return ctx;
     };
 
-    /** Play 0.7s of surf noise. */
+    /** Long, naturally-shaped surf wash. */
     const playSurf = (ctx: AudioContext) => {
       const noise = noiseBufferRef.current;
       if (!noise) return;
       const now = ctx.currentTime;
-      const dur = 0.7;
+      const dur = SURF_DURATION;
 
       const src = ctx.createBufferSource();
       src.buffer = noise;
-      // Random start offset within the 1.5s noise buffer for variety.
-      const offset = Math.random() * (noise.duration - dur - 0.05);
+      const offset = Math.random() * Math.max(0, noise.duration - dur - 0.05);
 
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 800;
-      lp.Q.value = 0.6;
+      lp.frequency.value = 750;
+      lp.Q.value = 0.5;
+
+      const peak = 0.4;
+      const fadeIn = 0.45;
+      const fadeOut = 0.55;
+      const sustainStart = now + fadeIn;
+      const sustainEnd = now + dur - fadeOut;
 
       const g = ctx.createGain();
-      // Soft fade-in / fade-out so the burst feels like a wave wash.
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.exponentialRampToValueAtTime(0.45, now + 0.1);
-      g.gain.setValueAtTime(0.45, now + dur - 0.18);
+      g.gain.exponentialRampToValueAtTime(peak, sustainStart);
+      g.gain.setValueAtTime(peak, Math.max(sustainStart + 0.01, sustainEnd));
       g.gain.exponentialRampToValueAtTime(0.0005, now + dur);
 
       src.connect(lp).connect(g).connect(ctx.destination);
@@ -108,13 +120,12 @@ export default function SeaSound() {
       }, (dur + 0.5) * 1000);
     };
 
-    /** Play one seagull cry on top of the surf. */
+    /** One seagull cry, with pitch & stereo variation. */
     const playGull = (ctx: AudioContext) => {
       const buffer = gullBufferRef.current;
       if (!buffer) return;
       const now = ctx.currentTime;
 
-      // 0.9..1.6s slice of the source recording.
       const sliceDur = 0.9 + Math.random() * 0.7;
       const maxStart = Math.max(0, buffer.duration - sliceDur - 0.05);
       const startOffset = Math.random() * maxStart;
@@ -157,24 +168,40 @@ export default function SeaSound() {
       }, (ctxDur + 0.5) * 1000);
     };
 
-    /** Single handler: ensure context, then play surf + gull. */
+    /**
+     * Single throttled handler. Surf on every accepted trigger;
+     * seagull only on every second accepted trigger.
+     */
     const onGesture = () => {
+      const now = performance.now();
+      if (now - lastFiredRef.current < MIN_GAP_MS) return;
+      lastFiredRef.current = now;
+      triggerCountRef.current += 1;
+      // Gull on every SECOND accepted trigger — i.e. 2nd, 4th, 6th… —
+      // so consecutive taps never produce two gull cries in a row.
+      const playGullThisTime = triggerCountRef.current % 2 === 0;
+
       void ensureContext().then((ctx) => {
         if (!ctx) return;
         if (ctx.state === 'suspended') {
           ctx.resume().catch(() => undefined);
         }
         playSurf(ctx);
-        playGull(ctx);
+        if (playGullThisTime) playGull(ctx);
       });
     };
 
-    window.addEventListener('touchstart', onGesture, { passive: true });
-    window.addEventListener('click', onGesture, { passive: true });
+    // pointerdown covers BOTH touch and mouse-click in one event,
+    // and wheel covers desktop trackpad / mouse-wheel scrolling.
+    // Both are passive — we never preventDefault.
+    window.addEventListener('pointerdown', onGesture, { passive: true });
+    window.addEventListener('wheel', onGesture, { passive: true });
+    window.addEventListener('keydown', onGesture, { passive: true });
 
     return () => {
-      window.removeEventListener('touchstart', onGesture);
-      window.removeEventListener('click', onGesture);
+      window.removeEventListener('pointerdown', onGesture);
+      window.removeEventListener('wheel', onGesture);
+      window.removeEventListener('keydown', onGesture);
       const ctx = ctxRef.current;
       if (ctx) {
         try {

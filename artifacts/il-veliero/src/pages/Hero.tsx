@@ -265,30 +265,37 @@ export default function Hero() {
             before. A single element / single ref / single
             data-testid is preserved so SandFilter and the GSAP intro
             both keep working. */}
+        {/* Booking widget — coloured to match the marquee band beneath it.
+            Body uses the same sky-blue (#5BB8E8) as the running text in the
+            marquee, with deep-navy (#0A1128) typography on top so the labels
+            and dates stay highly legible. The "Prenota Ora" CTA inverts to
+            navy with sky-blue text, then sweeps to a brighter aqua on hover.
+            This replaces the previous black/30-glass + gold button look the
+            user explicitly asked us to drop. */}
         <div
           ref={heroBookingRef}
-          className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-black/30 backdrop-blur-md border-y md:border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
+          className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-[#5BB8E8] border-y md:border border-[#5BB8E8] flex flex-col md:flex-row justify-between items-stretch shadow-2xl md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
         >
-          <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-white text-sm gap-3 md:gap-0 md:items-center">
+          <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-[#0A1128] text-sm gap-3 md:gap-0 md:items-center">
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Arrivo</span>
+              <span className="text-[10px] text-[#0A1128]/65 uppercase tracking-[0.15em] md:mb-1 group-hover:text-[#0A1128] transition-colors">Arrivo</span>
               <span className="font-light tracking-wide">28.04.2026</span>
             </div>
-            <div className="hidden md:block w-px h-8 bg-white/10 mx-2" />
-            <div className="block md:hidden h-px w-full bg-white/10" />
+            <div className="hidden md:block w-px h-8 bg-[#0A1128]/15 mx-2" />
+            <div className="block md:hidden h-px w-full bg-[#0A1128]/15" />
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkout">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Partenza</span>
+              <span className="text-[10px] text-[#0A1128]/65 uppercase tracking-[0.15em] md:mb-1 group-hover:text-[#0A1128] transition-colors">Partenza</span>
               <span className="font-light tracking-wide">30.04.2026</span>
             </div>
-            <div className="hidden md:block w-px h-8 bg-white/10 mx-2" />
-            <div className="block md:hidden h-px w-full bg-white/10" />
+            <div className="hidden md:block w-px h-8 bg-[#0A1128]/15 mx-2" />
+            <div className="block md:hidden h-px w-full bg-[#0A1128]/15" />
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-guests">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Ospiti</span>
+              <span className="text-[10px] text-[#0A1128]/65 uppercase tracking-[0.15em] md:mb-1 group-hover:text-[#0A1128] transition-colors">Ospiti</span>
               <span className="font-light tracking-wide">2 Adulti</span>
             </div>
           </div>
           <button
-            className="bg-[#D4AF37] text-black px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
+            className="bg-[#0A1128] text-[#5BB8E8] px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
             data-testid="btn-prenota"
           >
             <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">Prenota Ora</span>

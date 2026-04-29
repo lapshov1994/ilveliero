@@ -91,28 +91,28 @@ export default function SandFilter() {
     // is what made the previous listener feel binary. A per-frame
     // poll is cheap (one number compare + one style write at most)
     // and guarantees the opacity tracks scroll exactly.
+    //
+    // IMPORTANT: the body layer always paints at AT LEAST `BODY_FLOOR`
+    // (≈ 0.55). Without this floor the sand was invisible at the top
+    // of the page and could appear to "disappear" entirely on short
+    // viewports where scrollY/endScroll resolved very close to zero.
+    // The user explicitly asked for the sand to never vanish.
+    const BODY_FLOOR = 0.55;
+    const HEAD_FLOOR = 0.45;
     const tick = () => {
       if (!alive) return;
       const sy = window.scrollY || document.documentElement.scrollTop || 0;
       const tRaw = Math.min(1, Math.max(0, sy / endScroll));
-      // Perceptual ramp — a pure-linear opacity curve looks like a
-      // hard switch because the sand textures only become visible
-      // around opacity ~0.4. A sqrt curve front-loads the visible
-      // growth so the very first scroll already shows real grain.
+      // Perceptual ramp — sqrt front-loads the visible growth so the
+      // very first scroll already shows real grain.
       const t = Math.sqrt(tRaw);
-      // Skip the style write when nothing changed (saves layout work
-      // when the page is idle). Apply opacity DIRECTLY to each fixed
-      // layer (no shared parent) — avoids an opacity-on-parent issue
-      // where some browsers fail to propagate parent opacity onto
-      // position:fixed descendants when the parent has zero size.
       if (Math.abs(t - lastApplied) > 0.001) {
-        // Body layer: starts at 0 and grows to 1 (existing behaviour).
-        body.style.opacity = String(t);
-        // Header layer: keep a small baseline (0.18) at scroll-top so
-        // the header always reads as "sand on navy" — never as flat
-        // colour. This is the most expensive part of the brand feel
-        // and must never be invisible.
-        const headT = 0.18 + (1 - 0.18) * t;
+        // Body & header layers each have their own baseline floor so
+        // the sand reads as "always there, slightly intensifying
+        // with scroll" rather than "fades in from invisible".
+        const bodyT = BODY_FLOOR + (1 - BODY_FLOOR) * t;
+        const headT = HEAD_FLOOR + (1 - HEAD_FLOOR) * t;
+        body.style.opacity = String(bodyT);
         head.style.opacity = String(headT);
         lastApplied = t;
       }
@@ -170,7 +170,7 @@ export default function SandFilter() {
         ref={bodyLayerRef}
         className="fixed inset-0 z-[105] pointer-events-none"
         style={{
-          opacity: 0,
+          opacity: 0.55,
           maskImage:
             'linear-gradient(to bottom, transparent 0px, transparent 80px, black 120px)',
           WebkitMaskImage:
@@ -209,7 +209,7 @@ export default function SandFilter() {
         ref={headerLayerRef}
         className="fixed top-0 left-0 right-0 h-[120px] z-[160] pointer-events-none"
         style={{
-          opacity: 0.18,
+          opacity: 0.45,
           maskImage:
             'linear-gradient(to bottom, black 0px, black 80px, transparent 120px)',
           WebkitMaskImage:

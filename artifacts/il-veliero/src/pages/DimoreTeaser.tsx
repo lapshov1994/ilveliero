@@ -438,34 +438,24 @@ export default function DimoreTeaser() {
               </svg>
             </button>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2 bg-white/85 backdrop-blur-sm z-20">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-[#0A1128] font-bold tabular-nums">
-                {String(currentPhoto + 1).padStart(2, '0')} / {String(totalPhotos).padStart(2, '0')}
-              </span>
-              <div className="flex items-center gap-1.5">
-                {room.photos.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    aria-label={`Vai alla foto ${i + 1}`}
-                    onClick={() => setPhotoForActive(i)}
-                    className={`h-[3px] transition-all duration-300 ${
-                      i === currentPhoto ? 'w-6 bg-[#D4AF37]' : 'w-3 bg-[#0A1128]/30 hover:bg-[#0A1128]/60'
-                    }`}
-                  />
-                ))}
-              </div>
+            {/* Indicator strip — only the dots, the "01 / 05" numeric
+                pagination was removed at the user's request. */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-4 py-2 bg-white/85 backdrop-blur-sm z-20">
+              {room.photos.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Vai alla foto ${i + 1}`}
+                  onClick={() => setPhotoForActive(i)}
+                  className={`h-[3px] transition-all duration-300 ${
+                    i === currentPhoto ? 'w-6 bg-[#D4AF37]' : 'w-3 bg-[#0A1128]/30 hover:bg-[#0A1128]/60'
+                  }`}
+                />
+              ))}
             </div>
           </div>
 
           <div ref={textRef} className="flex flex-col justify-center">
-            <div className="flex items-center gap-3 mb-5">
-              <span className="w-8 h-[1px] bg-[#D4AF37]" />
-              <span className="text-[10px] tracking-[0.25em] uppercase text-[#D4AF37] font-bold">
-                {String(activeRoom + 1).padStart(2, '0')} · {String(ROOMS.length).padStart(2, '0')}
-              </span>
-            </div>
-
             <h3 className="text-3xl md:text-4xl font-serif mb-2">{room.name}</h3>
             <p className="text-sm tracking-[0.15em] uppercase text-[#0A1128]/50 mb-6">
               {room.tagline}
@@ -490,15 +480,9 @@ export default function DimoreTeaser() {
               </div>
             </dl>
 
-            <a
-              href="#footer"
-              className="bg-[#D4AF37] text-[#0A1128] px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-bold inline-block w-fit relative overflow-hidden group hover:shadow-lg transition-shadow duration-500"
-            >
-              <span className="relative z-10 inline-block transition-transform duration-300 group-hover:translate-x-[3px]">
-                Prenota {room.name}
-              </span>
-              <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-            </a>
+            {/* Per-room "Prenota Scirocco / Mistral / …" CTA was removed
+                at the user's request — guests use the global booking
+                widget at the top of the hero to start a reservation. */}
           </div>
         </div>
       </div>
