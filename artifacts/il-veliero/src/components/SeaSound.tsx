@@ -6,23 +6,29 @@ import { useEffect, useRef } from 'react';
  * Trigger rules (current user spec):
  *   • A trigger fires on EVERY tap (pointerdown), every mouse movement
  *     (pointermove), every wheel/scroll event, and every keypress.
- *   • Triggers are throttled to one every 1.5 s — matching the surf
- *     wash duration — so as the user moves the mouse continuously the
- *     site plays one wave per 1.5 s, not a chopped continuous wash.
- *   • Each accepted trigger plays a 1.5 s surf wash with a smooth
- *     fade-in / fade-out so it sounds like a real wave breaking.
+ *   • Triggers are throttled to one every 3 s — i.e. ~1 s SHORTER
+ *     than the 4 s surf wash. Successive waves therefore overlap by
+ *     about a second and crossfade into one another, so under any
+ *     continuous user activity the surf reads as one unbroken
+ *     ocean loop instead of a chopped staccato of half-waves.
+ *   • Each accepted trigger plays a 4 s surf wash with long
+ *     ~1.4 s / ~1.6 s fades so a single isolated gesture also
+ *     decays to silence smoothly.
  *   • Every SECOND accepted trigger ALSO plays a real seagull cry on
- *     top of the surf — the gull is heard every other gesture, never
- *     on consecutive ones.
+ *     top of the surf — the gull is heard every other gesture
+ *     (~6 s apart under continuous activity), never on consecutive
+ *     ones.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
-// One trigger per 1.5 s — i.e. exactly the surf duration. The previous
-// wave finishes its decay just as the next wave starts, so continuous
-// pointermove activity reads as a steady but natural-sounding ocean
-// loop instead of a clipped staccato of half-formed waves.
-const MIN_GAP_MS = 1500;
-const SURF_DURATION = 1.5;
+// Surf wash is 4 s long. Triggers are throttled to 3 s — i.e. ~1 s
+// SHORTER than the wave itself — so a fresh wave starts while the
+// previous wave is still in its long fade-out tail. The two crossfade
+// over each other and the listener never hears a silent gap between
+// waves. Result: under continuous mouse / scroll activity the sound
+// reads as one unbroken ocean loop, exactly as the user requested.
+const MIN_GAP_MS = 3000;
+const SURF_DURATION = 4;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
@@ -61,7 +67,9 @@ export default function SeaSound() {
 
       const ctx = new Ctor();
       ctxRef.current = ctx;
-      noiseBufferRef.current = makeNoiseBuffer(ctx, 4.0);
+      // Brown-noise pad — long enough that each surf grain (4 s) plus
+      // a small head/tail margin can pull from a random offset.
+      noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
 
       if (ctx.state === 'suspended') {
         try {
@@ -96,16 +104,22 @@ export default function SeaSound() {
       // Soft, deep ocean-rumble character:
       //   • lowpass at 600 Hz so the noise reads as deep wash, not hiss;
       //   • peak gain 0.3 — gentle, never harsh;
-      //   • symmetric ~0.55 s fade in / ~0.65 s fade out so the wave
-      //     swells in and decays out smoothly.
+      //   • long ~1.4 s fade-in and ~1.6 s fade-out. Combined with the
+      //     1 s overlap between successive waves (MIN_GAP_MS = 3 s,
+      //     SURF_DURATION = 4 s) the tail of one wave crossfades into
+      //     the head of the next, so under continuous activity the
+      //     listener hears one unbroken ocean loop — never a chopped
+      //     staccato. The long fade-out also means a single isolated
+      //     gesture decays naturally to silence over ~1.6 s instead
+      //     of cutting off abruptly.
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
       lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
       const peak = 0.3;
-      const fadeIn = Math.min(0.55, dur * 0.4);
-      const fadeOut = Math.min(0.65, dur * 0.45);
+      const fadeIn = Math.min(1.4, dur * 0.4);
+      const fadeOut = Math.min(1.6, dur * 0.45);
       const sustainStart = now + fadeIn;
       const sustainEnd = now + dur - fadeOut;
 
