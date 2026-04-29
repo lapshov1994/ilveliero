@@ -61,29 +61,22 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // power2.in — barely-perceptible change for the first few
-        // pixels of scroll, then a steady, growing buildup that
-        // accelerates into the final third. Concretely:
-        //   10% scroll → ~1%   opacity   (subtle)
-        //   25% scroll → ~6%   opacity   (just visible)
-        //   50% scroll → ~25%  opacity   (clearly growing)
-        //   75% scroll → ~56%  opacity   (well established)
-        //  100% scroll → 100%  opacity   (full)
-        // This is exactly the "gradual at the start, ramping up as
-        // you scroll" behaviour the user asked for — never a jump,
-        // never a fast initial spike.
-        ease: 'power2.in',
+        // Linear opacity stretched over the FULL hero scroll length
+        // (one viewport height = ~874px on mobile). At that distance
+        // every additional pixel of scroll adds only ~0.11% opacity,
+        // which is below the perception threshold for a single scroll
+        // event — no matter how the user scrolls, they cannot trigger
+        // a visible jump. The sand truly "settles in" as they descend
+        // through the hero.
+        ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // 100% lands at 40% of the hero (~350px on mobile),
-          // which is the moment the booking widget pinned at the
-          // bottom of the hero comes into the centre of the
-          // viewport. By the time the user reaches the booking,
-          // the sand is fully on. `scrub: true` ties the opacity
-          // 1:1 to scroll position with no inertia / catch-up.
           start: 'top top',
-          end: '+=40%',
-          scrub: true,
+          end: 'bottom top',
+          // Slight smoothing (0.5s) so that even on a coarse mouse
+          // wheel the opacity tweens between target values rather
+          // than snapping in 100px chunks.
+          scrub: 0.5,
         },
       });
     });
