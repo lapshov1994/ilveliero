@@ -55,13 +55,11 @@ export default function Hero() {
       { y: 100 },
       { y: 0, duration: 1.2, stagger: 0.15 },
       '-=2'
-    )
-    .fromTo(
-      heroBookingRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 1 },
-      '-=1'
     );
+
+    // The booking widget is intentionally NOT animated in — it must
+    // be visible the instant the page loads so users can start a
+    // search without waiting for the hero intro to finish.
 
     // Hero background parallax
     gsap.to(heroBgRef.current, {
@@ -269,7 +267,7 @@ export default function Hero() {
             both keep working. */}
         <div
           ref={heroBookingRef}
-          className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-black/30 backdrop-blur-md border-y md:border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0 md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
+          className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-black/30 backdrop-blur-md border-y md:border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
         >
           <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-white text-sm gap-3 md:gap-0 md:items-center">
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
