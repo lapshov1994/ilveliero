@@ -30,7 +30,8 @@ const SAND_TEXTURE_FINE =
 
 export default function SandFilter() {
   const [location] = useLocation();
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const bodyLayerRef = useRef<HTMLDivElement>(null);
+  const headerLayerRef = useRef<HTMLDivElement>(null);
 
   // The sand filter is intentionally only present on the home page where it
   // sits over the white "story" sections and the dark hero photograph. On
@@ -53,8 +54,9 @@ export default function SandFilter() {
   //     scrolls — the sand was always faintly there.
   useEffect(() => {
     if (!isHome) return;
-    const wrap = wrapperRef.current;
-    if (!wrap) return;
+    const body = bodyLayerRef.current;
+    const head = headerLayerRef.current;
+    if (!body || !head) return;
 
     // Progress targets the "Prenota Ora" CTA button: at the very first
     // pixel of scroll the sand is 0%, and it reaches 100% precisely
@@ -99,9 +101,19 @@ export default function SandFilter() {
       // growth so the very first scroll already shows real grain.
       const t = Math.sqrt(tRaw);
       // Skip the style write when nothing changed (saves layout work
-      // when the page is idle).
+      // when the page is idle). Apply opacity DIRECTLY to each fixed
+      // layer (no shared parent) — avoids an opacity-on-parent issue
+      // where some browsers fail to propagate parent opacity onto
+      // position:fixed descendants when the parent has zero size.
       if (Math.abs(t - lastApplied) > 0.001) {
-        wrap.style.opacity = String(t);
+        // Body layer: starts at 0 and grows to 1 (existing behaviour).
+        body.style.opacity = String(t);
+        // Header layer: keep a small baseline (0.18) at scroll-top so
+        // the header always reads as "sand on navy" — never as flat
+        // colour. This is the most expensive part of the brand feel
+        // and must never be invisible.
+        const headT = 0.18 + (1 - 0.18) * t;
+        head.style.opacity = String(headT);
         lastApplied = t;
       }
       rafId = requestAnimationFrame(tick);
@@ -148,15 +160,17 @@ export default function SandFilter() {
   //    sand-respects-photos behaviour. A small bottom fade-out softens
   //    the join into the body sand below.
   return (
-    <div ref={wrapperRef} aria-hidden="true" data-testid="sand-filter">
+    <div aria-hidden="true" data-testid="sand-filter">
       {/* Body sand — original z (BELOW photos at z-110) and original
           opacity. The mask fades the layer to transparent in the top
           100px so this layer NEVER doubles up with the header strip
           below it — the perceived sand density is uniform across the
           page, exactly the texture the user previously approved. */}
       <div
+        ref={bodyLayerRef}
         className="fixed inset-0 z-[105] pointer-events-none"
         style={{
+          opacity: 0,
           maskImage:
             'linear-gradient(to bottom, transparent 0px, transparent 80px, black 120px)',
           WebkitMaskImage:
@@ -188,10 +202,14 @@ export default function SandFilter() {
           band), at the SAME opacity as the body layer, with a fade-out
           near the bottom that crosses the body layer's fade-in. The
           two layers therefore tile-up to a single, uniform sand
-          surface — no double exposure, no visible seam. */}
+          surface — no double exposure, no visible seam. Starts at a
+          small baseline (0.18) so the header is sandified even at the
+          very top of the page. */}
       <div
+        ref={headerLayerRef}
         className="fixed top-0 left-0 right-0 h-[120px] z-[160] pointer-events-none"
         style={{
+          opacity: 0.18,
           maskImage:
             'linear-gradient(to bottom, black 0px, black 80px, transparent 120px)',
           WebkitMaskImage:

@@ -203,7 +203,7 @@ export default function Hero() {
             className="absolute inset-0 w-full h-full overflow-hidden"
           >
             <video
-              className="absolute inset-0 w-full h-full object-cover object-[30%_50%] md:object-[22%_50%]"
+              className="absolute inset-0 w-full h-full object-cover object-[8%_50%] md:object-[22%_50%]"
               src={`${import.meta.env.BASE_URL}video/hero.mp4`}
               poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
               autoPlay
@@ -234,25 +234,25 @@ export default function Hero() {
             <div className="absolute inset-x-0 bottom-0 h-20 md:h-64 bg-gradient-to-t from-[#0A1128]/45 md:from-[#0A1128]/65 to-transparent pointer-events-none" />
           </div>
 
-          {/* Title overlay. Mobile: ONE row baseline-aligned just under
-              the header, sitting on top of the video. Desktop: original
-              two-line stacked centred treatment. The two h1 refs are
-              kept across both layouts so the GSAP intro tween still
-              animates them. */}
-          <div className="absolute inset-x-0 top-[26%] md:top-0 md:bottom-0 z-10 flex justify-center items-baseline gap-1.5 md:flex-col md:items-center md:justify-center md:gap-0 text-center px-3 md:px-4 md:-mt-10">
-            <div className="overflow-hidden md:mb-2">
+          {/* Title overlay. Two stacked lines on every breakpoint —
+              line 1 ("Dove il Mare") above line 2 ("Incontra il Cielo"
+              in italic). Mobile sits a touch higher (top-[22%]) so the
+              breakfast table in the video stays visible below; desktop
+              centres the block within the full-screen hero. */}
+          <div className="absolute inset-x-0 top-[20%] md:top-0 md:bottom-0 z-10 flex flex-col items-center justify-start md:justify-center md:-mt-10 text-center px-4">
+            <div className="overflow-hidden mb-1 md:mb-2">
               <h1
                 ref={heroLine1Ref}
-                className="text-xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
+                className="text-4xl md:text-7xl font-serif text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
                 style={{ transform: 'translateY(100%)' }}
               >
                 Dove il Mare
               </h1>
             </div>
-            <div className="overflow-hidden md:mb-12">
+            <div className="overflow-hidden mb-2 md:mb-12">
               <h1
                 ref={heroLine2Ref}
-                className="text-xl md:text-7xl font-serif italic text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
+                className="text-4xl md:text-7xl font-serif italic text-white font-light tracking-tight drop-shadow-md whitespace-nowrap"
                 style={{ transform: 'translateY(100%)' }}
               >
                 Incontra il Cielo
@@ -269,7 +269,7 @@ export default function Hero() {
             both keep working. */}
         <div
           ref={heroBookingRef}
-          className="relative z-20 w-[92%] md:w-[95%] max-w-5xl mx-auto bg-black/30 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0 md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
+          className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-black/30 backdrop-blur-md border-y md:border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0 md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
         >
           <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-white text-sm gap-3 md:gap-0 md:items-center">
             <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
