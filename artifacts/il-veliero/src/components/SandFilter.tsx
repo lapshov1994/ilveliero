@@ -61,19 +61,21 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // sine.out keeps the curve very flat near the start: even after
-        // a small swipe the sand is barely a few % opaque, so the change
-        // never feels like a "switch flip", only a slow settling.
-        ease: 'sine.out',
+        // Linear ease so the sand density tracks scroll progress
+        // 1:1 — every additional pixel of scroll adds the same tiny
+        // amount of opacity. No flat segment, no sudden jump.
+        ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // Stretch the fade over THREE viewport heights of scroll so it
-          // can never reach full density inside a single fast swipe of
-          // the hero. The sand truly settles in over the first few
-          // sections of the page, not within the hero alone.
+          // Spans exactly the hero (one viewport): when the page is at
+          // the very top — sand is fully transparent; by the time the
+          // hero has scrolled out and the booking / story section
+          // arrives, sand is at full density.
           start: 'top top',
-          end: '+=300%',
-          scrub: 2,
+          end: 'bottom top',
+          // Small scrub smoothing keeps the change buttery instead of
+          // snapping when the user scrolls in coarse steps.
+          scrub: 0.4,
         },
       });
     });
