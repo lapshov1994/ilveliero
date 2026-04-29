@@ -61,22 +61,25 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // Linear ease so the sand density tracks scroll progress
-        // 1:1 — every additional pixel of scroll adds the same tiny
-        // amount of opacity. No flat segment, no sudden jump.
+        // Linear ease — every pixel of scroll adds the same tiny
+        // amount of opacity. Combined with `scrub: true` below, the
+        // sand becomes a true real-time gradient of the scroll
+        // position with NO catch-up animation, NO inertia, NO start
+        // delay. That removes the perceived "0 → 100 in one go" jump
+        // the previous `scrub: 0.4` introduced (the 0.4s lag made the
+        // sand stay at 0 then sprint to its target value the moment
+        // the wheel stopped).
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // From the very top (scrollY 0, sand fully transparent) to
-          // half a hero (scrollY ≈ 50vh, sand fully opaque). At that
-          // scroll position the booking widget anchored at the bottom
-          // of the hero is centred in the viewport — i.e. "the middle
-          // of the booking", which is exactly where the user wants the
-          // sand to have reached 100%. Linear ramp + light scrub keeps
-          // the buildup smooth and stutter-free.
+          // Range = the first half of the hero. On mobile that is
+          // ~437px of scroll, which lands the booking widget pinned
+          // at the bottom of the hero in the centre of the viewport —
+          // the "mid-booking" point where the user wants the sand to
+          // have reached 100%.
           start: 'top top',
           end: '+=50%',
-          scrub: 0.4,
+          scrub: true,
         },
       });
     });
