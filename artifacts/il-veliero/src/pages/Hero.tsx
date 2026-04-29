@@ -181,12 +181,35 @@ export default function Hero() {
       <section className="hero-section relative z-10 w-full h-screen overflow-hidden bg-[#0A1128]">
         <div
           ref={heroBgRef}
-          className="absolute inset-0 w-full h-full bg-cover bg-center opacity-90"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2000&auto=format&fit=crop')",
-          }}
+          className="absolute inset-0 w-full h-full overflow-hidden opacity-95"
         >
+          {/* The poster image is bundled and loads instantly so the hero is
+              never blank while the video bytes stream in. The video itself
+              is 1.6 MB H.264 with `+faststart` so playback can begin from
+              the first downloaded chunks. */}
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src={`${import.meta.env.BASE_URL}video/hero.mp4`}
+            poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden="true"
+            data-testid="hero-video"
+            onCanPlay={(e) => {
+              // Some headless / strict autoplay policies (especially on
+              // first visit) won't honour the `autoPlay` attribute. We
+              // force-trigger play once the browser confirms it can play
+              // — this is safe because the video is muted, which all
+              // browsers allow without a user gesture.
+              const v = e.currentTarget;
+              v.muted = true;
+              const p = v.play();
+              if (p && typeof p.catch === 'function') p.catch(() => undefined);
+            }}
+          />
           <div className="absolute inset-0 bg-black/40" />
         </div>
 

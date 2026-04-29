@@ -3,12 +3,23 @@ import gsap from 'gsap';
 import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 /**
- * Cursor — the user's pointer (or finger on touch) becomes a tiny gold
- * sailing ship. By default the ship is alone on the page; only as it moves
- * does it start leaving a soft, animated wake of waves behind it. Each wake
- * segment is heavily randomised — segment count, amplitude, length, colour
- * tint, stroke width, opacity, rotation jitter, drift distance and lifetime
- * are all sampled per-spawn — so two consecutive waves never look identical.
+ * Cursor — the user's pointer becomes a tiny gold sailing ship. By default
+ * the ship is alone on the page; only as it moves does it begin to leave a
+ * wake.
+ *
+ * Wake design (per latest feedback):
+ *   - The wake is a true KILVATER: every ripple sits directly behind the
+ *     hull on the line of motion, never to the side, never rotated for
+ *     visual variety.
+ *   - Each ripple is rotated only to align its long axis perpendicular to
+ *     motion (so the wave reads as a wave, not as a streak), but never with
+ *     extra "decorative" jitter.
+ *   - Five hand-picked sine-shaped wave forms are randomly rotated through.
+ *     They differ in length and amplitude, but every form is unmistakably
+ *     a wave — no spirals, no asymmetric shapes, no chaos.
+ *   - Ripples fade out gently in place with only a small straight push
+ *     further behind the ship along the motion line. They do not drift
+ *     sideways and they do not spin.
  */
 export default function Cursor() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -28,6 +39,10 @@ export default function Cursor() {
     let lastTrailY = 0;
     let lastScrollTrailAt = 0;
     let initialized = false;
+    // Persistent direction of travel — used so ripples emitted on micro-stops
+    // still align with the last meaningful motion.
+    let dirX = 0;
+    let dirY = 1;
 
     const setX = gsap.quickTo(wrap, 'x', { duration: 0.18, ease: 'power3.out' });
     const setY = gsap.quickTo(wrap, 'y', { duration: 0.18, ease: 'power3.out' });
@@ -64,93 +79,123 @@ export default function Cursor() {
       }, 1800);
     };
 
-    const rand = (min: number, max: number) => min + Math.random() * (max - min);
+    /**
+     * Five fixed wave silhouettes. All are drawn around y=0 across a fixed
+     * span of ±30 units so they share a baseline visual identity but vary
+     * subtly in number of crests, amplitude balance, and length so the
+     * wake doesn't look mass-produced.
+     *
+     * Each entry exposes: the SVG path data, the half-length used for
+     * positioning, and the half-amplitude used to size the SVG viewBox.
+     */
+    const WAVE_FORMS: { d: string; halfLen: number; halfAmp: number }[] = [
+      // Form 1 — gentle two-crest wave (the "default" hotel-postcard wave)
+      {
+        d: 'M -30 0 Q -22.5 -3.5 -15 0 Q -7.5 3.5 0 0 Q 7.5 -3.5 15 0 Q 22.5 3.5 30 0',
+        halfLen: 30,
+        halfAmp: 4,
+      },
+      // Form 2 — slightly bigger swell, single dominant crest
+      {
+        d: 'M -30 0 Q -20 -2 -10 0 Q 0 4.5 10 0 Q 20 -2 30 0',
+        halfLen: 30,
+        halfAmp: 5,
+      },
+      // Form 3 — three small crests, breezier feel
+      {
+        d: 'M -30 0 Q -25 -2.5 -20 0 Q -15 2.5 -10 0 Q -5 -2.5 0 0 Q 5 2.5 10 0 Q 15 -2.5 20 0 Q 25 2.5 30 0',
+        halfLen: 30,
+        halfAmp: 3,
+      },
+      // Form 4 — long lazy single arc with a soft rebound
+      {
+        d: 'M -30 0 Q -10 -3.5 0 0 Q 10 3.5 30 0',
+        halfLen: 30,
+        halfAmp: 4,
+      },
+      // Form 5 — four tiny ripples, finely textured
+      {
+        d: 'M -30 0 Q -26 -1.8 -22 0 Q -18 1.8 -14 0 Q -10 -1.8 -6 0 Q -2 1.8 2 0 Q 6 -1.8 10 0 Q 14 1.8 18 0 Q 22 -1.8 26 0 Q 28 0.9 30 0',
+        halfLen: 30,
+        halfAmp: 2.5,
+      },
+    ];
 
-    /** Three subtly different sky-blue tints so successive waves don't feel
-     *  cloned. All are within the brand palette. */
-    const WAVE_COLORS = ['#5BB8E8', '#7AC8F0', '#8FD2F2', '#B3E0F5'];
+    let lastFormIdx = -1;
+    const pickForm = () => {
+      // Avoid picking the exact same form twice in a row so consecutive
+      // ripples are always at least slightly different.
+      let idx = Math.floor(Math.random() * WAVE_FORMS.length);
+      if (idx === lastFormIdx) idx = (idx + 1) % WAVE_FORMS.length;
+      lastFormIdx = idx;
+      return WAVE_FORMS[idx];
+    };
 
     /**
-     * Spawn one wave segment in the ship's wake. Heavy randomisation across
-     * length, amplitude, segment count, asymmetry, colour, opacity, stroke
-     * width, rotation jitter, drift vector and lifetime so each ripple is
-     * visibly unique.
+     * Spawn one wave segment STRICTLY in the wake — directly behind the
+     * hull, on the line of motion, oriented perpendicular to motion, and
+     * with no rotational jitter or sideways drift.
      */
-    const spawnWave = (x: number, y: number, dirX: number, dirY: number) => {
+    const spawnWave = (anchorX: number, anchorY: number, mDirX: number, mDirY: number) => {
+      const form = pickForm();
+
+      // The wave's long axis must be perpendicular to motion. atan2 gives
+      // motion angle; +90deg rotates the wave so its crest line crosses
+      // the wake.
+      const angleDeg = Math.atan2(mDirY, mDirX) * (180 / Math.PI) + 90;
+
+      // Subtle uniform scale variation per spawn (0.9..1.15) so successive
+      // waves look like the same wake at slightly different distances —
+      // this is the ONLY size variation, kept small.
+      const scale = 0.9 + Math.random() * 0.25;
+
+      const svgWidth = (form.halfLen * 2 + 6) * scale;
+      const svgHeight = form.halfAmp * 5 * scale;
+
       const wave = document.createElement('div');
       wave.className = 'absolute pointer-events-none';
-      wave.style.left = `${x}px`;
-      wave.style.top = `${y}px`;
+      wave.style.left = `${anchorX}px`;
+      wave.style.top = `${anchorY}px`;
       wave.style.willChange = 'transform, opacity';
-
-      // Base orientation — perpendicular to motion — plus random jitter so
-      // the wake doesn't look like a stamped-out arc.
-      const baseAngleDeg = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
-      const angleJitter = rand(-22, 22);
-      const angleDeg = baseAngleDeg + angleJitter;
-
-      const initialScale = rand(0.55, 0.95);
-      wave.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(${initialScale})`;
-
-      // Vary geometry per wave.
-      const length = rand(28, 86);
-      const amp = rand(1.2, 4.6);
-      const segments = 2 + Math.floor(Math.random() * 3); // 2..4
-      const stepX = length / segments;
-
-      // Build a smooth quadratic-Bezier sine-ish path with per-segment
-      // amplitude jitter so the curve isn't a perfectly regular sine.
-      let d = `M ${-length / 2} 0`;
-      for (let i = 0; i < segments; i++) {
-        const cpX = -length / 2 + stepX * (i + 0.5) + rand(-stepX * 0.15, stepX * 0.15);
-        const segAmp = amp * rand(0.55, 1.25);
-        const cpY = i % 2 === 0 ? -segAmp : segAmp;
-        const endX = -length / 2 + stepX * (i + 1);
-        d += ` Q ${cpX.toFixed(2)} ${cpY.toFixed(2)} ${endX.toFixed(2)} 0`;
-      }
-
-      const color = WAVE_COLORS[Math.floor(Math.random() * WAVE_COLORS.length)];
-      const stroke1 = rand(0.9, 1.7).toFixed(2);
-      const stroke2 = rand(0.5, 1.0).toFixed(2);
-      const op1 = rand(0.55, 0.95).toFixed(2);
-      const op2 = rand(0.18, 0.5).toFixed(2);
-      const yShadow = rand(2, 5).toFixed(1);
-      // Sometimes skip the secondary echo for variety.
-      const drawEcho = Math.random() > 0.25;
+      wave.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(${scale})`;
 
       wave.innerHTML = `
-        <svg width="${length + 8}" height="${amp * 5}" viewBox="${-length / 2 - 4} ${-amp * 2.5} ${length + 8} ${amp * 5}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
-          <path d="${d}" fill="none" stroke="${color}" stroke-width="${stroke1}" stroke-linecap="round" opacity="${op1}" />
-          ${drawEcho ? `<path d="${d}" fill="none" stroke="${color}" stroke-width="${stroke2}" stroke-linecap="round" opacity="${op2}" transform="translate(0, ${yShadow})" />` : ''}
+        <svg
+          width="${svgWidth.toFixed(1)}"
+          height="${svgHeight.toFixed(1)}"
+          viewBox="${-form.halfLen - 3} ${-form.halfAmp * 2.5} ${form.halfLen * 2 + 6} ${form.halfAmp * 5}"
+          xmlns="http://www.w3.org/2000/svg"
+          overflow="visible"
+        >
+          <path d="${form.d}" fill="none" stroke="#5BB8E8" stroke-width="1.3" stroke-linecap="round" opacity="0.85" />
+          <path d="${form.d}" fill="none" stroke="#7AC8F0" stroke-width="0.7" stroke-linecap="round" opacity="0.45" transform="translate(0, 2.4)" />
         </svg>
       `;
 
       trailLayer.appendChild(wave);
 
-      // Drift away from the ship — magnitude and direction both jittered.
-      const driftMag = rand(10, 36);
-      const lateralJitter = rand(-10, 10);
-      const driftX = -dirX * driftMag + lateralJitter * (1 - Math.abs(dirX));
-      const driftY = -dirY * driftMag + lateralJitter * (1 - Math.abs(dirY));
-      const finalScale = initialScale + rand(0.3, 0.9);
-      const finalRotation = angleDeg + rand(-12, 12);
-      const lifetime = rand(1.1, 2.2);
-      const fadeInDur = rand(0.18, 0.32);
+      // Small straight push further behind the ship along the motion line —
+      // no perpendicular drift. This makes the trail read as a real wake
+      // settling away from the hull, not as a particle effect.
+      const pushBack = 14 + Math.random() * 10;
+      const driftX = -mDirX * pushBack;
+      const driftY = -mDirY * pushBack;
 
       gsap.fromTo(
         wave,
         { opacity: 0 },
-        { opacity: 1, duration: fadeInDur, ease: 'power2.out' }
+        { opacity: 1, duration: 0.22, ease: 'power2.out' }
       );
 
       gsap.to(wave, {
         x: driftX,
         y: driftY,
-        rotation: finalRotation - angleDeg, // additive on top of inline rotate
-        scale: finalScale,
+        // The wave settles by gently widening as it dissipates — no
+        // rotation, no sideways jitter.
+        scale: scale * 1.18,
         opacity: 0,
-        duration: lifetime,
-        delay: rand(0.05, 0.18),
+        duration: 1.4 + Math.random() * 0.3,
+        delay: 0.08,
         ease: 'sine.out',
         onComplete: () => wave.remove(),
       });
@@ -164,41 +209,27 @@ export default function Cursor() {
       const dy = y - lastY;
       const dist = Math.hypot(dx, dy);
 
-      if (initialized && dist > 0) {
-        const dirX = dx / dist;
-        const dirY = dy / dist;
+      if (initialized && dist > 0.5) {
+        // Update the persistent direction only on meaningful motion.
+        dirX = dx / dist;
+        dirY = dy / dist;
 
         const dxFromTrail = x - lastTrailX;
         const dyFromTrail = y - lastTrailY;
         const distFromTrail = Math.hypot(dxFromTrail, dyFromTrail);
 
-        // Random per-spawn distance threshold so the wake doesn't pulse at a
-        // mechanical pixel cadence.
-        const threshold = 18 + Math.random() * 18;
-
-        if (distFromTrail > threshold) {
-          // Anchor the wave just behind the hull, with a small random offset.
-          const trailOffset = rand(8, 14);
-          const sideJitter = rand(-3, 3);
-          const anchorX = x - dirX * trailOffset + (-dirY) * sideJitter;
-          const anchorY = y - dirY * trailOffset + 5 + dirX * sideJitter;
+        // Fixed-ish spawn cadence so the wake reads as evenly spaced
+        // ripples behind the hull rather than as a chaotic particle burst.
+        if (distFromTrail > 22) {
+          // Anchor each ripple ~12px directly behind the hull along motion.
+          const trailOffset = 12;
+          const anchorX = x - dirX * trailOffset;
+          const anchorY = y - dirY * trailOffset + 4;
           spawnWave(anchorX, anchorY, dirX, dirY);
-
-          // Occasionally emit a tiny secondary droplet for extra texture.
-          if (Math.random() < 0.35) {
-            const j2 = rand(-6, 6);
-            spawnWave(
-              anchorX + j2,
-              anchorY + rand(-2, 4),
-              dirX + rand(-0.2, 0.2),
-              dirY + rand(-0.2, 0.2)
-            );
-          }
-
           lastTrailX = x;
           lastTrailY = y;
         }
-      } else {
+      } else if (!initialized) {
         lastTrailX = x;
         lastTrailY = y;
       }
@@ -236,13 +267,13 @@ export default function Cursor() {
       lastScrollY = window.scrollY;
       if (Math.abs(dy) < 6) return;
       const now = performance.now();
-      const cooldown = 90 + Math.random() * 80;
-      if (now - lastScrollTrailAt < cooldown) return;
+      if (now - lastScrollTrailAt < 110) return;
       lastScrollTrailAt = now;
       const x = lastX || window.innerWidth / 2;
       const y = lastY || window.innerHeight / 2;
-      const dirY = dy > 0 ? 1 : -1;
-      spawnWave(x + rand(-8, 8), y + dirY * 4, rand(-0.2, 0.2), dirY);
+      // Scroll wake is purely vertical, no horizontal jitter.
+      const sDirY = dy > 0 ? 1 : -1;
+      spawnWave(x, y + sDirY * 4, 0, sDirY);
     };
 
     const onMouseOut = (e: MouseEvent) => {
