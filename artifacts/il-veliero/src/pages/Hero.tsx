@@ -210,7 +210,6 @@ export default function Hero() {
               if (p && typeof p.catch === 'function') p.catch(() => undefined);
             }}
           />
-          <div className="absolute inset-0 bg-black/40" />
         </div>
 
         <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">

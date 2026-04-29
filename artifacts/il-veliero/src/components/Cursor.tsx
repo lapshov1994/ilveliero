@@ -37,7 +37,6 @@ export default function Cursor() {
     let lastY = 0;
     let lastTrailX = 0;
     let lastTrailY = 0;
-    let lastScrollTrailAt = 0;
     let initialized = false;
     // Persistent direction of travel — used so ripples emitted on micro-stops
     // still align with the last meaningful motion.
@@ -80,44 +79,46 @@ export default function Cursor() {
     };
 
     /**
-     * Five fixed wave silhouettes. All are drawn around y=0 across a fixed
-     * span of ±30 units so they share a baseline visual identity but vary
-     * subtly in number of crests, amplitude balance, and length so the
-     * wake doesn't look mass-produced.
+     * Five wake silhouettes designed to look like the curling wash off the
+     * stern of a small boat. Each is a CURVED arc (concave away from the
+     * ship) with one or more pronounced crest bumps along its length —
+     * not a tame horizontal sine. Together they form a varied but
+     * recognisable family of "real boat wake" ripples.
      *
-     * Each entry exposes: the SVG path data, the half-length used for
-     * positioning, and the half-amplitude used to size the SVG viewBox.
+     * The crest path (`crestD`) is the foreground, brighter line.
+     * The optional `foamD` line draws a couple of short broken foam
+     * highlights along the crest for extra realism.
      */
-    const WAVE_FORMS: { d: string; halfLen: number; halfAmp: number }[] = [
-      // Form 1 — gentle two-crest wave (the "default" hotel-postcard wave)
+    type Form = { crestD: string; foamD?: string; halfLen: number; halfAmp: number };
+    const WAVE_FORMS: Form[] = [
+      // 1. Wide shallow arc with two pronounced bumps near the centre.
       {
-        d: 'M -30 0 Q -22.5 -3.5 -15 0 Q -7.5 3.5 0 0 Q 7.5 -3.5 15 0 Q 22.5 3.5 30 0',
-        halfLen: 30,
-        halfAmp: 4,
+        crestD: 'M -34 4 Q -24 -2 -16 -1 Q -8 -8 0 -2 Q 8 -8 16 -1 Q 24 -2 34 4',
+        foamD:  'M -10 -5 L -6 -6  M 6 -6 L 10 -5',
+        halfLen: 34, halfAmp: 9,
       },
-      // Form 2 — slightly bigger swell, single dominant crest
+      // 2. Long sweep with a single big swell to the right of centre.
       {
-        d: 'M -30 0 Q -20 -2 -10 0 Q 0 4.5 10 0 Q 20 -2 30 0',
-        halfLen: 30,
-        halfAmp: 5,
+        crestD: 'M -36 5 Q -22 -1 -10 -2 Q -2 -10 8 -3 Q 18 0 36 5',
+        foamD:  'M -2 -7 L 4 -8',
+        halfLen: 36, halfAmp: 10,
       },
-      // Form 3 — three small crests, breezier feel
+      // 3. Three short choppy crests, like fresh wash close to the hull.
       {
-        d: 'M -30 0 Q -25 -2.5 -20 0 Q -15 2.5 -10 0 Q -5 -2.5 0 0 Q 5 2.5 10 0 Q 15 -2.5 20 0 Q 25 2.5 30 0',
-        halfLen: 30,
-        halfAmp: 3,
+        crestD: 'M -28 3 Q -22 -2 -16 -3 Q -10 -7 -4 -2 Q 0 -8 6 -3 Q 12 -8 18 -3 Q 24 -2 28 3',
+        foamD:  'M -16 -5 L -12 -6  M 4 -6 L 8 -7  M 16 -5 L 20 -6',
+        halfLen: 28, halfAmp: 8,
       },
-      // Form 4 — long lazy single arc with a soft rebound
+      // 4. Asymmetric curl — one heavy crest left of centre, tail trails right.
       {
-        d: 'M -30 0 Q -10 -3.5 0 0 Q 10 3.5 30 0',
-        halfLen: 30,
-        halfAmp: 4,
+        crestD: 'M -30 5 Q -20 -3 -14 -4 Q -8 -11 -2 -3 Q 6 0 16 1 Q 24 3 30 5',
+        foamD:  'M -10 -8 L -4 -7',
+        halfLen: 30, halfAmp: 11,
       },
-      // Form 5 — four tiny ripples, finely textured
+      // 5. Gentle low spread with a subtle double dip — the calm wake.
       {
-        d: 'M -30 0 Q -26 -1.8 -22 0 Q -18 1.8 -14 0 Q -10 -1.8 -6 0 Q -2 1.8 2 0 Q 6 -1.8 10 0 Q 14 1.8 18 0 Q 22 -1.8 26 0 Q 28 0.9 30 0',
-        halfLen: 30,
-        halfAmp: 2.5,
+        crestD: 'M -32 2 Q -22 -1 -14 -2 Q -6 -5 0 -2 Q 6 -5 14 -2 Q 22 -1 32 2',
+        halfLen: 32, halfAmp: 5,
       },
     ];
 
@@ -159,16 +160,23 @@ export default function Cursor() {
       wave.style.willChange = 'transform, opacity';
       wave.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(${scale})`;
 
+      // Build the SVG. Three layers: a faint shadow echo behind the main
+      // crest (gives the curl a sense of depth), the bright crest, and a
+      // few short foam dashes on top.
+      const foamMarkup = form.foamD
+        ? `<path d="${form.foamD}" fill="none" stroke="#FFFFFF" stroke-width="0.9" stroke-linecap="round" opacity="0.55" />`
+        : '';
       wave.innerHTML = `
         <svg
           width="${svgWidth.toFixed(1)}"
           height="${svgHeight.toFixed(1)}"
-          viewBox="${-form.halfLen - 3} ${-form.halfAmp * 2.5} ${form.halfLen * 2 + 6} ${form.halfAmp * 5}"
+          viewBox="${-form.halfLen - 4} ${-form.halfAmp - 2} ${form.halfLen * 2 + 8} ${form.halfAmp + 8}"
           xmlns="http://www.w3.org/2000/svg"
           overflow="visible"
         >
-          <path d="${form.d}" fill="none" stroke="#5BB8E8" stroke-width="1.3" stroke-linecap="round" opacity="0.85" />
-          <path d="${form.d}" fill="none" stroke="#7AC8F0" stroke-width="0.7" stroke-linecap="round" opacity="0.45" transform="translate(0, 2.4)" />
+          <path d="${form.crestD}" fill="none" stroke="#7AC8F0" stroke-width="0.8" stroke-linecap="round" opacity="0.4" transform="translate(0.6, 2.4)" />
+          <path d="${form.crestD}" fill="none" stroke="#5BB8E8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" />
+          ${foamMarkup}
         </svg>
       `;
 
@@ -261,20 +269,10 @@ export default function Cursor() {
     };
     const onTouchEnd = () => scheduleHide();
 
-    let lastScrollY = window.scrollY;
-    const onScroll = () => {
-      const dy = window.scrollY - lastScrollY;
-      lastScrollY = window.scrollY;
-      if (Math.abs(dy) < 6) return;
-      const now = performance.now();
-      if (now - lastScrollTrailAt < 110) return;
-      lastScrollTrailAt = now;
-      const x = lastX || window.innerWidth / 2;
-      const y = lastY || window.innerHeight / 2;
-      // Scroll wake is purely vertical, no horizontal jitter.
-      const sDirY = dy > 0 ? 1 : -1;
-      spawnWave(x, y + sDirY * 4, 0, sDirY);
-    };
+    // NOTE: scroll-driven wake was intentionally removed. When the user
+    // scrolls with a trackpad while keeping the cursor still, ripples
+    // would pile up at the same screen point and overlap into an ugly
+    // stack. The ship leaves a wake only when it actually moves now.
 
     const onMouseOut = (e: MouseEvent) => {
       if (!e.relatedTarget && !(e as MouseEvent & { toElement?: Element }).toElement) {
@@ -290,7 +288,6 @@ export default function Cursor() {
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseout', onMouseOut);
     window.addEventListener('blur', onBlur);
-    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
@@ -300,7 +297,6 @@ export default function Cursor() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseout', onMouseOut);
       window.removeEventListener('blur', onBlur);
-      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);

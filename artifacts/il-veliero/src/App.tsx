@@ -53,7 +53,37 @@ export default function App() {
     gsap.ticker.add(lenisRaf);
     gsap.ticker.lagSmoothing(0);
 
+    // Hash-link interception. Lenis hijacks scrolling so the browser's
+    // built-in #anchor jump no longer works. We intercept clicks on
+    // in-page hash links AND honour an initial #section in the URL.
+    const scrollToHash = (hash: string) => {
+      if (!hash || hash === '#') return;
+      const el = document.querySelector(hash);
+      if (!el) return;
+      // Small offset so the navigation bar (≈70 px) doesn't cover headers.
+      lenis.scrollTo(el as HTMLElement, { offset: -70, duration: 1.4 });
+    };
+
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || !href.startsWith('#')) return;
+      e.preventDefault();
+      history.replaceState(null, '', href);
+      scrollToHash(href);
+    };
+    document.addEventListener('click', onClick);
+
+    if (window.location.hash) {
+      // Wait one frame for layout/Lenis to settle.
+      requestAnimationFrame(() => scrollToHash(window.location.hash));
+    }
+
     return () => {
+      document.removeEventListener('click', onClick);
       gsap.ticker.remove(lenisRaf);
       lenis.destroy();
     };
