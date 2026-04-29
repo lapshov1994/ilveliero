@@ -59,23 +59,41 @@ export default function SandFilter() {
         return;
       }
       gsap.set(wrapperRef.current, { opacity: 0 });
+      // Explicit pixel-based end so the calculation is deterministic
+      // and immune to the iframe / hot-reload sizing quirks that were
+      // making the trigger appear "broken" (sand staying at 0 even
+      // after the user had scrolled well past the supposed end).
+      const heroH = (hero as HTMLElement).offsetHeight;
       gsap.to(wrapperRef.current, {
         opacity: 1,
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          // Begin at the very first pixel of scroll, finish when the
-          // booking widget pinned at the bottom of the hero is centred
-          // in the viewport (~40vh of scroll). Linear ramp + 1s scrub
-          // smoothing gives a buttery, continuous fade.
+          // Start: very first pixel of scroll.
+          // End:   ~half the hero, which is the moment the booking
+          //        widget pinned at `bottom-4` of the hero comes into
+          //        the centre of the viewport. By that point the sand
+          //        is at 100%.
           start: 'top top',
-          end: 'bottom 60%',
+          end: () => `+=${Math.round(heroH * 0.5)}`,
           scrub: 1,
+          invalidateOnRefresh: true,
         },
       });
     });
 
-    return () => ctx.revert();
+    // Force ScrollTrigger to recalculate positions after fonts /
+    // images settle. Without this, on a fresh load (and on every HMR
+    // patch) the trigger sometimes locks in a 0-length range and the
+    // sand visually never animates.
+    const refresh = () => ScrollTrigger.refresh();
+    requestAnimationFrame(refresh);
+    window.addEventListener('load', refresh);
+
+    return () => {
+      window.removeEventListener('load', refresh);
+      ctx.revert();
+    };
   }, [isHome, location]);
 
   if (!isHome) return null;
