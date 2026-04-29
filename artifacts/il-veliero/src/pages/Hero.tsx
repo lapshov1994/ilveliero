@@ -190,7 +190,7 @@ export default function Hero() {
           BELOW the video on mobile. The wrapper carries the navy
           background ONLY on mobile so the booking widget reads cleanly
           against it without a stripe of white body bg showing through. */}
-      <div className="relative bg-[#0A1128] md:bg-transparent pb-4 md:pb-0">
+      <div className="relative bg-[#0A1128] md:bg-transparent">
         {/* Hero section. Mobile: portrait aspect-[4/5] container (the
             16:9 source is cropped to portrait, focus held slightly left
             of centre so the breakfast table stays in frame). Desktop:

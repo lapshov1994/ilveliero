@@ -368,15 +368,16 @@ export default function SeaSound() {
       // Putting a finger on the screen IS deliberate engagement.
       bumpIntensity(0.20);
 
-      // First touch wakes the audio system. Specific subsequent
-      // touches (#2, #5, #9, #12) fire a seagull cry instantly —
-      // these are the touches at which the user is most likely
-      // engaged, so the bird answers them. Any pending "first cry"
-      // timer is cancelled so the cry doesn't double up a moment
-      // later. If the buffer is still decoding, retry every 80ms
-      // until it's ready.
+      // First touch wakes the audio system AND fires a cry the
+      // instant the buffer is ready, so the user gets immediate
+      // audible confirmation that the seaside soundscape is alive.
+      // A few subsequent touches (#2, #5, #9, #12) also trigger
+      // cries so the bird keeps answering as the user explores.
+      // Any pending timer is cancelled so cries don't double up.
+      // If the buffer is still decoding, retry every 80ms until
+      // it's ready.
       touchCountRef.current += 1;
-      const gullTouchCounts = new Set([2, 5, 9, 12]);
+      const gullTouchCounts = new Set([1, 2, 5, 9, 12]);
       if (gullTouchCounts.has(touchCountRef.current)) {
         if (gullTimerRef.current) {
           clearTimeout(gullTimerRef.current);
