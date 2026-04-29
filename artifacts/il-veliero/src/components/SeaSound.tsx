@@ -4,8 +4,9 @@ import { useEffect, useRef } from 'react';
  * SeaSound — invisible.
  *
  * Trigger rules (current user spec):
- *   • A trigger fires on EVERY tap (pointerdown), every mouse movement
- *     (pointermove), every wheel/scroll event, and every keypress.
+ *   • A trigger fires on EVERY tap (pointerdown / touchstart / click),
+ *     every keypress, every mouse movement (pointermove), every wheel
+ *     event, and every scroll event.
  *   • Triggers are throttled to one every 3 s — i.e. ~1 s SHORTER
  *     than the 4 s surf wash. Successive waves therefore overlap by
  *     about a second and crossfade into one another, so under any
@@ -18,6 +19,16 @@ import { useEffect, useRef } from 'react';
  *     top of the surf — the gull is heard every other gesture
  *     (~6 s apart under continuous activity), never on consecutive
  *     ones.
+ *
+ * Browser autoplay policy:
+ *   Chrome and Safari only allow an AudioContext to start (or resume
+ *   from suspended) inside a "user activation" event — i.e. a real
+ *   tap / click / key press. pointermove, wheel and scroll do NOT
+ *   count. So the context is created and resumed inside the
+ *   ACTIVATING_EVENTS handler only; the PASSIVE_EVENTS handler just
+ *   plays sound when the context is already running. Without this
+ *   split a visitor who only hovers / scrolls (never clicks) would
+ *   create the context but it would stay forever muted.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
@@ -193,51 +204,77 @@ export default function SeaSound() {
     };
 
     /**
-     * Single throttled handler. Surf on every accepted trigger;
-     * seagull only on every second accepted trigger.
+     * "Real" user-activation events. Only these grant Chrome / Safari
+     * the right to start (or resume) an AudioContext under the
+     * autoplay policy. We MUST create + resume the context inside
+     * one of these handlers — pointermove, wheel and scroll do not
+     * count as activation and will leave the context stuck in
+     * `suspended` state, producing total silence.
      */
-    const onGesture = () => {
+    const ACTIVATING_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'] as const;
+
+    /**
+     * "Passive" events. These can also play surf, but ONLY if the
+     * context has already been primed by an activating event — they
+     * cannot prime it themselves.
+     */
+    const PASSIVE_EVENTS = ['pointermove', 'wheel', 'scroll'] as const;
+
+    /** Shared, throttled "play one wave (and maybe a gull)" routine. */
+    const playOnce = (ctx: AudioContext) => {
       const now = performance.now();
       if (now - lastFiredRef.current < MIN_GAP_MS) return;
       lastFiredRef.current = now;
       triggerCountRef.current += 1;
-      // Gull on every SECOND accepted trigger — i.e. 2nd, 4th, 6th… —
-      // so consecutive gestures never produce two gull cries in a row.
+      // Gull on every SECOND accepted trigger — so consecutive
+      // gestures never produce two gull cries in a row.
       const playGullThisTime = triggerCountRef.current % 2 === 0;
+      playSurf(ctx);
+      if (playGullThisTime) playGull(ctx);
+    };
 
+    /**
+     * Activating handler. Primes (creates + resumes) the AudioContext
+     * the first time, then plays a wave. Because it runs synchronously
+     * inside a real user-activation event, Chrome / Safari will
+     * actually allow `ctx.resume()` to succeed.
+     */
+    const onActivatingGesture = () => {
       void ensureContext().then((ctx) => {
         if (!ctx) return;
         if (ctx.state === 'suspended') {
+          // resume() inside the activation call stack is allowed.
           ctx.resume().catch(() => undefined);
         }
-        playSurf(ctx);
-        if (playGullThisTime) playGull(ctx);
+        playOnce(ctx);
       });
     };
 
-    // Listeners — every reasonable user input feeds the same throttled
-    // handler so the site reacts to BOTH desktop mouse motion and
-    // mobile touch:
-    //   • pointerdown   — every tap / click
-    //   • pointermove   — every mouse / trackpad motion (throttled)
-    //   • wheel         — desktop wheel/trackpad scroll
-    //   • scroll        — fallback for smooth-scroll libs (Lenis) that
-    //                      may swallow wheel events on the document
-    //   • keydown       — keyboard navigation (Tab, arrow keys, etc.)
-    // All listeners are passive — we never preventDefault.
+    /**
+     * Passive handler — fires on mouse motion, wheel, and scroll.
+     * It does NOT try to create or resume the context (that would be
+     * silently rejected by the browser autoplay policy and would
+     * leave us in a "context exists but stays muted" state). Instead
+     * it only plays when the activating handler has already primed
+     * everything.
+     */
+    const onPassiveGesture = () => {
+      const ctx = ctxRef.current;
+      if (!ctx || ctx.state !== 'running') return;
+      playOnce(ctx);
+    };
+
     const opts: AddEventListenerOptions = { passive: true, capture: true };
-    window.addEventListener('pointerdown', onGesture, opts);
-    window.addEventListener('pointermove', onGesture, opts);
-    window.addEventListener('wheel', onGesture, opts);
-    window.addEventListener('scroll', onGesture, opts);
-    window.addEventListener('keydown', onGesture, opts);
+    ACTIVATING_EVENTS.forEach((evt) => window.addEventListener(evt, onActivatingGesture, opts));
+    PASSIVE_EVENTS.forEach((evt) => window.addEventListener(evt, onPassiveGesture, opts));
 
     return () => {
-      window.removeEventListener('pointerdown', onGesture, opts);
-      window.removeEventListener('pointermove', onGesture, opts);
-      window.removeEventListener('wheel', onGesture, opts);
-      window.removeEventListener('scroll', onGesture, opts);
-      window.removeEventListener('keydown', onGesture, opts);
+      ACTIVATING_EVENTS.forEach((evt) =>
+        window.removeEventListener(evt, onActivatingGesture, opts),
+      );
+      PASSIVE_EVENTS.forEach((evt) =>
+        window.removeEventListener(evt, onPassiveGesture, opts),
+      );
       const ctx = ctxRef.current;
       if (ctx) {
         try {
