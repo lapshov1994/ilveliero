@@ -51,10 +51,26 @@ export default function Footer() {
 
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
 
+      {/* Decorative local "sand" texture — sits behind the content but on top
+          of the navy background, giving the footer the same warm grain as
+          the rest of the page without obscuring the white text the way the
+          global multiply-blended sand filter would. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none opacity-[0.18] mix-blend-screen"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0.83  0 0 0 0 0.69  0 0 0 0 0.22  0 0 0 0.85 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+          backgroundSize: '220px 220px',
+        }}
+        data-testid="footer-sand-texture"
+      />
+
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline */}
         <section
+          id="cosa-fare"
           className="mb-16 border-b border-white/10 pb-14"
           data-testid="cosa-fare-section"
         >
