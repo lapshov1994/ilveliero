@@ -64,9 +64,13 @@ export default function SandFilter() {
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          start: 'bottom 90%',
-          end: 'bottom 30%',
-          scrub: true,
+          // Begin at the very first pixel of scroll, finish when the
+          // booking widget pinned at the bottom of the hero is centred
+          // in the viewport (~40vh of scroll). Linear ramp + 1s scrub
+          // smoothing gives a buttery, continuous fade.
+          start: 'top top',
+          end: 'bottom 60%',
+          scrub: 1,
         },
       });
     });
