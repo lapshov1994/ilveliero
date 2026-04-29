@@ -37,20 +37,11 @@ export default function Story() {
       }
     );
 
-    gsap.fromTo(
-      image2Ref.current,
-      { y: 40 },
-      {
-        y: -40,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
-        },
-      }
-    );
+    // image2 (welcome lifebuoy + chair) is rendered at its natural
+    // aspect with no overflow padding, so a y-tween would either
+    // expose blank background or get clipped at the photo edge. The
+    // wrapper-level fade-in below already gives this photo a clean
+    // entrance.
 
     [text1Ref.current, text2Ref.current].forEach((text) => {
       if (!text) return;
@@ -156,12 +147,16 @@ export default function Story() {
               Same reasoning as the left block: no z-index so the inner
               photo's z-[110] isolates can rise above the sand layer. */}
           <div className="md:col-span-4 md:col-start-9 mt-14 md:mt-32 relative">
-            <div ref={image2WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
+            {/* Natural-aspect frame — no fixed ratio, no parallax crop.
+                The full photo (lifebuoy + chair, top to bottom) is
+                always visible; nothing important is sacrificed to a
+                grid-imposed aspect ratio. */}
+            <div ref={image2WrapRef} className="relative z-[110] isolate w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
                 src={welcomeImg}
                 alt="Salvagente Welcome Aboard e poltroncina con cuscino veliero"
-                className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
+                className="block w-full h-auto"
               />
             </div>
 
