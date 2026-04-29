@@ -29,6 +29,16 @@ import { useEffect, useRef } from 'react';
  *   plays sound when the context is already running. Without this
  *   split a visitor who only hovers / scrolls (never clicks) would
  *   create the context but it would stay forever muted.
+ *
+ * Why eager init at mount:
+ *   The AudioContext, the brown-noise pad, AND the seagull MP3 are
+ *   all created / fetched / decoded at MOUNT time, while the context
+ *   is still in `suspended` state (legal — only audio output is
+ *   gated, decode and buffer creation are not). On the first
+ *   activating gesture we just call `ctx.resume()` and play. Without
+ *   this, the first tap had to wait for fetch + decode of a 595 kB
+ *   MP3, which on a slow canvas iframe meant ~10 taps before the
+ *   user heard anything.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
@@ -62,46 +72,31 @@ export default function SeaSound() {
       return buf;
     };
 
-    /**
-     * Create the AudioContext and decode the seagull MP3 lazily, on
-     * the first user gesture. Browsers reject audio output before a
-     * user gesture, so this MUST happen inside an event handler call
-     * stack (it does — onGesture awaits this).
-     */
-    const ensureContext = async (): Promise<AudioContext | null> => {
-      if (ctxRef.current) return ctxRef.current;
+    // ─── Eager initialisation at mount ───
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
 
-      const Ctor =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!Ctor) return null;
-
+    if (Ctor) {
       const ctx = new Ctor();
       ctxRef.current = ctx;
-      // Brown-noise pad — long enough that each surf grain (4 s) plus
-      // a small head/tail margin can pull from a random offset.
       noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
 
-      if (ctx.state === 'suspended') {
+      // Fire-and-forget — gull is optional; surf still plays if this
+      // never finishes. By the time the user actually clicks (almost
+      // always >> 100 ms after mount), this will already be done.
+      void (async () => {
         try {
-          await ctx.resume();
+          const r = await fetch(SEAGULL_URL);
+          const ab = await r.arrayBuffer();
+          gullBufferRef.current = await ctx.decodeAudioData(ab);
         } catch {
-          /* ignore */
+          /* ignore — surf still plays */
         }
-      }
+      })();
+    }
 
-      try {
-        const r = await fetch(SEAGULL_URL);
-        const ab = await r.arrayBuffer();
-        gullBufferRef.current = await ctx.decodeAudioData(ab);
-      } catch {
-        /* ignore — surf will still play */
-      }
-
-      return ctx;
-    };
-
-    /** Naturally-shaped 1.5 s surf wash. */
+    /** Naturally-shaped 4 s surf wash. */
     const playSurf = (ctx: AudioContext) => {
       const noise = noiseBufferRef.current;
       if (!noise) return;
@@ -114,22 +109,25 @@ export default function SeaSound() {
 
       // Soft, deep ocean-rumble character:
       //   • lowpass at 600 Hz so the noise reads as deep wash, not hiss;
-      //   • peak gain 0.3 — gentle, never harsh;
-      //   • long ~1.4 s fade-in and ~1.6 s fade-out. Combined with the
-      //     1 s overlap between successive waves (MIN_GAP_MS = 3 s,
-      //     SURF_DURATION = 4 s) the tail of one wave crossfades into
-      //     the head of the next, so under continuous activity the
-      //     listener hears one unbroken ocean loop — never a chopped
-      //     staccato. The long fade-out also means a single isolated
-      //     gesture decays naturally to silence over ~1.6 s instead
-      //     of cutting off abruptly.
+      //   • peak gain 0.55 — clearly audible on mobile speakers
+      //     without being harsh;
+      //   • fast 0.45 s fade-in so the FIRST wave is immediately
+      //     audible (used to be 1.4 s — almost inaudible on phones);
+      //   • long ~1.6 s fade-out tail. Combined with the 1 s overlap
+      //     between successive waves (MIN_GAP_MS = 3 s, SURF_DURATION
+      //     = 4 s) the tail of one wave crossfades into the head of
+      //     the next, so under continuous activity the listener
+      //     hears one unbroken ocean loop — never a chopped staccato.
+      //     The long fade-out also means a single isolated gesture
+      //     decays naturally to silence over ~1.6 s instead of
+      //     cutting off abruptly.
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
       lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
-      const peak = 0.3;
-      const fadeIn = Math.min(1.4, dur * 0.4);
+      const peak = 0.55;
+      const fadeIn = Math.min(0.45, dur * 0.15);
       const fadeOut = Math.min(1.6, dur * 0.45);
       const sustainStart = now + fadeIn;
       const sustainEnd = now + dur - fadeOut;
@@ -205,18 +203,13 @@ export default function SeaSound() {
 
     /**
      * "Real" user-activation events. Only these grant Chrome / Safari
-     * the right to start (or resume) an AudioContext under the
-     * autoplay policy. We MUST create + resume the context inside
-     * one of these handlers — pointermove, wheel and scroll do not
-     * count as activation and will leave the context stuck in
-     * `suspended` state, producing total silence.
+     * the right to RESUME an AudioContext under the autoplay policy.
      */
     const ACTIVATING_EVENTS = ['pointerdown', 'touchstart', 'keydown', 'click'] as const;
 
     /**
      * "Passive" events. These can also play surf, but ONLY if the
-     * context has already been primed by an activating event — they
-     * cannot prime it themselves.
+     * context has already been resumed by an activating event.
      */
     const PASSIVE_EVENTS = ['pointermove', 'wheel', 'scroll'] as const;
 
@@ -234,29 +227,25 @@ export default function SeaSound() {
     };
 
     /**
-     * Activating handler. Primes (creates + resumes) the AudioContext
-     * the first time, then plays a wave. Because it runs synchronously
-     * inside a real user-activation event, Chrome / Safari will
-     * actually allow `ctx.resume()` to succeed.
+     * Activating handler. Resumes the (already pre-built) context if
+     * it is still suspended, then plays a wave. Because it runs
+     * synchronously inside a real user-activation event, Chrome /
+     * Safari will actually allow `ctx.resume()` to succeed.
      */
     const onActivatingGesture = () => {
-      void ensureContext().then((ctx) => {
-        if (!ctx) return;
-        if (ctx.state === 'suspended') {
-          // resume() inside the activation call stack is allowed.
-          ctx.resume().catch(() => undefined);
-        }
-        playOnce(ctx);
-      });
+      const ctx = ctxRef.current;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => undefined);
+      }
+      playOnce(ctx);
     };
 
     /**
      * Passive handler — fires on mouse motion, wheel, and scroll.
-     * It does NOT try to create or resume the context (that would be
-     * silently rejected by the browser autoplay policy and would
-     * leave us in a "context exists but stays muted" state). Instead
-     * it only plays when the activating handler has already primed
-     * everything.
+     * It does NOT try to resume the context (that would be silently
+     * rejected by the browser autoplay policy). It only plays when
+     * the activating handler has already resumed the context.
      */
     const onPassiveGesture = () => {
       const ctx = ctxRef.current;
