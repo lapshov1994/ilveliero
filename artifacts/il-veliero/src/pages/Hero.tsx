@@ -193,7 +193,7 @@ export default function Hero() {
               the centre of the portrait viewport instead of the empty
               wall on the right. Desktop keeps default centre framing. */}
           <video
-            className="absolute inset-0 w-full h-full object-cover object-[50%_38%] md:object-center"
+            className="absolute inset-0 w-full h-full object-cover object-[18%_45%] md:object-[22%_50%]"
             src={`${import.meta.env.BASE_URL}video/hero.mp4`}
             poster={`${import.meta.env.BASE_URL}video/hero-poster.jpg`}
             autoPlay

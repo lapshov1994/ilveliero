@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import doorImg from '@assets/1000016580_1777472482708.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -112,11 +113,20 @@ export default function Family() {
 
         {/* Right column: Portrait (6 cols, offset by 1) */}
         <div className="md:col-span-6 md:col-start-7">
-          <div ref={imageWrapRef} className="overflow-hidden aspect-[3/4] w-full">
+          {/* Horizontal photo of the entrance door — replaces the previous
+              portrait placeholder. Aspect ratio flipped to 4:3 to match
+              the landscape orientation of the source image. Image is
+              lifted above the global SandFilter (z-90) and grain (z-100)
+              with z-[110] + isolate so it renders pristine while the
+              text columns keep the warm grain. */}
+          <div
+            ref={imageWrapRef}
+            className="relative z-[110] isolate overflow-hidden aspect-[4/3] w-full"
+          >
             <img
               ref={imageRef}
-              src="https://images.unsplash.com/photo-1543269664-56d93c1b41a6?q=80&w=800&auto=format&fit=crop"
-              alt="La Famiglia Valenti"
+              src={doorImg}
+              alt="L'ingresso de Il Veliero — porta in legno con ringhiera in ferro battuto"
               className="w-full h-full object-cover"
             />
           </div>

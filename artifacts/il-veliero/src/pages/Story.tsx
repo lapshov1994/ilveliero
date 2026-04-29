@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import shellsImg from '@assets/PXL_20260428_104636690_1777473103349.jpg';
+import welcomeImg from '@assets/PXL_20260428_104008109~2_1777473103350.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -110,8 +112,8 @@ export default function Story() {
             <div ref={image1WrapRef} className="overflow-hidden aspect-[4/3] w-full bg-gray-100">
               <img
                 ref={image1Ref}
-                src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop"
-                alt="Colazione in giardino"
+                src={shellsImg}
+                alt="Conchiglie, stelle marine e coralli — dettagli marinari de Il Veliero"
                 className="w-full h-[120%] object-cover scale-110"
               />
             </div>
@@ -134,8 +136,8 @@ export default function Story() {
             <div ref={image2WrapRef} className="overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
-                src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop"
-                alt="Spiaggia San Vito Lo Capo"
+                src={welcomeImg}
+                alt="Salvagente Welcome Aboard e poltroncina con cuscino veliero"
                 className="w-full h-[120%] object-cover scale-110"
               />
             </div>

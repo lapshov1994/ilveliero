@@ -169,14 +169,15 @@ export default function Navigation() {
         aria-modal="true"
         aria-label="Menu di navigazione"
         aria-hidden={!isOpen}
-        className={`fixed top-0 left-0 right-0 z-[200] bg-[#0A1128] text-white border-b border-[#D4AF37]/25 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.55)] ${
+        className={`fixed top-0 left-0 right-0 z-[200] bg-[#0A1128] text-white border-b border-[#D4AF37]/25 shadow-[0_18px_40px_-20px_rgba(0,0,0,0.55)] md:bottom-auto bottom-0 ${
           isOpen ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         data-testid="nav-overlay"
       >
-        <div className="flex items-center justify-between gap-6 px-8 py-6">
-          {/* Brand mark — mirrors the page header so the swap looks like a
-              re-styling of the same band. */}
+        {/* ── Top bar (brand + close) ─────────────────────────────────
+            On mobile this is the header strip of a full-screen sheet;
+            on desktop it's the entire menu bar with links inline. */}
+        <div className="flex items-center justify-between gap-4 px-6 md:px-8 py-5 md:py-6">
           <div ref={brandRef} className="flex items-center gap-3 flex-shrink-0">
             <div
               className="w-7 h-7"
@@ -193,21 +194,20 @@ export default function Navigation() {
               }}
               aria-hidden="true"
             />
-            <div className="text-base tracking-[0.3em] font-serif uppercase text-white leading-none">
+            <div className="text-sm md:text-base tracking-[0.3em] font-serif uppercase text-white leading-none">
               il veliero
               <span className="text-[#D4AF37] ml-2 text-xs opacity-80">★★★</span>
             </div>
           </div>
 
-          {/* Horizontal links. On narrow screens we still keep them in a row
-              and let them shrink — five short Italian words easily fit. */}
+          {/* Desktop-only inline links between brand and trigger */}
           <ul
             ref={itemsRef}
-            className="flex items-center gap-3 sm:gap-6 md:gap-10 flex-1 justify-end pr-4"
+            className="hidden md:flex items-center gap-6 md:gap-10 flex-1 justify-end pr-4"
           >
             {SECTIONS.map((section) => {
               const itemClass =
-                'nav-item group inline-flex items-center text-[11px] sm:text-xs tracking-[0.3em] uppercase text-white/85 hover:text-[#D4AF37] transition-colors duration-300';
+                'nav-item group inline-flex items-center text-xs tracking-[0.3em] uppercase text-white/85 hover:text-[#D4AF37] transition-colors duration-300';
               const labelInner = (
                 <span className="relative inline-block pb-1">
                   {section.label}
@@ -244,12 +244,55 @@ export default function Navigation() {
             })}
           </ul>
 
-          {/* The trigger lives inside the bar so it sits naturally on top
-              of it — clicking the anchor closes the menu. */}
+          {/* Close trigger — always rightmost. The trigger swaps from a
+              hamburger to an anchor when open, and the anchor is the
+              user's primary close affordance on every viewport. */}
           <div ref={triggerWrapRef} className="flex-shrink-0">
             <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
           </div>
         </div>
+
+        {/* ── Mobile-only stacked links ──────────────────────────────
+            Five tappable rows filling the rest of the screen, with a
+            generous gold hairline separator. On md+ this whole block
+            is hidden — the desktop links render inside the top bar. */}
+        <ul className="md:hidden flex flex-col px-6 pb-10">
+          {SECTIONS.map((section) => {
+            const rowClass =
+              'nav-item group flex items-center justify-between w-full py-5 border-b border-white/10 text-base tracking-[0.25em] uppercase text-white/90 hover:text-[#D4AF37] transition-colors duration-300';
+            const arrow = (
+              <span className="text-[#D4AF37] text-lg leading-none transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+            );
+            if (section.kind === 'anchor') {
+              return (
+                <li key={section.label}>
+                  <button
+                    type="button"
+                    onClick={() => scrollToAnchor(section.anchor)}
+                    className={`${rowClass} bg-transparent border-0 cursor-pointer text-left`}
+                    data-testid={`nav-link-mobile-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <span className="font-serif normal-case text-2xl tracking-normal">{section.label}</span>
+                    {arrow}
+                  </button>
+                </li>
+              );
+            }
+            return (
+              <li key={section.label}>
+                <Link
+                  href={section.href}
+                  onClick={close}
+                  className={rowClass}
+                  data-testid={`nav-link-mobile-${section.label.toLowerCase()}`}
+                >
+                  <span className="font-serif normal-case text-2xl tracking-normal">{section.label}</span>
+                  {arrow}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </div>
     </>
   );

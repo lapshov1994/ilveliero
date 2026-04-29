@@ -7,7 +7,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { NavProvider } from '@/components/NavigationContext';
 import Navigation from '@/components/Navigation';
 import Cursor from '@/components/Cursor';
-import OceanicAtmosphere from '@/components/OceanicAtmosphere';
 import SandFilter from '@/components/SandFilter';
 
 import Hero from '@/pages/Hero';
@@ -105,7 +104,6 @@ export default function App() {
           />
           {/* Global overlays */}
           <Cursor />
-          <OceanicAtmosphere />
           <SandFilter />
           <Navigation />
 

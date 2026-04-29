@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import bedroomImg from '@assets/2026-04-29_16.21.56_1777472525735.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,7 +23,7 @@ const ROOMS: Room[] = [
     description:
       "Avvolta nei toni caldi della terra siciliana, la suite Scirocco ti accoglie con la sua ampia finestra a tutta altezza affacciata sull'orizzonte. Letto a baldacchino in ferro battuto, pavimento in cotto antico e una terrazza privata per i tramonti più lenti.",
     photos: [
-      'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1200&auto=format&fit=crop',
+      bedroomImg,
       'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200&auto=format&fit=crop',
@@ -76,6 +77,177 @@ const ROOMS: Room[] = [
   },
 ];
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Segmented pill switch
+   --------------------
+   A horizontal track with a gold "knob" that slides under the active room.
+   The knob is a separate absolutely-positioned element — its left/width
+   are animated with GSAP whenever the active index changes, so the slide
+   reads as a continuous physical motion (the very thing the user asked
+   for: "тумблер с кругляшком, который как ползунок можно перемещать").
+
+   The whole control is also drag-aware: pointerdown anywhere on the track
+   starts a drag, pointermove updates the active index in real time as the
+   knob follows the pointer, and pointerup commits it. Keyboard navigation
+   (arrow left/right + Home/End) is included for a11y.
+   ────────────────────────────────────────────────────────────────────── */
+function RoomToggle({
+  rooms,
+  activeIndex,
+  onChange,
+}: {
+  rooms: Room[];
+  activeIndex: number;
+  onChange: (i: number) => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const knobRef = useRef<HTMLDivElement>(null);
+  const segmentRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const draggingRef = useRef(false);
+
+  // Move the knob to sit exactly under the active segment. Using a layout
+  // effect so we measure after the DOM is laid out but BEFORE paint, which
+  // prevents a one-frame jump on first render.
+  const positionKnob = (i: number, animate = true) => {
+    const seg = segmentRefs.current[i];
+    const track = trackRef.current;
+    const knob = knobRef.current;
+    if (!seg || !track || !knob) return;
+    const trackRect = track.getBoundingClientRect();
+    const segRect = seg.getBoundingClientRect();
+    const left = segRect.left - trackRect.left;
+    const width = segRect.width;
+    if (animate) {
+      gsap.to(knob, { left, width, duration: 0.55, ease: 'power3.out' });
+    } else {
+      gsap.set(knob, { left, width });
+    }
+  };
+
+  useLayoutEffect(() => {
+    positionKnob(activeIndex, false);
+    // Reposition on resize so the knob follows when segments reflow.
+    const onResize = () => positionKnob(activeIndex, false);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    positionKnob(activeIndex, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex]);
+
+  // Map a pointer X (page coords) to the segment index under it.
+  const indexAtX = (clientX: number): number => {
+    const track = trackRef.current;
+    if (!track) return activeIndex;
+    const rect = track.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const w = rect.width / rooms.length;
+    const i = Math.floor(x / w);
+    return Math.max(0, Math.min(rooms.length - 1, i));
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    draggingRef.current = true;
+    onChange(indexAtX(e.clientX));
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    const next = indexAtX(e.clientX);
+    if (next !== activeIndex) onChange(next);
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = false;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
+  };
+
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      onChange(Math.min(rooms.length - 1, activeIndex + 1));
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onChange(Math.max(0, activeIndex - 1));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      onChange(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      onChange(rooms.length - 1);
+    }
+  };
+
+  return (
+    <div
+      ref={trackRef}
+      role="tablist"
+      aria-label="Seleziona una dimora"
+      tabIndex={0}
+      onKeyDown={onKey}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      className="relative w-full select-none touch-none rounded-full bg-[#0A1128]/[0.045] ring-1 ring-[#0A1128]/10 p-1.5 cursor-grab active:cursor-grabbing"
+      data-testid="room-toggle"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+    >
+      {/* The sliding knob — a gold pill under the active segment. */}
+      <div
+        ref={knobRef}
+        aria-hidden="true"
+        className="absolute top-1.5 bottom-1.5 rounded-full bg-[#D4AF37] shadow-[0_6px_18px_-6px_rgba(212,175,55,0.55)]"
+        style={{ left: 0, width: 0 }}
+      />
+      {/* The segments themselves — buttons so they remain accessible to
+          screen readers and to keyboard users without needing to track
+          the knob. */}
+      <div className="relative flex">
+        {rooms.map((r, i) => {
+          const isActive = i === activeIndex;
+          return (
+            <button
+              key={r.name}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`room-panel-${i}`}
+              ref={(el) => { segmentRefs.current[i] = el; }}
+              data-testid={`room-tab-${i}`}
+              onClick={(e) => {
+                // Click also triggers onPointerDown which already set
+                // the active index — but if someone uses Enter/Space
+                // via keyboard navigation we still want to handle it.
+                e.preventDefault();
+                onChange(i);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className={`relative z-10 flex-1 min-w-0 px-2 sm:px-4 md:px-6 py-3 md:py-3.5 transition-colors duration-300 ${
+                isActive ? 'text-[#0A1128]' : 'text-[#0A1128]/45 hover:text-[#0A1128]/70'
+              }`}
+            >
+              <span className="block text-center font-serif text-[13px] sm:text-base md:text-lg leading-none truncate">
+                {r.name}
+              </span>
+              {/* Tagline hidden on the narrowest viewports — at <420 px the
+                  4-segment pill simply doesn't have room for two lines per
+                  cell and the tagline starts wrapping awkwardly. */}
+              <span className={`hidden sm:block text-center text-[9px] sm:text-[10px] tracking-[0.18em] uppercase mt-1 leading-none transition-colors duration-300 ${
+                isActive ? 'text-[#0A1128]/65' : 'text-[#0A1128]/35'
+              }`}>
+                {r.tagline}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DimoreTeaser() {
   const containerRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -84,15 +256,12 @@ export default function DimoreTeaser() {
   const photoLayerRef = useRef<HTMLDivElement>(null);
 
   const [activeRoom, setActiveRoom] = useState(0);
-  // Track the current photo index for each room independently so
-  // switching rooms preserves where the user was in each carousel.
   const [photoIdx, setPhotoIdx] = useState<number[]>(() => ROOMS.map(() => 0));
 
   const room = ROOMS[activeRoom];
   const currentPhoto = photoIdx[activeRoom] ?? 0;
   const totalPhotos = room.photos.length;
 
-  // ── Entry animation ─────────────────────────────────────────────────
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
@@ -132,7 +301,6 @@ export default function DimoreTeaser() {
     return () => ctx.revert();
   }, []);
 
-  // ── Cross-fade whenever the visible photo changes ──────────────────
   useEffect(() => {
     if (!photoLayerRef.current) return;
     gsap.fromTo(
@@ -157,21 +325,15 @@ export default function DimoreTeaser() {
     <section
       id="dimore-teaser"
       ref={containerRef}
-      // No z-index here so the carousel inside can lift itself ABOVE the
-      // global SandFilter (z-90) without the rest of the section also
-      // jumping above it. position:relative is kept for the absolute "04"
-      // decoration but without a z-index it does NOT create a stacking
-      // context — that's the whole trick.
       className="relative bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
       data-testid="dimore-teaser"
     >
-      {/* Giant decorative section number */}
       <div className="absolute top-16 right-10 text-[18rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
         04
       </div>
 
       <div className="max-w-7xl mx-auto relative">
-        {/* ── Section header + room tabs ────────────────────────────── */}
+        {/* ── Section header + room toggle ────────────────────────── */}
         <div ref={headerRef} className="mb-12 md:mb-16">
           <span className="text-xs tracking-[0.2em] text-[#D4AF37] uppercase font-bold block mb-4">
             Le Nostre Dimore
@@ -181,58 +343,21 @@ export default function DimoreTeaser() {
             <span className="italic">quattro storie.</span>
           </h2>
 
-          {/* Room tabs */}
-          <div
-            role="tablist"
-            aria-label="Seleziona una dimora"
-            className="flex flex-wrap items-center gap-x-10 gap-y-4 border-t border-b border-[#0A1128]/10 py-5"
-          >
-            {ROOMS.map((r, i) => {
-              const isActive = i === activeRoom;
-              return (
-                <button
-                  key={r.name}
-                  role="tab"
-                  aria-selected={isActive}
-                  data-testid={`room-tab-${i}`}
-                  onClick={() => setActiveRoom(i)}
-                  className="group relative flex items-baseline gap-3 transition-colors duration-300"
-                >
-                  <span
-                    className={`font-serif text-lg md:text-xl transition-colors duration-300 ${
-                      isActive ? 'text-[#0A1128]' : 'text-[#0A1128]/40 group-hover:text-[#0A1128]/70'
-                    }`}
-                  >
-                    {r.name}
-                  </span>
-                  <span
-                    className={`text-[10px] tracking-[0.2em] uppercase transition-colors duration-300 ${
-                      isActive ? 'text-[#D4AF37]' : 'text-[#0A1128]/30 group-hover:text-[#0A1128]/50'
-                    }`}
-                  >
-                    {r.tagline}
-                  </span>
-                  <span
-                    className={`absolute -bottom-[22px] left-0 h-[2px] bg-[#D4AF37] transition-all duration-500 ease-out ${
-                      isActive ? 'w-full' : 'w-0'
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
+          <RoomToggle rooms={ROOMS} activeIndex={activeRoom} onChange={setActiveRoom} />
         </div>
 
-        {/* ── Carousel + text ────────────────────────────────────────── */}
+        {/* ── Carousel + text ────────────────────────────────────────
+            z-[110] + isolate lifts the photo block above BOTH the
+            global SandFilter (z-90) AND the film-grain overlay
+            (z-100). Isolate creates its own stacking context so only
+            the carousel rises — the rest of the section keeps its
+            warm grain. */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
-          {/* Left: photo carousel.
-              z-[95] + isolate lifts the photo (and only the photo) ABOVE
-              the global SandFilter at z-90, so the room images render
-              clean and pristine while the rest of the section keeps
-              the warm sand grain. */}
           <div
             ref={carouselRef}
-            className="relative z-[95] isolate aspect-[4/5] w-full overflow-hidden bg-[#0A1128]/5 select-none"
+            id={`room-panel-${activeRoom}`}
+            role="tabpanel"
+            className="relative z-[110] isolate aspect-[4/5] w-full overflow-hidden bg-[#0A1128]/5 select-none"
             data-testid="room-carousel"
           >
             <div
@@ -248,7 +373,6 @@ export default function DimoreTeaser() {
               />
             </div>
 
-            {/* Left arrow — main navigation control the user asked for */}
             <button
               type="button"
               aria-label="Foto precedente"
@@ -261,7 +385,6 @@ export default function DimoreTeaser() {
               </svg>
             </button>
 
-            {/* Right arrow — convenience */}
             <button
               type="button"
               aria-label="Foto successiva"
@@ -274,7 +397,6 @@ export default function DimoreTeaser() {
               </svg>
             </button>
 
-            {/* Counter + dot indicators */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2 bg-white/85 backdrop-blur-sm z-20">
               <span className="text-[10px] tracking-[0.2em] uppercase text-[#0A1128] font-bold tabular-nums">
                 {String(currentPhoto + 1).padStart(2, '0')} / {String(totalPhotos).padStart(2, '0')}
@@ -295,7 +417,6 @@ export default function DimoreTeaser() {
             </div>
           </div>
 
-          {/* Right: text block */}
           <div ref={textRef} className="flex flex-col justify-center">
             <div className="flex items-center gap-3 mb-5">
               <span className="w-8 h-[1px] bg-[#D4AF37]" />
