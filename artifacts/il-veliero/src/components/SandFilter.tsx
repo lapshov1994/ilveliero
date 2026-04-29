@@ -33,11 +33,8 @@ const SAND_TEXTURE_FINE =
   "</svg>\")";
 
 export default function SandFilter() {
-  const layerRef = useRef<HTMLDivElement>(null);
-  const coarseRef = useRef<HTMLDivElement>(null);
-  const fineRef = useRef<HTMLDivElement>(null);
-  const gustRef = useRef<HTMLDivElement>(null);
   const [location] = useLocation();
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // The sand filter is intentionally only present on the home page where it
   // sits over the white "story" sections and the dark hero photograph. On
@@ -46,177 +43,124 @@ export default function SandFilter() {
   // user wants to see clean.
   const isHome = location === '/' || location === '';
 
+  // Scroll-tied opacity. Initially the entire sand layer (body + header
+  // strip) is fully transparent — the hero video and the header read
+  // crisp at page load. As the user scrolls the hero out of view, the
+  // sand fades in continuously (scrub) until the hero is mostly gone,
+  // landing at full opacity for the rest of the page.
   useEffect(() => {
-    if (!layerRef.current) return;
     if (!isHome) return;
+    if (!wrapperRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Coarse layer uses NORMAL blend — guaranteed visible on any
-      // background (bright video, white sections, navy footer). Alpha
-      // is tuned so it reads clearly as warm sand grain without dimming
-      // the underlying photograph too much.
-      gsap.set(coarseRef.current, { opacity: 0.42, scale: 1, x: 0, y: 0 });
-      gsap.set(fineRef.current, { opacity: 0.75, x: 0, y: 0 });
-      if (gustRef.current) gsap.set(gustRef.current, { opacity: 0, x: -120, y: 0 });
-
-      // Coarse drift — slow, predominantly horizontal "downwind" motion
-      // with a hint of vertical sway. Long duration so it feels like a
-      // steady breeze, not a fan.
-      gsap.to(coarseRef.current, {
-        x: '+=60',
-        y: '-=8',
-        duration: 14,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
-      // Coarse density breathes very slowly — barely perceptible.
-      gsap.to(coarseRef.current, {
-        opacity: 0.5,
-        duration: 5.2,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
-
-      // Fine highlight layer drifts in the OPPOSITE direction (cross-flow)
-      // and slightly faster — adds the shimmering "grains in the air" feel.
-      gsap.to(fineRef.current, {
-        x: '-=80',
-        y: '+=6',
-        duration: 9,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
-      gsap.to(fineRef.current, {
-        opacity: 0.85,
-        duration: 1.8,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
-
-      // GUST loop — periodic wind gusts that sweep a faster, denser
-      // sand sheet across the screen left-to-right and fade out. Uses
-      // randomised delay/duration so the gusts feel natural, not ticking
-      // on a metronome. The recursive launchGust is registered into the
-      // active gsap.context so every tween/delayedCall (including those
-      // scheduled by onComplete) is reverted together when the effect
-      // tears down — no stragglers between route changes.
-      const gust = gustRef.current;
-      if (gust) {
-        const launchGust = () => {
-          gsap.set(gust, { x: -160, opacity: 0 });
-          gsap
-            .timeline({
-              onComplete: () => {
-                ctx.add(() => {
-                  gsap.delayedCall(gsap.utils.random(2.4, 6.8), launchGust);
-                });
-              },
-            })
-            .to(gust, {
-              opacity: gsap.utils.random(0.18, 0.34),
-              duration: 0.6,
-              ease: 'power1.out',
-            })
-            .to(
-              gust,
-              {
-                x: window.innerWidth + 160,
-                duration: gsap.utils.random(2.2, 3.6),
-                ease: 'power1.inOut',
-              },
-              '<'
-            )
-            .to(
-              gust,
-              {
-                opacity: 0,
-                duration: 0.8,
-                ease: 'power1.in',
-              },
-              '-=0.9'
-            );
-        };
-        gsap.delayedCall(gsap.utils.random(1.2, 3.0), launchGust);
-      }
-
       const hero = document.querySelector('.hero-section');
-      if (hero) {
-        gsap.set(layerRef.current, { opacity: 0 });
-        gsap.to(layerRef.current, {
-          opacity: 1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: hero,
-            start: 'bottom 80%',
-            end: 'bottom 20%',
-            scrub: true,
-          },
-        });
-      } else {
-        gsap.set(layerRef.current, { opacity: 1 });
+      if (!hero) {
+        gsap.set(wrapperRef.current, { opacity: 1 });
+        return;
       }
+      gsap.set(wrapperRef.current, { opacity: 0 });
+      gsap.to(wrapperRef.current, {
+        opacity: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: hero,
+          start: 'bottom 90%',
+          end: 'bottom 30%',
+          scrub: true,
+        },
+      });
     });
 
     return () => ctx.revert();
-  }, [location, isHome]);
+  }, [isHome, location]);
 
   if (!isHome) return null;
 
+  // Two separate sand layers, both static (no animation):
+  //
+  // 1) Body layer at z-[105] — sits BELOW the photos (z-[110]) and the
+  //    headers (z-[150]) so photos stay perfectly clean and the page is
+  //    only sandified in the empty / background regions, exactly the
+  //    look the user previously approved.
+  //
+  // 2) Header strip at z-[160] — a fixed band the height of the header
+  //    that sits ABOVE the headers (z-[150]) and below the navigation
+  //    panel (z-[200]) and the scroll progress bar (z-[165]). This is
+  //    the ONLY place sand visibly overlaps the headers, so the rest of
+  //    the page (chairs, table, photos, content) keeps its original
+  //    sand-respects-photos behaviour. A small bottom fade-out softens
+  //    the join into the body sand below.
   return (
-    <div
-      ref={layerRef}
-      className="fixed inset-0 z-[105] pointer-events-none"
-      aria-hidden="true"
-      data-testid="sand-filter"
-    >
-      {/* Coarse warm-sand layer — NORMAL blend so it always reads, even
-          over a fully-saturated bright video frame. Kept at low alpha so
-          it never feels like a foggy haze. */}
+    <div ref={wrapperRef} aria-hidden="true" data-testid="sand-filter">
+      {/* Body sand — original z (BELOW photos at z-110) and original
+          opacity. The mask fades the layer to transparent in the top
+          100px so this layer NEVER doubles up with the header strip
+          below it — the perceived sand density is uniform across the
+          page, exactly the texture the user previously approved. */}
       <div
-        ref={coarseRef}
-        className="absolute -inset-8"
+        className="fixed inset-0 z-[105] pointer-events-none"
         style={{
-          backgroundImage: SAND_TEXTURE,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '240px 240px',
-        }}
-      />
-      {/* Fine cream highlight layer — soft-light keeps it subtle but
-          adds the "sun glint" feel on darker areas (footer, hero edges). */}
-      <div
-        ref={fineRef}
-        className="absolute -inset-8"
-        style={{
-          backgroundImage: SAND_TEXTURE_FINE,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '140px 140px',
-          mixBlendMode: 'soft-light',
-        }}
-      />
-      {/* Wind-gust sheet — denser sand burst that periodically sweeps
-          left-to-right across the viewport, fades in/out, and has a
-          subtle horizontal motion-blur so it reads as airborne dust
-          riding a gust of wind rather than a static texture. */}
-      <div
-        ref={gustRef}
-        className="absolute top-0 bottom-0 w-[40vw] will-change-transform"
-        style={{
-          backgroundImage: SAND_TEXTURE,
-          backgroundRepeat: 'repeat',
-          backgroundSize: '180px 180px',
-          opacity: 0,
-          left: 0,
-          filter: 'blur(0.6px)',
           maskImage:
-            'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.6) 65%, transparent 100%)',
+            'linear-gradient(to bottom, transparent 0px, transparent 80px, black 120px)',
           WebkitMaskImage:
-            'linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.6) 65%, transparent 100%)',
+            'linear-gradient(to bottom, transparent 0px, transparent 80px, black 120px)',
         }}
-      />
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: SAND_TEXTURE,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '240px 240px',
+            opacity: 0.42,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: SAND_TEXTURE_FINE,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '140px 140px',
+            opacity: 0.75,
+            mixBlendMode: 'soft-light',
+          }}
+        />
+      </div>
+
+      {/* Header sand strip — only paints in the top 120px (the header
+          band), at the SAME opacity as the body layer, with a fade-out
+          near the bottom that crosses the body layer's fade-in. The
+          two layers therefore tile-up to a single, uniform sand
+          surface — no double exposure, no visible seam. */}
+      <div
+        className="fixed top-0 left-0 right-0 h-[120px] z-[160] pointer-events-none"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, black 0px, black 80px, transparent 120px)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, black 0px, black 80px, transparent 120px)',
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: SAND_TEXTURE,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '240px 240px',
+            opacity: 0.42,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: SAND_TEXTURE_FINE,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '140px 140px',
+            opacity: 0.75,
+            mixBlendMode: 'soft-light',
+          }}
+        />
+      </div>
     </div>
   );
 }

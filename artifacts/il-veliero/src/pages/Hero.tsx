@@ -128,7 +128,7 @@ export default function Hero() {
       {/* Scroll progress bar — fixed at very top */}
       <div
         ref={scrollProgressRef}
-        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[155]"
+        className="fixed top-0 left-0 h-0.5 bg-[#D4AF37] w-full origin-left scale-x-0 z-[165]"
       />
 
       {/* Header — fixed so the sailboat stays in viewport while it sails away.
