@@ -36,12 +36,6 @@ export default function SeaSound() {
   // Schedule handle for the next seagull call, so we can clear it on
   // unmount and re-arm cleanly across activity windows.
   const gullTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Counts touchstart events. The seagull cry fires immediately on
-  // the SECOND touch — by then the user has clearly engaged with the
-  // page on mobile, and any pending "first cry" timer is cancelled
-  // so the cry happens right under the finger rather than a moment
-  // later.
-  const touchCountRef = useRef(0);
 
   useEffect(() => {
     /** Brown noise buffer (mono). */
@@ -88,10 +82,7 @@ export default function SeaSound() {
       if (!buffer) return;
 
       const now = ctx.currentTime + 0.02;
-      // Each cry is kept short (0.54..0.96s) so consecutive cries
-      // never bleed into one another — the user wanted them clearly
-      // separated, not slurred together.
-      const sliceDur = 0.54 + Math.random() * 0.42;
+      const sliceDur = 0.9 + Math.random() * 0.7; // 0.9..1.6s
       const maxStart = Math.max(0, buffer.duration - sliceDur - 0.05);
       const startOffset = Math.random() * maxStart;
 
@@ -367,35 +358,6 @@ export default function SeaSound() {
       if (c?.state === 'suspended') c.resume().catch(() => undefined);
       // Putting a finger on the screen IS deliberate engagement.
       bumpIntensity(0.20);
-
-      // First touch wakes the audio system. Specific subsequent
-      // touches (#2, #5, #9, #12) fire a seagull cry instantly —
-      // these are the touches at which the user is most likely
-      // engaged, so the bird answers them. Any pending "first cry"
-      // timer is cancelled so the cry doesn't double up a moment
-      // later. If the buffer is still decoding, retry every 80ms
-      // until it's ready.
-      touchCountRef.current += 1;
-      const gullTouchCounts = new Set([2, 5, 9, 12]);
-      if (gullTouchCounts.has(touchCountRef.current)) {
-        if (gullTimerRef.current) {
-          clearTimeout(gullTimerRef.current);
-          gullTimerRef.current = null;
-        }
-        const ctx = ctxRef.current;
-        const gm = gullMasterRef.current;
-        if (ctx && gm) {
-          const fireOnTouch = () => {
-            if (gullBufferRef.current) {
-              playSeagull(ctx, gm);
-              scheduleNextGull();
-            } else {
-              gullTimerRef.current = setTimeout(fireOnTouch, 80);
-            }
-          };
-          fireOnTouch();
-        }
-      }
     };
     const onTouchMove = () => {
       ensureStarted();
