@@ -139,11 +139,7 @@ export default function Hero() {
           headerScrolled ? 'bg-[#0A1128]/75 backdrop-blur-md' : ''
         }`}
       >
-        {/* Local sand grain — same warm pattern as the global SandFilter,
-            embedded here because the header sits above z-105 (the global
-            sand layer). */}
-        <span className="sand-grain-local" aria-hidden="true" />
-        <div className="flex items-center gap-4 group cursor-pointer relative z-[2]">
+        <div className="flex items-center gap-4 group cursor-pointer relative z-50">
           <div className="relative">
             <div
               ref={sailboatRef}
@@ -178,9 +174,7 @@ export default function Hero() {
             </span>
           </div>
         </div>
-        <div className="relative z-[2]">
-          <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
-        </div>
+        <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
       </header>
 
       {/* Full-screen hero */}

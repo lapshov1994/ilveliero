@@ -35,7 +35,6 @@ export default function InnerPageHeader() {
 
   return (
     <header className="fixed top-0 left-0 w-full px-8 py-6 z-[150] flex justify-between items-center bg-white/95 backdrop-blur-sm border-b border-[#0A1128]/5">
-      <span className="sand-grain-local" aria-hidden="true" />
       <Link href="/" className="flex items-center gap-3 group cursor-pointer">
         <div className="relative z-50">
           <div ref={sailboatRef} className="relative z-50">
