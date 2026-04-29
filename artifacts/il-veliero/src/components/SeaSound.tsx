@@ -36,6 +36,12 @@ export default function SeaSound() {
   // Schedule handle for the next seagull call, so we can clear it on
   // unmount and re-arm cleanly across activity windows.
   const gullTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Counts touchstart events. The seagull cry fires immediately on
+  // the SECOND touch — by then the user has clearly engaged with the
+  // page on mobile, and any pending "first cry" timer is cancelled
+  // so the cry happens right under the finger rather than a moment
+  // later.
+  const touchCountRef = useRef(0);
 
   useEffect(() => {
     /** Brown noise buffer (mono). */
@@ -358,6 +364,31 @@ export default function SeaSound() {
       if (c?.state === 'suspended') c.resume().catch(() => undefined);
       // Putting a finger on the screen IS deliberate engagement.
       bumpIntensity(0.20);
+
+      // First touch wakes the audio system. The SECOND touch fires a
+      // seagull cry instantly — clear the pending 1s "first cry"
+      // timer so the cry doesn't double up a moment later. If the
+      // buffer is still decoding, retry every 80ms until it's ready.
+      touchCountRef.current += 1;
+      if (touchCountRef.current === 2) {
+        if (gullTimerRef.current) {
+          clearTimeout(gullTimerRef.current);
+          gullTimerRef.current = null;
+        }
+        const ctx = ctxRef.current;
+        const gm = gullMasterRef.current;
+        if (ctx && gm) {
+          const fireOnSecondTouch = () => {
+            if (gullBufferRef.current) {
+              playSeagull(ctx, gm);
+              scheduleNextGull();
+            } else {
+              gullTimerRef.current = setTimeout(fireOnSecondTouch, 80);
+            }
+          };
+          fireOnSecondTouch();
+        }
+      }
     };
     const onTouchMove = () => {
       ensureStarted();
