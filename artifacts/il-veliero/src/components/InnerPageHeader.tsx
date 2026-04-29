@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Link } from 'wouter';
 import gsap from 'gsap';
 import { useNav } from './NavigationContext';
+import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 export default function InnerPageHeader() {
   const { toggle, isOpen } = useNav();
@@ -36,11 +37,20 @@ export default function InnerPageHeader() {
       <Link href="/" className="flex items-center gap-3 group cursor-pointer">
         <div className="relative z-50">
           <div ref={sailboatRef} className="relative z-50">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-[#0A1128] drop-shadow-sm">
-              <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1"/>
-              <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="2 2" className="opacity-60"/>
-            </svg>
+            <div
+              className="w-7 h-7 drop-shadow-sm"
+              style={{
+                backgroundColor: '#0A1128',
+                WebkitMaskImage: `url(${shipLogoUrl})`,
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskSize: 'contain',
+                WebkitMaskPosition: 'center',
+                maskImage: `url(${shipLogoUrl})`,
+                maskRepeat: 'no-repeat',
+                maskSize: 'contain',
+                maskPosition: 'center',
+              }}
+            />
           </div>
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#D4AF37] opacity-0 group-hover:w-full group-hover:opacity-40 transition-all duration-700" />
         </div>

@@ -5,7 +5,7 @@ import { useNav } from './NavigationContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Hand-drawn cartoon wind glyph — two curls plus a tail line.
+// Hand-drawn cartoon wind glyph — multiple curls + tails.
 // Stroke is sky-blue so it reads on both light and dark backgrounds.
 const WIND_GLYPH_PATHS = [
   // Variant A — two curls + lower tail
@@ -18,25 +18,34 @@ const WIND_GLYPH_PATHS = [
   [
     'M5 25 Q22 25 36 22 Q52 14 58 26 Q60 38 46 38 Q36 36 44 26',
     'M50 44 Q70 44 92 44',
+    'M3 38 Q20 38 32 38',
   ],
   // Variant C — small curl on the right with a long tail
   [
     'M5 28 Q30 28 55 28 Q70 28 78 24 Q88 18 92 28 Q92 36 82 34',
     'M10 40 Q30 40 50 40',
+    'M5 16 Q22 16 36 16',
+  ],
+  // Variant D — twin spirals
+  [
+    'M3 22 Q18 22 30 18 Q42 12 46 22 Q46 30 38 30 Q32 28 38 22',
+    'M50 36 Q66 36 78 32 Q90 26 94 36 Q94 44 86 44 Q80 42 86 36',
+    'M5 48 Q22 48 36 48',
   ],
 ];
 
-// 14 wind glyphs scattered randomly across the whole viewport
-const WIND_WISPS = Array.from({ length: 14 }, (_, i) => {
+// 22 wind glyphs scattered randomly across the whole viewport
+const WIND_WISPS = Array.from({ length: 22 }, (_, i) => {
   const variantIdx = i % WIND_GLYPH_PATHS.length;
+  // Use prime-ish multipliers for pseudo-random scatter
   return {
-    top: `${5 + ((i * 23) % 88)}vh`,
-    left: `${-(5 + ((i * 11) % 25))}vw`, // start off-screen left
-    size: 80 + ((i * 13) % 90),           // 80–170px
-    delay: (i * 1.1) % 9,
-    dur: 16 + ((i * 7) % 12),
-    scale: 0.85 + ((i * 17) % 30) / 100,  // 0.85–1.15
-    rotation: -8 + ((i * 19) % 16),
+    top: `${4 + ((i * 37) % 90)}vh`,
+    left: `${-(8 + ((i * 13) % 22))}vw`, // start off-screen left
+    size: 110 + ((i * 19) % 130),         // 110–240px (was 80–170)
+    delay: (i * 0.8) % 11,
+    dur: 14 + ((i * 11) % 16),            // 14–30s
+    scale: 0.9 + ((i * 23) % 40) / 100,   // 0.9–1.3
+    rotation: -12 + ((i * 17) % 24),
     variantIdx,
   };
 });
@@ -73,13 +82,13 @@ export default function OceanicAtmosphere() {
         gsap.set(wisp, { x: 0, opacity: 0, scale, rotation });
         continuousTweens.push(
           gsap.to(wisp, {
-            x: '125vw',
+            x: '130vw',
             duration: dur,
             repeat: -1,
             ease: 'sine.inOut',
             delay,
             keyframes: {
-              opacity: [0, 0.7, 0.85, 0.7, 0],
+              opacity: [0, 0.85, 1, 0.95, 0],
               easeEach: 'none',
             },
           })
@@ -188,10 +197,10 @@ export default function OceanicAtmosphere() {
                     d={d}
                     fill="none"
                     stroke="#5BB8E8"
-                    strokeWidth="1.8"
+                    strokeWidth="2.4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    opacity="0.75"
+                    opacity="0.95"
                   />
                 ))}
               </svg>

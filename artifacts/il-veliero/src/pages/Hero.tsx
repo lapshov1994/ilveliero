@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useNav } from '@/components/NavigationContext';
+import shipLogoUrl from '@assets/sailing-ship-silhouette-000000-xl_1777459411002.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -144,11 +145,20 @@ export default function Hero() {
               className="relative z-50 transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-110"
             >
               <div ref={sailboatSwayRef}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" className="text-white drop-shadow-xl">
-                  <path d="M12 2L20 14H4L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1"/>
-                  <path d="M12 22V14" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M5 14C5 14 8 16 12 16C16 16 19 14 19 14" stroke="#D4AF37" strokeWidth="1" strokeDasharray="3 3" className="opacity-70"/>
-                </svg>
+                <div
+                  className="w-10 h-10 drop-shadow-xl"
+                  style={{
+                    backgroundColor: 'white',
+                    WebkitMaskImage: `url(${shipLogoUrl})`,
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskPosition: 'center',
+                    maskImage: `url(${shipLogoUrl})`,
+                    maskRepeat: 'no-repeat',
+                    maskSize: 'contain',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
             </div>
             <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-[1px] bg-[#D4AF37] scale-x-0 group-hover:scale-x-150 group-hover:opacity-40 transition-all duration-700 origin-center" />
@@ -207,29 +217,31 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Booking widget */}
+        {/* Booking widget — stacks fully on mobile, inline bar on desktop */}
         <div
           ref={heroBookingRef}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[95%] max-w-5xl bg-black/20 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0"
+          className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-20 w-[92%] md:w-[95%] max-w-5xl bg-black/30 backdrop-blur-md border border-white/10 flex flex-col md:flex-row justify-between items-stretch shadow-2xl opacity-0"
         >
-          <div className="flex-1 flex justify-around w-full px-6 py-4 text-white text-sm items-center">
-            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkin">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Arrivo</span>
+          <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-white text-sm gap-3 md:gap-0 md:items-center">
+            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Arrivo</span>
               <span className="font-light tracking-wide">28.04.2026</span>
             </div>
-            <div className="w-px h-8 bg-white/10 mx-2" />
-            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-checkout">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Partenza</span>
+            <div className="hidden md:block w-px h-8 bg-white/10 mx-2" />
+            <div className="block md:hidden h-px w-full bg-white/10" />
+            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkout">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Partenza</span>
               <span className="font-light tracking-wide">30.04.2026</span>
             </div>
-            <div className="w-px h-8 bg-white/10 mx-2" />
-            <div className="flex flex-col items-start cursor-pointer group" data-testid="widget-guests">
-              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] mb-1 group-hover:text-white transition-colors">Ospiti</span>
+            <div className="hidden md:block w-px h-8 bg-white/10 mx-2" />
+            <div className="block md:hidden h-px w-full bg-white/10" />
+            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-guests">
+              <span className="text-[10px] text-white/50 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Ospiti</span>
               <span className="font-light tracking-wide">2 Adulti</span>
             </div>
           </div>
           <button
-            className="bg-[#D4AF37] text-black px-10 py-4 md:py-0 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
+            className="bg-[#D4AF37] text-black px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
             data-testid="btn-prenota"
           >
             <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">Prenota Ora</span>

@@ -33,39 +33,42 @@ export default function Services() {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (headingRef.current) {
-      gsap.fromTo(
-        headingRef.current,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          ease: 'power3.out',
-          scrollTrigger: { trigger: headingRef.current, start: 'top 85%' },
-        }
-      );
-    }
+    // Scope all ScrollTriggers/tweens to a gsap.context so cleanup only
+    // reverts THIS component's triggers, not unrelated ones from
+    // SandFilter / OceanicAtmosphere / Hero.
+    const ctx = gsap.context(() => {
+      if (headingRef.current) {
+        gsap.fromTo(
+          headingRef.current,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: headingRef.current, start: 'top 85%' },
+          }
+        );
+      }
 
-    if (gridRef.current) {
-      const cells = gridRef.current.querySelectorAll<HTMLElement>('.service-cell');
-      gsap.fromTo(
-        cells,
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: 'power3.out',
-          stagger: 0.08,
-          scrollTrigger: { trigger: gridRef.current, start: 'top 80%' },
-        }
-      );
-    }
+      if (gridRef.current) {
+        const cells = gridRef.current.querySelectorAll<HTMLElement>('.service-cell');
+        gsap.fromTo(
+          cells,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: 'power3.out',
+            stagger: 0.08,
+            scrollTrigger: { trigger: gridRef.current, start: 'top 80%' },
+          }
+        );
+      }
+    }, sectionRef);
 
-    return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -85,10 +88,10 @@ export default function Services() {
           </h2>
         </div>
 
-        {/* 3x3 grid */}
+        {/* 2-per-row grid (denser, more compact) */}
         <div
           ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-20 gap-x-12 md:gap-y-24 md:gap-x-16"
+          className="grid grid-cols-2 gap-y-14 gap-x-8 md:gap-y-20 md:gap-x-16 max-w-3xl mx-auto"
         >
           {SERVICES.map(({ Icon, label }) => (
             <div

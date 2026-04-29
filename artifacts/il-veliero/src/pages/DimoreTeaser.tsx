@@ -28,13 +28,18 @@ export default function DimoreTeaser() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative bg-white text-[#0A1128] py-32 px-6 lg:px-20 overflow-hidden">
+    <section
+      id="dimore-teaser"
+      ref={containerRef}
+      className="relative bg-white text-[#0A1128] py-32 px-6 lg:px-20 overflow-hidden"
+    >
       <div className="absolute top-16 right-10 text-[18rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">04</div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center relative z-10">
 
-        {/* Left: large photo */}
-        <div ref={imageRef} className="overflow-hidden aspect-[4/5] w-full">
+        {/* Left: large photo — marked as the FIRST bottom image so the
+            global SandFilter can locally intensify over it on scroll. */}
+        <div ref={imageRef} className="first-bottom-image overflow-hidden aspect-[4/5] w-full">
           <img
             src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=900&auto=format&fit=crop"
             alt="Scirocco Suite"
