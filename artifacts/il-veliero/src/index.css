@@ -201,6 +201,16 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Prevent the white "line" / strip mobile browsers (iOS Safari,
+     Android Chrome) reveal at the bottom of the page during overscroll
+     bounce or when the address bar collapses. The footer is deep navy
+     (#0A1128); painting the html element the same colour means any
+     pixel that escapes the body — overscroll area, dynamic-viewport
+     gap, safe-area inset — stays on-brand instead of flashing white. */
+  html {
+    background-color: #0A1128;
+  }
 }
 
 .text-balance {
