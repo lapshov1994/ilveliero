@@ -1,9 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 // Warm sand grain. The feComponentTransfer step turns the smooth
 // turbulence into sharper, more visible specks (the discrete table
@@ -43,57 +39,51 @@ export default function SandFilter() {
   // user wants to see clean.
   const isHome = location === '/' || location === '';
 
-  // Scroll-tied opacity. Initially the entire sand layer (body + header
-  // strip) is fully transparent — the hero video and the header read
-  // crisp at page load. As the user scrolls the hero out of view, the
-  // sand fades in continuously (scrub) until the hero is mostly gone,
-  // landing at full opacity for the rest of the page.
+  // Scroll-tied opacity — implemented as a DIRECT scroll listener
+  // instead of a GSAP ScrollTrigger tween. Why:
+  //   - GSAP scrub (with or without smoothing) animates opacity via a
+  //     ticker, which under Lenis smooth-scroll + bursty touch input
+  //     can briefly "catch up" and read as a wave / pop of sand.
+  //   - A plain scroll handler that maps scrollY → opacity 1:1 has
+  //     ZERO temporal delay: every pixel of scroll deterministically
+  //     produces the corresponding opacity. There is no animation
+  //     frame race, no scrub catch-up, no jump on load.
+  //   - We also seed a small baseline (0.10) so there is no visible
+  //     "0 → something" transition the very first time the user
+  //     scrolls — the sand was always faintly there.
   useEffect(() => {
     if (!isHome) return;
-    if (!wrapperRef.current) return;
+    const wrap = wrapperRef.current;
+    if (!wrap) return;
 
-    const ctx = gsap.context(() => {
-      const hero = document.querySelector('.hero-section');
-      if (!hero) {
-        gsap.set(wrapperRef.current, { opacity: 1 });
-        return;
-      }
-      // Key insight from repeated user feedback: ANY 0 → 1 transition is
-      // perceived as a visible "appearance event", regardless of how
-      // long the scroll range is. The fix is twofold:
-      //   1) Set a very small BASELINE opacity (0.12) so the sand is
-      //      always faintly there — the eye never witnesses a "from
-      //      nothing" moment, only a continuous tonal shift.
-      //   2) Stretch the ramp over a FULL viewport of scroll (~100vh)
-      //      so the per-pixel delta is ~0.0007 — physiologically
-      //      imperceptible — and add 1.5s scrub smoothing on top so
-      //      even rapid wheel flicks land softly.
-      const SAND_BASE_OPACITY = 0.12;
-      gsap.set(wrapperRef.current, { opacity: SAND_BASE_OPACITY });
-      gsap.to(wrapperRef.current, {
-        opacity: 1,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: hero,
-          start: 'top top',
-          end: () => `+=${window.innerHeight}`,
-          scrub: 1.5,
-          invalidateOnRefresh: true,
-        },
-      });
-    });
+    const SAND_BASE = 0.10; // barely-perceptible baseline so there is
+                            // never a "from nothing" appearance event
+    const SAND_TOP  = 1.00;
+    let rafId = 0;
 
-    // Force ScrollTrigger to recalculate positions after fonts /
-    // images settle. Without this, on a fresh load (and on every HMR
-    // patch) the trigger sometimes locks in a 0-length range and the
-    // sand visually never animates.
-    const refresh = () => ScrollTrigger.refresh();
-    requestAnimationFrame(refresh);
-    window.addEventListener('load', refresh);
+    const apply = () => {
+      rafId = 0;
+      const heroH = window.innerHeight; // hero is h-screen
+      // Map scrollY [0 .. heroH] → opacity [SAND_BASE .. SAND_TOP]
+      // linearly, clamped on both ends.
+      const t = Math.min(1, Math.max(0, window.scrollY / heroH));
+      wrap.style.opacity = String(SAND_BASE + t * (SAND_TOP - SAND_BASE));
+    };
+
+    const onScroll = () => {
+      // rAF-coalesced for one paint per frame.
+      if (rafId) return;
+      rafId = requestAnimationFrame(apply);
+    };
+
+    apply(); // initial state — important on hard refresh mid-page
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', apply);
 
     return () => {
-      window.removeEventListener('load', refresh);
-      ctx.revert();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', apply);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isHome, location]);
 

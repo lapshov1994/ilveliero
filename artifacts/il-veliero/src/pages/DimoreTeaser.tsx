@@ -257,6 +257,7 @@ export default function DimoreTeaser() {
 
   const [activeRoom, setActiveRoom] = useState(0);
   const [photoIdx, setPhotoIdx] = useState<number[]>(() => ROOMS.map(() => 0));
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const room = ROOMS[activeRoom];
   const currentPhoto = photoIdx[activeRoom] ?? 0;
@@ -321,6 +322,23 @@ export default function DimoreTeaser() {
   const prevPhoto = () => setPhotoForActive(currentPhoto - 1);
   const nextPhoto = () => setPhotoForActive(currentPhoto + 1);
 
+  // Lightbox: keyboard navigation + body-scroll lock while open.
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowLeft') prevPhoto();
+      if (e.key === 'ArrowRight') nextPhoto();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [lightboxOpen, currentPhoto, activeRoom]);
+
   return (
     <section
       id="dimore-teaser"
@@ -372,6 +390,25 @@ export default function DimoreTeaser() {
                 draggable={false}
               />
             </div>
+
+            {/* Fullscreen / zoom — opens the current photo in a true
+                full-viewport lightbox. On mobile this lets the guest
+                pinch-zoom the room photography natively (the lightbox
+                container has `touch-action: pinch-zoom`). */}
+            <button
+              type="button"
+              aria-label="Apri foto a schermo intero"
+              data-testid="carousel-fullscreen"
+              onClick={() => setLightboxOpen(true)}
+              className="absolute right-4 top-4 w-11 h-11 md:w-12 md:h-12 flex items-center justify-center bg-white/85 hover:bg-white text-[#0A1128] backdrop-blur-sm shadow-lg transition-all duration-300 hover:scale-105 z-20"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 9V4h5" />
+                <path d="M20 9V4h-5" />
+                <path d="M4 15v5h5" />
+                <path d="M20 15v5h-5" />
+              </svg>
+            </button>
 
             <button
               type="button"
@@ -461,6 +498,83 @@ export default function DimoreTeaser() {
           </div>
         </div>
       </div>
+
+      {/* ── Lightbox ──────────────────────────────────────────────────
+          Full-viewport overlay that opens when the guest clicks the
+          fullscreen icon on the carousel. The image is rendered with
+          `object-contain` inside `100vw × 100vh` so it always fits the
+          screen without cropping; `touch-action: pinch-zoom` lets
+          mobile users natively pinch-zoom the photo. Keyboard:
+          ←/→ to flip photos, Esc to close. */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
+          data-testid="room-lightbox"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Image container — clicks INSIDE here don't close the
+              lightbox so the guest can pinch-zoom freely. */}
+          <div
+            className="relative w-full h-full flex items-center justify-center p-4 md:p-10"
+            style={{ touchAction: 'pinch-zoom' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={room.photos[currentPhoto]}
+              alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
+              className="max-w-full max-h-full object-contain select-none"
+              draggable={false}
+              data-testid="lightbox-image"
+            />
+          </div>
+
+          {/* Close (top-right) */}
+          <button
+            type="button"
+            aria-label="Chiudi"
+            data-testid="lightbox-close"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 md:top-6 md:right-6 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors duration-300 z-10"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 6 L18 18 M18 6 L6 18" />
+            </svg>
+          </button>
+
+          {/* Prev / Next inside the lightbox */}
+          <button
+            type="button"
+            aria-label="Foto precedente"
+            data-testid="lightbox-prev"
+            onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors duration-300 z-10"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18 L9 12 L15 6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            aria-label="Foto successiva"
+            data-testid="lightbox-next"
+            onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors duration-300 z-10"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 6 L15 12 L9 18" />
+            </svg>
+          </button>
+
+          {/* Caption / counter */}
+          <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white text-[10px] tracking-[0.2em] uppercase font-medium tabular-nums">
+            {room.name} · {String(currentPhoto + 1).padStart(2, '0')} / {String(totalPhotos).padStart(2, '0')}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

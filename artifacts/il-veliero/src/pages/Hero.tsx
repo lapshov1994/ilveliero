@@ -230,7 +230,13 @@ export default function Hero() {
           <div className="absolute inset-x-0 bottom-0 h-56 md:h-64 bg-gradient-to-t from-[#0A1128]/65 to-transparent pointer-events-none" />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-center items-center h-full text-center px-4 -mt-10">
+        {/* Title block. On mobile the layout is intentionally STACKED —
+            title at the top (just under the floating header), 16:9 video
+            letterbox in the middle, booking widget at the bottom — so
+            the hero reads as a clean three-band composition instead of
+            an empty navy strip with an orphaned header. On desktop we
+            keep the original centred-overlay treatment. */}
+        <div className="relative z-10 flex flex-col items-center h-full text-center px-4 justify-start pt-[18vh] md:justify-center md:pt-0 md:-mt-10">
           <div className="overflow-hidden mb-2">
             <h1
               ref={heroLine1Ref}
