@@ -157,7 +157,12 @@ export default function DimoreTeaser() {
     <section
       id="dimore-teaser"
       ref={containerRef}
-      className="relative z-10 bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
+      // No z-index here so the carousel inside can lift itself ABOVE the
+      // global SandFilter (z-90) without the rest of the section also
+      // jumping above it. position:relative is kept for the absolute "04"
+      // decoration but without a z-index it does NOT create a stacking
+      // context — that's the whole trick.
+      className="relative bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
       data-testid="dimore-teaser"
     >
       {/* Giant decorative section number */}
@@ -165,7 +170,7 @@ export default function DimoreTeaser() {
         04
       </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative">
         {/* ── Section header + room tabs ────────────────────────────── */}
         <div ref={headerRef} className="mb-12 md:mb-16">
           <span className="text-xs tracking-[0.2em] text-[#D4AF37] uppercase font-bold block mb-4">
@@ -220,10 +225,14 @@ export default function DimoreTeaser() {
 
         {/* ── Carousel + text ────────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
-          {/* Left: photo carousel */}
+          {/* Left: photo carousel.
+              z-[95] + isolate lifts the photo (and only the photo) ABOVE
+              the global SandFilter at z-90, so the room images render
+              clean and pristine while the rest of the section keeps
+              the warm sand grain. */}
           <div
             ref={carouselRef}
-            className="relative aspect-[4/5] w-full overflow-hidden bg-[#0A1128]/5 select-none"
+            className="relative z-[95] isolate aspect-[4/5] w-full overflow-hidden bg-[#0A1128]/5 select-none"
             data-testid="room-carousel"
           >
             <div
