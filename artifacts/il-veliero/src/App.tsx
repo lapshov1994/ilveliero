@@ -8,6 +8,7 @@ import { NavProvider } from '@/components/NavigationContext';
 import Navigation from '@/components/Navigation';
 import Cursor from '@/components/Cursor';
 import SandFilter from '@/components/SandFilter';
+import SeaSound from '@/components/SeaSound';
 
 import Hero from '@/pages/Hero';
 import Story from '@/pages/Story';
@@ -105,6 +106,7 @@ export default function App() {
           {/* Global overlays */}
           <Cursor />
           <SandFilter />
+          <SeaSound />
           <Navigation />
 
           {/* Routes */}

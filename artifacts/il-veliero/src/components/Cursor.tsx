@@ -281,13 +281,19 @@ export default function Cursor() {
         // Slightly tighter cadence so the disturbed surface feels
         // alive, but not so dense that waves visually overlap.
         if (distFromTrail > 18) {
-          spawnWave(x, y, dirX, dirY);
+          // Anchor the primary wake ~12px BEHIND the cursor along the
+          // motion line — feels like the wake of an invisible hull
+          // moving through water, not a wave painted under the
+          // cursor.
+          const trailOffset = 12;
+          const anchorX = x - dirX * trailOffset;
+          const anchorY = y - dirY * trailOffset;
+          spawnWave(anchorX, anchorY, dirX, dirY);
 
-          // Occasionally emit a SECOND, smaller wave a tiny bit behind
-          // the first to suggest a more complex disturbance — gives
-          // pointer-trails a layered, "real water" texture.
-          if (Math.random() < 0.35) {
-            const echoOff = 6 + Math.random() * 4;
+          // Occasionally emit a SECOND, smaller wave a bit further
+          // behind to give the wake layered "real water" texture.
+          if (Math.random() < 0.45) {
+            const echoOff = trailOffset + 8 + Math.random() * 6;
             spawnWave(
               x - dirX * echoOff,
               y - dirY * echoOff,
@@ -328,68 +334,18 @@ export default function Cursor() {
       moveTo(t.clientX, t.clientY);
     };
 
-    // ───────────────────────── Scroll-driven waves ──────────────────────────
-
-    let lastScrollY = window.scrollY || document.documentElement.scrollTop || 0;
-    let scrollAccumulated = 0;
-    const SCROLL_SPAWN_PX = 120; // emit a wave roughly every 120px of scroll
-
-    const onScroll = () => {
-      const sy = window.scrollY || document.documentElement.scrollTop || 0;
-      const delta = sy - lastScrollY;
-      lastScrollY = sy;
-      if (delta === 0) return;
-
-      scrollAccumulated += Math.abs(delta);
-      if (scrollAccumulated < SCROLL_SPAWN_PX) return;
-      scrollAccumulated = 0;
-
-      // Direction: scroll-down = disturbance moves DOWN the page.
-      const sDirX = 0;
-      const sDirY = delta > 0 ? 1 : -1;
-
-      // Pick a random horizontal position across the viewport, biased
-      // away from the very edges so waves feel like they sit IN the
-      // page, not at the gutter.
-      const margin = Math.min(80, window.innerWidth * 0.1);
-      const x = margin + Math.random() * (window.innerWidth - margin * 2);
-      // Vertical: a comfortable middle band of the viewport — never
-      // too close to top header or bottom marquee where it would
-      // overlap text.
-      const yMin = window.innerHeight * 0.25;
-      const yMax = window.innerHeight * 0.75;
-      const y = yMin + Math.random() * (yMax - yMin);
-
-      spawnWave(x, y, sDirX, sDirY, {
-        preferLarge: true,
-        // Scroll waves are bigger and live longer — they should feel
-        // like an oceanic surface response, not a fleeting tick.
-        scaleBoost: 1.4 + Math.random() * 0.8,
-        lifeBoost: 1.4,
-      });
-
-      // Sometimes companion ripple a bit higher/lower — varied surface.
-      if (Math.random() < 0.5) {
-        const offX = (Math.random() - 0.5) * 220;
-        const offY = (Math.random() - 0.5) * 80;
-        spawnWave(x + offX, y + offY, sDirX, sDirY, {
-          preferLarge: false,
-          scaleBoost: 0.9 + Math.random() * 0.4,
-          lifeBoost: 1.2,
-        });
-      }
-    };
+    // Pointer-only wake. Scrolling does not generate ripples — the
+    // wake should ALWAYS feel like it follows the user's hand, not
+    // appear scattered across the page.
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('scroll', onScroll);
       while (trailLayer.firstChild) trailLayer.removeChild(trailLayer.firstChild);
     };
   }, []);
