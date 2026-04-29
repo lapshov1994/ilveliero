@@ -56,33 +56,62 @@ export default function SandFilter() {
     const wrap = wrapperRef.current;
     if (!wrap) return;
 
-    const SAND_BASE = 0.10; // barely-perceptible baseline so there is
-                            // never a "from nothing" appearance event
-    const SAND_TOP  = 1.00;
+    // Progress targets the "Prenota Ora" CTA button: at the very first
+    // pixel of scroll the sand is 0%, and it reaches 100% precisely
+    // when that button has been scrolled up to the top edge of the
+    // viewport. We re-measure the button's document-Y on every resize
+    // so the mapping stays correct across orientation changes and
+    // mobile address-bar collapses.
+    let endScroll = 1; // never divide by zero
     let rafId = 0;
+
+    const measure = () => {
+      const btn = document.querySelector<HTMLElement>('[data-testid="btn-prenota"]');
+      if (btn) {
+        const r = btn.getBoundingClientRect();
+        // Document-Y of the button = its viewport-Y plus current scroll.
+        endScroll = Math.max(1, r.top + window.scrollY);
+      } else {
+        // Fallback: one full viewport of scroll.
+        endScroll = window.innerHeight;
+      }
+    };
 
     const apply = () => {
       rafId = 0;
-      const heroH = window.innerHeight; // hero is h-screen
-      // Map scrollY [0 .. heroH] → opacity [SAND_BASE .. SAND_TOP]
-      // linearly, clamped on both ends.
-      const t = Math.min(1, Math.max(0, window.scrollY / heroH));
-      wrap.style.opacity = String(SAND_BASE + t * (SAND_TOP - SAND_BASE));
+      // Map scrollY [0 .. endScroll] → opacity [0 .. 1] linearly,
+      // clamped on both ends.
+      const t = Math.min(1, Math.max(0, window.scrollY / endScroll));
+      wrap.style.opacity = String(t);
     };
 
     const onScroll = () => {
-      // rAF-coalesced for one paint per frame.
       if (rafId) return;
       rafId = requestAnimationFrame(apply);
     };
 
-    apply(); // initial state — important on hard refresh mid-page
+    const onResize = () => {
+      measure();
+      apply();
+    };
+
+    // Measure immediately, again after first paint, and once more
+    // after the hero intro animation lands (~1s) so any layout shift
+    // from the booking widget's fade-in is captured.
+    measure();
+    apply();
+    requestAnimationFrame(() => { measure(); apply(); });
+    const settleTimer = window.setTimeout(() => { measure(); apply(); }, 1200);
+
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', apply);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('load', onResize);
 
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', apply);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('load', onResize);
+      window.clearTimeout(settleTimer);
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isHome, location]);
