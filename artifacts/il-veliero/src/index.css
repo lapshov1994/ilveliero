@@ -211,6 +211,22 @@
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 30-30 30L0 30z' fill='%23D4AF37' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
 }
 
+/* Local sand-grain overlay. Used inside the fixed headers (which sit above
+   the global SandFilter and would otherwise look "clean" / cut out the warm
+   texture). The pattern matches the global SandFilter's coarse layer so the
+   header reads as part of the same warm sand surface. */
+.sand-grain-local::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><filter id='s'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6   0 0 0 0 0.42   0 0 0 0 0.18   0 0 0 1 0'/><feComponentTransfer><feFuncA type='discrete' tableValues='0 0 0 0.4 0.7 0.95 1'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23s)'/></svg>");
+  background-repeat: repeat;
+  background-size: 240px 240px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
 @layer utilities {
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;

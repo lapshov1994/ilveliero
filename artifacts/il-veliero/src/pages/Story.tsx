@@ -123,10 +123,12 @@ export default function Story() {
               />
             </div>
 
-            {/* Text overlaps photo from below */}
+            {/* Text overlaps photo from below — desktop overlays the bottom-right
+                corner of the photo for an editorial feel; mobile sits cleanly
+                full-width below the photo so nothing looks misaligned. */}
             <div
               ref={text1Ref}
-              className="relative md:absolute md:-bottom-16 md:-right-24 bg-white p-8 md:p-12 shadow-2xl w-[90%] md:w-[80%] ml-auto -mt-10 md:mt-0"
+              className="relative md:absolute md:-bottom-16 md:-right-24 bg-white p-8 md:p-12 shadow-2xl w-full md:w-[80%] mt-6 md:mt-0"
             >
               <h3 className="text-3xl font-serif mb-4">Un risveglio profumato</h3>
               <p className="text-sm leading-relaxed text-gray-600">

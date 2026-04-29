@@ -135,11 +135,11 @@ export default function Hero() {
           Adds a glassmorphic backdrop once the user scrolls past the hero so
           the white text stays readable on light sections below. */}
       <header
-        className={`fixed top-0 left-0 w-full px-8 py-6 z-[150] flex justify-between items-center text-white transition-all duration-500 ${
+        className={`fixed top-0 left-0 w-full px-8 py-6 z-[150] flex justify-between items-center text-white transition-all duration-500 overflow-hidden sand-grain-local ${
           headerScrolled ? 'bg-[#0A1128]/75 backdrop-blur-md' : ''
         }`}
       >
-        <div className="flex items-center gap-4 group cursor-pointer relative z-50">
+        <div className="flex items-center gap-4 group cursor-pointer relative z-[2]">
           <div className="relative">
             <div
               ref={sailboatRef}
@@ -174,7 +174,9 @@ export default function Hero() {
             </span>
           </div>
         </div>
-        <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
+        <div className="relative z-[2]">
+          <MenuTrigger className="text-white hover:text-[#D4AF37] transition-colors" />
+        </div>
       </header>
 
       {/* Full-screen hero */}
