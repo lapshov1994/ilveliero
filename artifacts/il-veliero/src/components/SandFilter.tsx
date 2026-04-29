@@ -61,24 +61,25 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // Linear ease — every pixel of scroll adds the same tiny
-        // amount of opacity. Combined with `scrub: true` below, the
-        // sand becomes a true real-time gradient of the scroll
-        // position with NO catch-up animation, NO inertia, NO start
-        // delay. That removes the perceived "0 → 100 in one go" jump
-        // the previous `scrub: 0.4` introduced (the 0.4s lag made the
-        // sand stay at 0 then sprint to its target value the moment
-        // the wheel stopped).
-        ease: 'none',
+        // power2.out — fast, visible growth from the very first pixel
+        // of scroll, then a soft approach to full opacity. Concretely,
+        // at 10% scroll opacity is already ~19%, at 25% it's ~44%,
+        // at 50% it's ~75%, and at 100% it lands cleanly at 1. So the
+        // user sees a real-time, continuously growing gradient on
+        // every micro-scroll instead of "nothing → suddenly full".
+        ease: 'power2.out',
         scrollTrigger: {
           trigger: hero,
-          // Range = the first half of the hero. On mobile that is
-          // ~437px of scroll, which lands the booking widget pinned
-          // at the bottom of the hero in the centre of the viewport —
-          // the "mid-booking" point where the user wants the sand to
-          // have reached 100%.
+          // Tightened range: full opacity is reached at 35% of the
+          // hero (~305px on mobile), which is BEFORE the booking
+          // widget pinned at the bottom of the hero comes into the
+          // middle of the viewport. So by the time the user lands on
+          // the booking widget, the sand is already 100% — exactly
+          // what was asked for. `scrub: true` keeps the opacity tied
+          // 1:1 to the scroll position, with no catch-up animation
+          // and no start-delay that could read as a step.
           start: 'top top',
-          end: '+=50%',
+          end: '+=35%',
           scrub: true,
         },
       });
