@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import shellsImg from '@assets/PXL_20260428_104636690_1777473103349.jpg';
-import welcomeImg from '@assets/PXL_20260428_104008109~2_1777473103350.jpg';
+import shellsImg from '@assets/shells.jpg';
+import welcomeImg from '@assets/welcome_aboard.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -86,7 +86,7 @@ export default function Story() {
   return (
     <section
       ref={containerRef}
-      className="majolica-bg relative z-10 bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
+      className="majolica-bg relative z-10 bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
     >
       {/* Background watermark number */}
       <div className="absolute top-10 left-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
@@ -96,7 +96,7 @@ export default function Story() {
       <div className="max-w-7xl mx-auto relative">
 
         {/* Section heading */}
-        <div className="mb-24 md:mb-40">
+        <div className="mb-14 md:mb-24">
           <h2 className="text-sm tracking-[0.3em] text-[#D4AF37] uppercase mb-6">72 Ore Perfette</h2>
           <p className="text-4xl md:text-6xl font-serif max-w-2xl leading-tight">
             Il tempo rallenta. <br/>
@@ -132,7 +132,7 @@ export default function Story() {
           </div>
 
           {/* Right block — Sea & Cleanliness (4 cols, shifted down) */}
-          <div className="md:col-span-4 md:col-start-9 mt-20 md:mt-56 relative z-20">
+          <div className="md:col-span-4 md:col-start-9 mt-14 md:mt-32 relative z-20">
             <div ref={image2WrapRef} className="overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}

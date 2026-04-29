@@ -46,7 +46,7 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className="bg-[#0A1128] text-white pt-20 pb-12 px-6 lg:px-20 relative z-[95] overflow-hidden"
+      className="bg-[#0A1128] text-white pt-14 pb-10 px-6 lg:px-20 relative z-[95] overflow-hidden"
     >
 
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent pointer-events-none"></div>
@@ -71,10 +71,10 @@ export default function Footer() {
         {/* "Cosa fare" carousel — replaces the old "Inizia il tuo viaggio" headline */}
         <section
           id="cosa-fare"
-          className="mb-16 border-b border-white/10 pb-14"
+          className="mb-10 border-b border-white/10 pb-10"
           data-testid="cosa-fare-section"
         >
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
             <div>
               <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] block mb-4 font-bold">
                 Il diario di San Vito

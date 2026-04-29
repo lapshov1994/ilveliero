@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import bedroomImg from '@assets/2026-04-29_16.21.56_1777472525735.jpg';
+import bedroomImg from '@assets/bedroom.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -325,7 +325,7 @@ export default function DimoreTeaser() {
     <section
       id="dimore-teaser"
       ref={containerRef}
-      className="relative bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden"
+      className="relative bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
       data-testid="dimore-teaser"
     >
       <div className="absolute top-16 right-10 text-[18rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
@@ -334,7 +334,7 @@ export default function DimoreTeaser() {
 
       <div className="max-w-7xl mx-auto relative">
         {/* ── Section header + room toggle ────────────────────────── */}
-        <div ref={headerRef} className="mb-12 md:mb-16">
+        <div ref={headerRef} className="mb-8 md:mb-12">
           <span className="text-xs tracking-[0.2em] text-[#D4AF37] uppercase font-bold block mb-4">
             Le Nostre Dimore
           </span>

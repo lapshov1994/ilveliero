@@ -115,7 +115,7 @@ export default function SandFilter() {
   return (
     <div
       ref={layerRef}
-      className="fixed inset-0 z-[90] pointer-events-none"
+      className="fixed inset-0 z-[105] pointer-events-none"
       aria-hidden="true"
       data-testid="sand-filter"
     >

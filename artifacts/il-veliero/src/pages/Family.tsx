@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import doorImg from '@assets/1000016580_1777472482708.jpg';
+import doorImg from '@assets/door.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,14 +73,14 @@ export default function Family() {
   }, []);
 
   return (
-    <section id="about" ref={containerRef} className="relative z-10 bg-[#F9F9F9] text-[#0A1128] py-20 md:py-28 px-6 lg:px-20 overflow-hidden">
+    <section id="about" ref={containerRef} className="relative z-10 bg-[#F9F9F9] text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden">
 
       {/* Watermark */}
       <div className="absolute top-20 right-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
         03
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 relative z-10 items-center">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 relative z-10 items-center">
 
         {/* Left column: Text + Review (5 cols) */}
         <div className="md:col-span-5 flex flex-col justify-center">

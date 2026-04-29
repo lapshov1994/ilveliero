@@ -72,12 +72,12 @@ export default function Services() {
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 bg-white text-[#0A1128] py-20 md:py-28 px-6 lg:px-20"
+      className="relative z-10 bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20"
       data-testid="section-services"
     >
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div ref={headingRef} className="text-center mb-14 md:mb-20">
+        <div ref={headingRef} className="text-center mb-10 md:mb-14">
           <span className="text-xs tracking-[0.3em] text-[#D4AF37] uppercase font-light block mb-6">
             I Nostri Servizi
           </span>
