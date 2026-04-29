@@ -1,43 +1,46 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * SeaSound — invisible. The sea is heard only while the user is
- * actively engaged with the page (a held finger that scrolls, an
- * active mouse drag, a sustained scroll wheel). A momentary twitch
- * does almost nothing; sustained interaction swells the sea up to
- * full volume. Once the user stops, the sound fades back to true
- * silence.
+ * SeaSound — invisible. Once the user makes ANY interaction
+ * (mouse move, scroll, tap), a soft sea soundscape begins playing
+ * and continues for the rest of the visit:
  *
- * On top of the swell layers, a seagull cry occasionally calls out
- * while the surf is loud enough to mask its onset — never on a tick,
- * never predictable, but unmistakably "the seaside".
+ *   - A continuous synthesised surf (two slow brown-noise swells +
+ *     a faint pink-noise foam layer) at a steady, gentle level so
+ *     the seaside is always present in the background.
+ *   - A real European Herring Gull (XC707075) cry calls out every
+ *     5–10 seconds, with random pitch and stereo placement so
+ *     consecutive cries feel like different birds.
  *
- * Audio is fully synthesised — no asset files.
+ * The MP3 bytes are pre-fetched on mount so the very first cry
+ * fires the instant the user interacts — no race against decode.
  */
-// Real seagull recording — European Herring Gull (Larus argentatus),
-// xeno-canto XC707075 via Wikimedia Commons. Played as a one-shot
-// sample so the cry is unmistakably a real bird, not a synth.
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 
 export default function SeaSound() {
-  const ctxRef = useRef<AudioContext | null>(null);
-  const masterRef = useRef<GainNode | null>(null);
-  // Seagull cries are routed to a SEPARATE master gain that bypasses
-  // the surf master. This is critical: it means the gulls are loud
-  // and clearly audible the moment the user starts interacting,
-  // instead of being buried under the swelling noise floor.
-  const gullMasterRef = useRef<GainNode | null>(null);
-  // Decoded seagull buffer — fetched once on first activation, reused
-  // for every cry so playback is instant and never re-decodes.
+  // Pre-fetched MP3 bytes (raw ArrayBuffer). Cached on mount so we
+  // can decode them the moment the AudioContext is created.
+  const gullBytesRef = useRef<ArrayBuffer | null>(null);
+  // Decoded buffer, reused for every cry once available.
   const gullBufferRef = useRef<AudioBuffer | null>(null);
+
+  const ctxRef = useRef<AudioContext | null>(null);
+  const surfMasterRef = useRef<GainNode | null>(null);
+  const gullMasterRef = useRef<GainNode | null>(null);
   const startedRef = useRef(false);
-  const intensityRef = useRef(0);
-  const decayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Schedule handle for the next seagull call, so we can clear it on
-  // unmount and re-arm cleanly across activity windows.
   const gullTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    // Pre-fetch MP3 bytes immediately so the cry can play within
+    // tens of ms of the user's first interaction, not after a 500ms
+    // network round-trip.
+    fetch(SEAGULL_URL)
+      .then((r) => r.arrayBuffer())
+      .then((ab) => {
+        gullBytesRef.current = ab;
+      })
+      .catch(() => undefined);
+
     /** Brown noise buffer (mono). */
     const makeBrownNoise = (ctx: AudioContext, seconds: number): AudioBuffer => {
       const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
@@ -70,19 +73,16 @@ export default function SeaSound() {
       return buf;
     };
 
-    /**
-     * Play one seagull cry from the loaded recording. We pick a
-     * random ~0.9–1.6s slice of the file, apply a tiny pitch detune
-     * and random stereo placement so consecutive cries feel like
-     * different birds in different parts of the sky. A short
-     * fade-in/fade-out prevents clicks at the slice boundaries.
-     */
-    const playSeagull = (ctx: AudioContext, dest: AudioNode) => {
+    /** Play one seagull cry from the loaded recording. */
+    const playSeagull = () => {
+      const ctx = ctxRef.current;
+      const dest = gullMasterRef.current;
       const buffer = gullBufferRef.current;
-      if (!buffer) return;
+      if (!ctx || !dest || !buffer) return;
 
       const now = ctx.currentTime + 0.02;
-      const sliceDur = 0.9 + Math.random() * 0.7; // 0.9..1.6s
+      // Each cry uses a 0.9..1.6s slice of the source recording.
+      const sliceDur = 0.9 + Math.random() * 0.7;
       const maxStart = Math.max(0, buffer.duration - sliceDur - 0.05);
       const startOffset = Math.random() * maxStart;
 
@@ -92,14 +92,8 @@ export default function SeaSound() {
       const rate = 0.88 + Math.random() * 0.24;
       src.playbackRate.value = rate;
 
-      // The `duration` argument of start() is in BUFFER time — it
-      // controls how many seconds of source audio are consumed. The
-      // resulting playback length in CONTEXT time is bufferDur/rate,
-      // because higher playbackRate consumes the buffer faster. We
-      // also clamp gain ramps and stop() to the same context-time
-      // length so fades land exactly on the audio tail.
-      const bufferDur = sliceDur; // seconds of source audio to consume
-      const ctxDur = bufferDur / rate; // resulting play length in ctx seconds
+      // Length in CONTEXT time = source seconds / playback rate.
+      const ctxDur = sliceDur / rate;
 
       const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
       if (pan) pan.pan.value = (Math.random() * 2 - 1) * 0.75;
@@ -107,9 +101,6 @@ export default function SeaSound() {
       // "Distance" — closer vs farther cries.
       const distance = 0.55 + Math.random() * 0.45;
       const peakGain = 0.95 * distance;
-
-      // Fade tail length scaled to the actual playback length so very
-      // short cries still get a clean release.
       const fadeTail = Math.min(0.18, ctxDur * 0.25);
 
       const g = ctx.createGain();
@@ -124,11 +115,9 @@ export default function SeaSound() {
         src.connect(g).connect(dest);
       }
 
-      src.start(now, startOffset, bufferDur + 0.05);
+      src.start(now, startOffset, sliceDur + 0.05);
       src.stop(now + ctxDur + 0.05);
 
-      // Disconnect the per-call nodes once the cry is done so they
-      // don't pile up across many calls.
       setTimeout(() => {
         try {
           src.disconnect();
@@ -141,34 +130,21 @@ export default function SeaSound() {
     };
 
     /**
-     * Schedule the next seagull cry. Self-rescheduling: each call
-     * decides when the NEXT one fires. This guarantees a steady
-     * cadence whenever the user is interacting at all — the bird
-     * doesn't depend on a tick-by-tick coin flip.
+     * Schedule the next cry 5–10 seconds from now. Self-rescheduling.
      */
     const scheduleNextGull = () => {
       if (gullTimerRef.current) clearTimeout(gullTimerRef.current);
-      // 4–10 second gap between cries.
-      const delay = 4000 + Math.random() * 6000;
+      const delay = 5000 + Math.random() * 5000;
       gullTimerRef.current = setTimeout(() => {
-        const c = ctxRef.current;
-        const gm = gullMasterRef.current;
-        if (c && gm && intensityRef.current > 0.10) {
-          // The user is engaged enough to "hear" the seaside — call.
-          playSeagull(c, gm);
-          scheduleNextGull();
-        } else if (c && gm) {
-          // Quiet: try again sooner so the bird is ready to cry as
-          // soon as the user resumes scrolling.
-          gullTimerRef.current = setTimeout(scheduleNextGull, 800);
-        }
+        playSeagull();
+        scheduleNextGull();
       }, delay);
     };
 
     /**
-     * Build the sea soundtrack ONCE on the first qualifying user
-     * gesture. Buffer sources stay running; only the master gain is
-     * touched to follow user intensity.
+     * Build & start the soundscape exactly once, on the user's first
+     * gesture. From then on, surf plays continuously at a gentle
+     * background level and gulls call every 5–10s.
      */
     const ensureStarted = () => {
       if (startedRef.current) return;
@@ -181,15 +157,19 @@ export default function SeaSound() {
       const ctx = new Ctor();
       ctxRef.current = ctx;
 
-      const master = ctx.createGain();
-      master.gain.value = 0;
-      master.connect(ctx.destination);
-      masterRef.current = master;
+      // Surf master — held at a steady, gentle background level.
+      // Ramp up smoothly from zero over the first second so the
+      // soundscape fades in rather than slamming on at full volume.
+      const surfMaster = ctx.createGain();
+      surfMaster.gain.setValueAtTime(0, ctx.currentTime);
+      surfMaster.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 1.2);
+      surfMaster.connect(ctx.destination);
+      surfMasterRef.current = surfMaster;
 
-      // Separate master for the seagulls — bypasses the surf gain so
-      // gulls are clearly audible the moment the user is engaged.
+      // Gull master — full volume always, so cries are clearly
+      // audible whenever they fire.
       const gullMaster = ctx.createGain();
-      gullMaster.gain.value = 0;
+      gullMaster.gain.value = 1.0;
       gullMaster.connect(ctx.destination);
       gullMasterRef.current = gullMaster;
 
@@ -209,7 +189,7 @@ export default function SeaSound() {
       lfo1Gain.connect(lp1.frequency);
       const g1 = ctx.createGain();
       g1.gain.value = 0.85;
-      brown1.connect(lp1).connect(g1).connect(master);
+      brown1.connect(lp1).connect(g1).connect(surfMaster);
 
       // Layer 2 — faster swell, out of phase with layer 1.
       const brown2 = ctx.createBufferSource();
@@ -227,7 +207,7 @@ export default function SeaSound() {
       lfo2Gain.connect(lp2.frequency);
       const g2 = ctx.createGain();
       g2.gain.value = 0.55;
-      brown2.connect(lp2).connect(g2).connect(master);
+      brown2.connect(lp2).connect(g2).connect(surfMaster);
 
       // Layer 3 — band-passed pink noise (foam / spray).
       const pink = ctx.createBufferSource();
@@ -245,7 +225,7 @@ export default function SeaSound() {
       lfo3Gain.gain.value = 0.05;
       lfo3.connect(lfo3Gain);
       lfo3Gain.connect(g3.gain);
-      pink.connect(bp).connect(g3).connect(master);
+      pink.connect(bp).connect(g3).connect(surfMaster);
 
       const t0 = ctx.currentTime;
       brown1.start(t0);
@@ -259,127 +239,49 @@ export default function SeaSound() {
         ctx.resume().catch(() => undefined);
       }
 
-      // Fetch & decode the real seagull recording. Done once on first
-      // activation so subsequent cries are instant. If the fetch
-      // fails (offline, etc.), the scheduler simply skips calls
-      // because gullBufferRef stays null.
-      fetch(SEAGULL_URL)
-        .then((r) => r.arrayBuffer())
-        .then((ab) => ctx.decodeAudioData(ab))
-        .then((decoded) => {
-          gullBufferRef.current = decoded;
-        })
-        .catch(() => undefined);
-
-      // Decay loop. Runs at ~20Hz. Each tick:
-      //   - intensity decays towards 0 (→ true silence when idle)
-      //   - surf master gain follows intensity smoothly
-      //   - gull master gain follows intensity with a low threshold so
-      //     ANY meaningful interaction makes the gulls audible
-      decayTimerRef.current = setInterval(() => {
-        const c = ctxRef.current;
-        const m = masterRef.current;
-        const gm = gullMasterRef.current;
-        if (!c || !m || !gm) return;
-
-        // Intensity decays slowly so brief gestures DO build up if
-        // they keep coming, but a true pause silences quickly.
-        intensityRef.current *= 0.94; // ~0.94^20 ≈ 0.29 per second
-
-        // Below a tiny floor, snap to 0 so silence really is silence.
-        if (intensityRef.current < 0.01) intensityRef.current = 0;
-
-        const surfTarget = intensityRef.current * 0.22; // peak surf gain ≈ 0.22
-        m.gain.setTargetAtTime(surfTarget, c.currentTime, 0.08);
-
-        // Gulls go to full volume the moment intensity passes a low
-        // threshold — they're a featured part of the soundscape, not
-        // a background detail.
-        const gullTarget = intensityRef.current > 0.10 ? 1.0 : 0;
-        gm.gain.setTargetAtTime(gullTarget, c.currentTime, 0.12);
-      }, 50);
-
-      // Kick the seagull scheduler off once the soundscape is built.
-      // First cry comes ~1 second after the user starts interacting —
-      // the seaside character is established almost immediately. We
-      // wait for the buffer to be decoded; if it's still loading,
-      // poll briefly until it's ready (the file is small, so this
-      // typically resolves within the first few hundred ms).
-      const fireFirstGull = () => {
-        const c = ctxRef.current;
-        const gm = gullMasterRef.current;
-        if (!c || !gm) return;
-        if (gullBufferRef.current) {
-          if (intensityRef.current > 0.05) playSeagull(c, gm);
-          scheduleNextGull();
-        } else {
-          // Buffer still loading — try again shortly.
-          gullTimerRef.current = setTimeout(fireFirstGull, 150);
-        }
+      // Decode the pre-fetched MP3 bytes (or fetch+decode if the
+      // pre-fetch hasn't completed yet). Once decoded, fire the
+      // first cry immediately and start the cycle.
+      const startGulls = (decoded: AudioBuffer) => {
+        gullBufferRef.current = decoded;
+        playSeagull();
+        scheduleNextGull();
       };
-      gullTimerRef.current = setTimeout(fireFirstGull, 1000);
+
+      const bytes = gullBytesRef.current;
+      if (bytes) {
+        // Slice the buffer because some implementations consume the
+        // ArrayBuffer during decode, which would prevent re-decoding
+        // if anything ever wanted to retry.
+        ctx.decodeAudioData(bytes.slice(0)).then(startGulls).catch(() => undefined);
+      } else {
+        // Pre-fetch wasn't ready — fetch+decode now.
+        fetch(SEAGULL_URL)
+          .then((r) => r.arrayBuffer())
+          .then((ab) => ctx.decodeAudioData(ab))
+          .then(startGulls)
+          .catch(() => undefined);
+      }
     };
 
-    /**
-     * Activity callback — invoked on each interaction event with a
-     * specific "weight" for that event type. Touchmove (a real held
-     * scroll on mobile) is the heaviest; mousemove is the lightest
-     * because browsers fire it dozens of times for a stationary
-     * cursor that just got bumped.
-     *
-     * Because intensity caps at 1.0, even a flurry of mousemoves
-     * can't push the volume above the natural peak — the only way to
-     * KEEP it loud is to keep interacting.
-     */
-    const bumpIntensity = (weight: number) => {
-      intensityRef.current = Math.min(1, intensityRef.current + weight);
+    const onInteraction = () => {
+      ensureStarted();
+      const c = ctxRef.current;
+      if (c?.state === 'suspended') c.resume().catch(() => undefined);
     };
 
-    const onMouseMove = () => {
-      ensureStarted();
-      const c = ctxRef.current;
-      if (c?.state === 'suspended') c.resume().catch(() => undefined);
-      // Mousemove fires dozens of times for any small motion — give
-      // each one only a tiny boost so a passing cursor doesn't summon
-      // the whole sea instantly.
-      bumpIntensity(0.025);
-    };
-    const onScroll = () => {
-      ensureStarted();
-      const c = ctxRef.current;
-      if (c?.state === 'suspended') c.resume().catch(() => undefined);
-      // Scroll events are coarser and represent real engagement —
-      // each one is worth more than a mousemove.
-      bumpIntensity(0.10);
-    };
-    const onTouchStart = () => {
-      ensureStarted();
-      const c = ctxRef.current;
-      if (c?.state === 'suspended') c.resume().catch(() => undefined);
-      // Putting a finger on the screen IS deliberate engagement.
-      bumpIntensity(0.20);
-    };
-    const onTouchMove = () => {
-      ensureStarted();
-      const c = ctxRef.current;
-      if (c?.state === 'suspended') c.resume().catch(() => undefined);
-      // Held-finger scrolling (the canonical mobile reading gesture)
-      // is the heaviest weight — this is precisely the case we want
-      // to drive the surf to full volume.
-      bumpIntensity(0.18);
-    };
-
-    window.addEventListener('mousemove', onMouseMove, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('mousemove', onInteraction, { passive: true });
+    window.addEventListener('scroll', onInteraction, { passive: true });
+    window.addEventListener('touchstart', onInteraction, { passive: true });
+    window.addEventListener('click', onInteraction, { passive: true });
+    window.addEventListener('keydown', onInteraction);
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      if (decayTimerRef.current) clearInterval(decayTimerRef.current);
+      window.removeEventListener('mousemove', onInteraction);
+      window.removeEventListener('scroll', onInteraction);
+      window.removeEventListener('touchstart', onInteraction);
+      window.removeEventListener('click', onInteraction);
+      window.removeEventListener('keydown', onInteraction);
       if (gullTimerRef.current) clearTimeout(gullTimerRef.current);
       const ctx = ctxRef.current;
       if (ctx) {
@@ -389,7 +291,7 @@ export default function SeaSound() {
           /* ignore */
         }
         ctxRef.current = null;
-        masterRef.current = null;
+        surfMasterRef.current = null;
         gullMasterRef.current = null;
       }
     };
