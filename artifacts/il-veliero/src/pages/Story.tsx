@@ -86,7 +86,7 @@ export default function Story() {
   return (
     <section
       ref={containerRef}
-      className="majolica-bg relative z-10 bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
+      className="majolica-bg relative bg-white text-[#0A1128] py-12 md:py-20 px-6 lg:px-20 overflow-hidden"
     >
       {/* Background watermark number */}
       <div className="absolute top-10 left-10 text-[20rem] font-serif text-black opacity-[0.02] select-none pointer-events-none leading-none">
@@ -107,8 +107,13 @@ export default function Story() {
         {/* Asymmetric editorial grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-0 relative">
 
-          {/* Left block — Garden & Breakfast (7 cols) */}
-          <div className="md:col-span-7 relative z-10">
+          {/* Left block — Garden & Breakfast (7 cols).
+              No z-index here on purpose: it would create a stacking
+              context that clamps the inner photo's z-[110] back down
+              to z-10 in the global order, and the sand layer (z-105)
+              would re-cover it. Keeping z auto lets the photo float
+              freely above the sand at the root level. */}
+          <div className="md:col-span-7 relative">
             <div ref={image1WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[4/3] w-full bg-gray-100">
               <img
                 ref={image1Ref}
@@ -131,8 +136,10 @@ export default function Story() {
             </div>
           </div>
 
-          {/* Right block — Sea & Cleanliness (4 cols, shifted down) */}
-          <div className="md:col-span-4 md:col-start-9 mt-14 md:mt-32 relative z-20">
+          {/* Right block — Sea & Cleanliness (4 cols, shifted down).
+              Same reasoning as the left block: no z-index so the inner
+              photo's z-[110] isolates can rise above the sand layer. */}
+          <div className="md:col-span-4 md:col-start-9 mt-14 md:mt-32 relative">
             <div ref={image2WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[3/4] w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
