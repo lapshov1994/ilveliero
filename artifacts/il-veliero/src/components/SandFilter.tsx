@@ -131,8 +131,8 @@ export default function SandFilter() {
             backgroundImage: SAND_TEXTURE_FINE,
             backgroundRepeat: 'repeat',
             backgroundSize: '140px 140px',
-            opacity: 0.75,
-            mixBlendMode: 'soft-light',
+            opacity: 0.55,
+            mixBlendMode: 'screen',
           }}
         />
       </div>
@@ -166,8 +166,8 @@ export default function SandFilter() {
             backgroundImage: SAND_TEXTURE_FINE,
             backgroundRepeat: 'repeat',
             backgroundSize: '140px 140px',
-            opacity: 0.75,
-            mixBlendMode: 'soft-light',
+            opacity: 0.55,
+            mixBlendMode: 'screen',
           }}
         />
       </div>
