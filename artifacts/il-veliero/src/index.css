@@ -1,7 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600&display=swap');
+/* Fonts are loaded once from index.html via <link rel="preconnect"> +
+   <link rel="stylesheet"> so the font CSS can start downloading in
+   parallel with the HTML/JS. We deliberately do NOT @import them
+   from CSS here, because a CSS @import becomes a render-blocking
+   request that fires only after the stylesheet has been parsed. */
 @import "tailwindcss";
-@import "tw-animate-css";
-@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
