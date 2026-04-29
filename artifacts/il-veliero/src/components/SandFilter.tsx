@@ -61,22 +61,12 @@ export default function SandFilter() {
       gsap.set(wrapperRef.current, { opacity: 0 });
       gsap.to(wrapperRef.current, {
         opacity: 1,
-        // Linear opacity stretched over the FULL hero scroll length
-        // (one viewport height = ~874px on mobile). At that distance
-        // every additional pixel of scroll adds only ~0.11% opacity,
-        // which is below the perception threshold for a single scroll
-        // event — no matter how the user scrolls, they cannot trigger
-        // a visible jump. The sand truly "settles in" as they descend
-        // through the hero.
         ease: 'none',
         scrollTrigger: {
           trigger: hero,
-          start: 'top top',
-          end: 'bottom top',
-          // Slight smoothing (0.5s) so that even on a coarse mouse
-          // wheel the opacity tweens between target values rather
-          // than snapping in 100px chunks.
-          scrub: 0.5,
+          start: 'bottom 90%',
+          end: 'bottom 30%',
+          scrub: true,
         },
       });
     });
@@ -131,8 +121,8 @@ export default function SandFilter() {
             backgroundImage: SAND_TEXTURE_FINE,
             backgroundRepeat: 'repeat',
             backgroundSize: '140px 140px',
-            opacity: 0.55,
-            mixBlendMode: 'screen',
+            opacity: 0.75,
+            mixBlendMode: 'soft-light',
           }}
         />
       </div>
@@ -166,8 +156,8 @@ export default function SandFilter() {
             backgroundImage: SAND_TEXTURE_FINE,
             backgroundRepeat: 'repeat',
             backgroundSize: '140px 140px',
-            opacity: 0.55,
-            mixBlendMode: 'screen',
+            opacity: 0.75,
+            mixBlendMode: 'soft-light',
           }}
         />
       </div>
