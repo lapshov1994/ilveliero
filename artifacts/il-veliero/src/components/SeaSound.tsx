@@ -167,11 +167,20 @@ export default function SeaSound() {
         ctx.resume().catch(() => undefined);
       }
 
+      // If a previous even tap was queued while the gull was still
+      // decoding, drain it now that we know the context is running
+      // and the buffer is (probably) ready.
+      if (pendingGullRef.current && gullBufferRef.current) {
+        pendingGullRef.current = false;
+        playGull(ctx);
+      }
+
       tapCountRef.current += 1;
       playSurf(ctx);
       // Every SECOND tap (2nd, 4th, 6th…) plays a gull on top. If
       // the gull buffer hasn't finished decoding yet, remember the
-      // request so the decode-complete callback can play it.
+      // request so the decode-complete callback (or the next tap)
+      // can play it as soon as it's ready.
       if (tapCountRef.current % 2 === 0) {
         if (gullBufferRef.current) {
           playGull(ctx);
