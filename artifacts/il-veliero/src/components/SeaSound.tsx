@@ -3,22 +3,13 @@ import { useEffect, useRef } from 'react';
 /**
  * SeaSound — invisible.
  *
- * Simple spec:
- *   • Every tap (click / touch / keypress) plays one 4-second
- *     ocean-wave wash.
- *   • Every SECOND tap also plays a real seagull cry on top.
- *   • That's it. No throttling, no passive listeners — just react
- *     to taps.
+ * Spec: every tap (pointerdown / keydown) plays one 4 s ocean-wave
+ * wash. Every SECOND tap also plays a real seagull cry on top.
  *
- * Why eager init at mount:
- *   The AudioContext, noise pad and seagull MP3 are all built /
- *   fetched / decoded at MOUNT time, while the context is still in
- *   `suspended` state (legal — only audio output is gated, decode
- *   and buffer creation are not). On the first tap we just call
- *   `ctx.resume()` and immediately play. Without this, the first
- *   tap had to wait for context init (~50–100 ms) AND fetch + decode
- *   of a 595 kB MP3 (~300–800 ms), so the seagull was usually
- *   missing on the second tap and the first wave felt delayed.
+ * Pointer Events ("pointerdown") fire for both mouse and touch on
+ * every modern browser, so we deliberately do NOT also listen to
+ * "touchstart" — doing so double-counts a single physical tap on
+ * mobile and breaks the 1-tap / 2-tap sequence.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 const SURF_DURATION = 4;
@@ -43,11 +34,9 @@ export default function SeaSound() {
       return buf;
     };
 
-    // ─── Eager initialisation at mount ───
-    // Build the context, noise pad and seagull buffer NOW so the
-    // first tap has nothing to wait for. The context is allowed to
-    // start in `suspended` state — `decodeAudioData` and buffer
-    // creation work fine while suspended; only audio output is gated.
+    // Eager init: build context (suspended is fine), noise pad, and
+    // decode the seagull MP3 now so the first tap has nothing to wait
+    // for. decodeAudioData works on a suspended context.
     const Ctor =
       window.AudioContext ||
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -57,16 +46,13 @@ export default function SeaSound() {
       ctxRef.current = ctx;
       noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
 
-      // Fire-and-forget — gull is optional; surf still plays if this
-      // never finishes. By the time the user actually taps (almost
-      // always >> 100 ms after mount), this will already be done.
       void (async () => {
         try {
           const r = await fetch(SEAGULL_URL);
           const ab = await r.arrayBuffer();
           gullBufferRef.current = await ctx.decodeAudioData(ab);
         } catch {
-          /* ignore — surf still plays */
+          /* surf still plays without the gull */
         }
       })();
     }
@@ -87,9 +73,8 @@ export default function SeaSound() {
       lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
-      // Very short fade-in (50 ms) so the wave is audible the instant
-      // the user taps, with just enough ramp to avoid a click. Long
-      // 1.4 s fade-out tail keeps the natural ocean decay.
+      // 50 ms fade-in keeps the wave instantly audible on tap while
+      // avoiding a click. 1.4 s fade-out keeps the natural decay.
       const peak = 0.55;
       const fadeIn = 0.05;
       const fadeOut = 1.4;
@@ -163,12 +148,6 @@ export default function SeaSound() {
       }, (ctxDur + 0.5) * 1000);
     };
 
-    /**
-     * Tap handler. Resumes the (already pre-built) context if it is
-     * still suspended, then plays a wave (and maybe a gull). Because
-     * it runs synchronously inside a real user-activation event,
-     * Chrome / Safari will allow `ctx.resume()` to succeed.
-     */
     const onTap = () => {
       const ctx = ctxRef.current;
       if (!ctx) return;
@@ -182,14 +161,16 @@ export default function SeaSound() {
       if (tapCountRef.current % 2 === 0) playGull(ctx);
     };
 
+    // Pointer Events fire for both mouse and touch — DO NOT also
+    // listen to touchstart (would double-count one physical tap).
     const opts: AddEventListenerOptions = { passive: true, capture: true };
-    window.addEventListener('pointerdown', onTap, opts);
-    window.addEventListener('touchstart', onTap, opts);
+    const supportsPointer = typeof window !== 'undefined' && 'PointerEvent' in window;
+    const tapEvent = supportsPointer ? 'pointerdown' : 'touchstart';
+    window.addEventListener(tapEvent, onTap, opts);
     window.addEventListener('keydown', onTap, opts);
 
     return () => {
-      window.removeEventListener('pointerdown', onTap, opts);
-      window.removeEventListener('touchstart', onTap, opts);
+      window.removeEventListener(tapEvent, onTap, opts);
       window.removeEventListener('keydown', onTap, opts);
       const ctx = ctxRef.current;
       if (ctx) {
