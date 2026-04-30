@@ -181,16 +181,22 @@ export default function SeaSound() {
       }
     };
 
-    // Pointer Events fire for both mouse and touch — DO NOT also
-    // listen to touchstart (would double-count one physical tap).
+    // Pointer Events fire for both mouse and touch on all modern
+    // browsers, so on those we listen to `pointerdown` only — adding
+    // touchstart on top would double-count a single physical tap on
+    // mobile and break the 1-tap / 2-tap sequence. For very old
+    // browsers without PointerEvent we fall back to the legacy pair
+    // (mousedown + touchstart) since neither covers both inputs alone.
     const opts: AddEventListenerOptions = { passive: true, capture: true };
     const supportsPointer = typeof window !== 'undefined' && 'PointerEvent' in window;
-    const tapEvent = supportsPointer ? 'pointerdown' : 'touchstart';
-    window.addEventListener(tapEvent, onTap, opts);
+    const tapEvents: ReadonlyArray<keyof WindowEventMap> = supportsPointer
+      ? ['pointerdown']
+      : ['mousedown', 'touchstart'];
+    tapEvents.forEach((ev) => window.addEventListener(ev, onTap, opts));
     window.addEventListener('keydown', onTap, opts);
 
     return () => {
-      window.removeEventListener(tapEvent, onTap, opts);
+      tapEvents.forEach((ev) => window.removeEventListener(ev, onTap, opts));
       window.removeEventListener('keydown', onTap, opts);
       const ctx = ctxRef.current;
       if (ctx) {
