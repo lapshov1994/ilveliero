@@ -6,27 +6,53 @@ import { useEffect, useRef } from 'react';
  * Spec: every tap (pointerdown / keydown) plays one 4 s ocean-wave
  * wash. Every SECOND tap also plays a real seagull cry on top.
  *
- * Pointer Events ("pointerdown") fire for both mouse and touch on
- * every modern browser, so we deliberately do NOT also listen to
- * "touchstart" — doing so double-counts a single physical tap on
- * mobile and breaks the 1-tap / 2-tap sequence.
+ * Strategy for instant first-tap sound:
+ *   • At mount we ONLY pre-fetch the seagull MP3 bytes (an ArrayBuffer
+ *     in memory). We do NOT create the AudioContext yet, because some
+ *     browsers (notably mobile Safari and any iframe with strict
+ *     autoplay policy) refuse to resume a context that was constructed
+ *     outside a user gesture, even though the spec says they should.
+ *   • On the very first tap (a real user gesture) we synchronously
+ *     create the AudioContext, build the brown-noise buffer, kick off
+ *     decodeAudioData on the already-fetched bytes, and play the surf.
+ *     Decode of a ~600 kB MP3 takes ~10–30 ms, well under the
+ *     perceptual threshold, and the network round-trip has already
+ *     been amortised.
+ *   • Subsequent taps reuse the same context and buffers.
+ *
+ * Pointer Events ("pointerdown") fire for both mouse and touch on all
+ * modern browsers, so we listen to that one event only and avoid the
+ * mobile double-count caused by also subscribing to `touchstart`.
  */
 const SEAGULL_URL = `${import.meta.env.BASE_URL}audio/seagull.mp3`;
 const SURF_DURATION = 4;
 
 export default function SeaSound() {
   const ctxRef = useRef<AudioContext | null>(null);
+  const gullBytesRef = useRef<ArrayBuffer | null>(null);
   const gullBufferRef = useRef<AudioBuffer | null>(null);
   const noiseBufferRef = useRef<AudioBuffer | null>(null);
   const tapCountRef = useRef<number>(0);
   /**
-   * Set to true if an even-numbered tap fires BEFORE the seagull MP3
-   * has finished decoding. As soon as decoding completes, we play the
-   * deferred gull immediately so the user still hears it.
+   * True if an even-numbered tap arrived before the seagull MP3 was
+   * decoded. The decode-complete callback will play the gull as soon
+   * as the buffer is ready so we don't lose the request.
    */
   const pendingGullRef = useRef<boolean>(false);
 
   useEffect(() => {
+    // ---------- pre-fetch only (no AudioContext yet) ----------
+    let cancelled = false;
+    void (async () => {
+      try {
+        const r = await fetch(SEAGULL_URL);
+        const ab = await r.arrayBuffer();
+        if (!cancelled) gullBytesRef.current = ab;
+      } catch {
+        /* surf will still play; gull just won't */
+      }
+    })();
+
     /** Brown-noise buffer — sounds like ocean wash once low-passed. */
     const makeNoiseBuffer = (ctx: AudioContext, seconds: number): AudioBuffer => {
       const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
@@ -56,8 +82,6 @@ export default function SeaSound() {
       lp.frequency.value = 600;
       lp.Q.value = 0.4;
 
-      // 50 ms fade-in keeps the wave instantly audible on tap while
-      // avoiding a click. 1.4 s fade-out keeps the natural decay.
       const peak = 0.55;
       const fadeIn = 0.05;
       const fadeOut = 1.4;
@@ -131,45 +155,50 @@ export default function SeaSound() {
       }, (ctxDur + 0.5) * 1000);
     };
 
-    // Eager init: build context (suspended is fine), noise pad, and
-    // decode the seagull MP3 now so the first tap has nothing to wait
-    // for. decodeAudioData works on a suspended context.
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-    if (Ctor) {
+    /**
+     * Lazily build the AudioContext on first user gesture. Returns the
+     * context, or null if Web Audio is unavailable.
+     */
+    const ensureContext = (): AudioContext | null => {
+      if (ctxRef.current) return ctxRef.current;
+      const Ctor =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return null;
       const ctx = new Ctor();
       ctxRef.current = ctx;
       noiseBufferRef.current = makeNoiseBuffer(ctx, 6.0);
 
-      void (async () => {
-        try {
-          const r = await fetch(SEAGULL_URL);
-          const ab = await r.arrayBuffer();
-          gullBufferRef.current = await ctx.decodeAudioData(ab);
-          // If a 2nd-tap-style trigger arrived while we were still
-          // decoding, play the gull now so the user still hears it.
-          if (pendingGullRef.current && ctx.state === 'running') {
-            pendingGullRef.current = false;
-            playGull(ctx);
-          }
-        } catch {
-          /* surf still plays without the gull */
-        }
-      })();
-    }
+      // Decode the already-fetched MP3 bytes asynchronously. If the
+      // bytes haven't arrived yet (very slow network), the decode
+      // simply doesn't happen now and the gull stays silent.
+      const bytes = gullBytesRef.current;
+      if (bytes) {
+        // decodeAudioData detaches the ArrayBuffer, so clone it first
+        // in case we ever want to retry.
+        const slice = bytes.slice(0);
+        ctx
+          .decodeAudioData(slice)
+          .then((buf) => {
+            gullBufferRef.current = buf;
+            if (pendingGullRef.current && ctx.state === 'running') {
+              pendingGullRef.current = false;
+              playGull(ctx);
+            }
+          })
+          .catch(() => undefined);
+      }
+      return ctx;
+    };
 
     const onTap = () => {
-      const ctx = ctxRef.current;
+      const ctx = ensureContext();
       if (!ctx) return;
       if (ctx.state === 'suspended') {
         ctx.resume().catch(() => undefined);
       }
 
-      // If a previous even tap was queued while the gull was still
-      // decoding, drain it now that we know the context is running
-      // and the buffer is (probably) ready.
+      // Drain any gull that was queued while the buffer was decoding.
       if (pendingGullRef.current && gullBufferRef.current) {
         pendingGullRef.current = false;
         playGull(ctx);
@@ -177,10 +206,7 @@ export default function SeaSound() {
 
       tapCountRef.current += 1;
       playSurf(ctx);
-      // Every SECOND tap (2nd, 4th, 6th…) plays a gull on top. If
-      // the gull buffer hasn't finished decoding yet, remember the
-      // request so the decode-complete callback (or the next tap)
-      // can play it as soon as it's ready.
+      // Every SECOND tap (2nd, 4th, 6th…) plays a gull on top.
       if (tapCountRef.current % 2 === 0) {
         if (gullBufferRef.current) {
           playGull(ctx);
@@ -190,12 +216,6 @@ export default function SeaSound() {
       }
     };
 
-    // Pointer Events fire for both mouse and touch on all modern
-    // browsers, so on those we listen to `pointerdown` only — adding
-    // touchstart on top would double-count a single physical tap on
-    // mobile and break the 1-tap / 2-tap sequence. For very old
-    // browsers without PointerEvent we fall back to the legacy pair
-    // (mousedown + touchstart) since neither covers both inputs alone.
     const opts: AddEventListenerOptions = { passive: true, capture: true };
     const supportsPointer = typeof window !== 'undefined' && 'PointerEvent' in window;
     const tapEvents: ReadonlyArray<keyof WindowEventMap> = supportsPointer
@@ -205,6 +225,7 @@ export default function SeaSound() {
     window.addEventListener('keydown', onTap, opts);
 
     return () => {
+      cancelled = true;
       tapEvents.forEach((ev) => window.removeEventListener(ev, onTap, opts));
       window.removeEventListener('keydown', onTap, opts);
       const ctx = ctxRef.current;
