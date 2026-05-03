@@ -41,17 +41,7 @@ export default function SeaSound() {
   const pendingGullRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // ---------- pre-fetch only (no AudioContext yet) ----------
     let cancelled = false;
-    void (async () => {
-      try {
-        const r = await fetch(SEAGULL_URL);
-        const ab = await r.arrayBuffer();
-        if (!cancelled) gullBytesRef.current = ab;
-      } catch {
-        /* surf will still play; gull just won't */
-      }
-    })();
 
     /** Brown-noise buffer — sounds like ocean wash once low-passed. */
     const makeNoiseBuffer = (ctx: AudioContext, seconds: number): AudioBuffer => {
@@ -190,6 +180,38 @@ export default function SeaSound() {
       }
       return ctx;
     };
+
+    // Pre-fetch the seagull MP3 bytes (no AudioContext yet — that
+    // gets created lazily on the first user gesture so iframes /
+    // mobile Safari can't refuse to ever resume it).
+    void (async () => {
+      try {
+        const r = await fetch(SEAGULL_URL);
+        const ab = await r.arrayBuffer();
+        if (cancelled) return;
+        gullBytesRef.current = ab;
+        // If the user already tapped (so the context exists) but we
+        // hadn't received the bytes in time to kick off decode in
+        // ensureContext, decode them now so the gull isn't lost for
+        // the rest of the session.
+        const ctx = ctxRef.current;
+        if (ctx && !gullBufferRef.current) {
+          try {
+            const buf = await ctx.decodeAudioData(ab.slice(0));
+            if (cancelled) return;
+            gullBufferRef.current = buf;
+            if (pendingGullRef.current && ctx.state === 'running') {
+              pendingGullRef.current = false;
+              playGull(ctx);
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      } catch {
+        /* surf will still play; gull just won't */
+      }
+    })();
 
     const onTap = () => {
       const ctx = ensureContext();
