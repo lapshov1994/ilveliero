@@ -118,6 +118,8 @@ export default function Story() {
               <img
                 ref={image1Ref}
                 src={hotelImg1}
+                loading="lazy"
+                decoding="async"
                 alt="Hotel Il Veliero — la struttura nel cuore di San Vito Lo Capo"
                 className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
               />
@@ -157,6 +159,8 @@ export default function Story() {
               <img
                 ref={image2Ref}
                 src={hotelImg2}
+                loading="lazy"
+                decoding="async"
                 alt="Hotel Il Veliero — ambiente curato e atmosfera familiare"
                 className="absolute inset-0 w-full h-full object-cover"
               />

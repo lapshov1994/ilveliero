@@ -409,6 +409,8 @@ export default function DimoreTeaser() {
                   src={room.photos[currentPhoto]}
                   alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
                   draggable={false}
                 />
               )}
@@ -524,6 +526,8 @@ export default function DimoreTeaser() {
                 src={room.photos[currentPhoto]}
                 alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
                 className="max-w-full max-h-full object-contain select-none"
+                loading="lazy"
+                decoding="async"
                 draggable={false}
                 data-testid="lightbox-image"
               />

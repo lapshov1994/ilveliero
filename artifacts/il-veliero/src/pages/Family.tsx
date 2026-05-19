@@ -124,6 +124,8 @@ export default function Family() {
             <img
               ref={imageRef}
               src={doorImg}
+              loading="lazy"
+              decoding="async"
               alt="L'ingresso de Il Veliero — porta in legno con ringhiera in ferro battuto"
               className="block w-full h-auto"
             />
