@@ -369,7 +369,7 @@ export default function Hero() {
               <select
                 value={guests}
                 onChange={(e) => setGuests(Number(e.target.value))}
-                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer appearance-none pr-1"
+                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer appearance-none w-[7.5rem] md:w-auto text-right md:text-left pr-0"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-guests"
               >
