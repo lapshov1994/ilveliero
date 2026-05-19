@@ -22,6 +22,13 @@ import p17 from '@assets/17_1779216013206.jpeg';
 import p19 from '@assets/19_1779216013206.jpeg';
 import p20 from '@assets/20_1779216013206.jpeg';
 import p21 from '@assets/21_1779216013206.jpeg';
+import p22 from '@assets/22_1779217480992.jpeg';
+import p23 from '@assets/23_1779217480992.jpeg';
+import p24 from '@assets/24_1779217480992.jpeg';
+import p25 from '@assets/25_1779217480992.jpeg';
+import p26 from '@assets/26_1779217480992.jpeg';
+import p27 from '@assets/27_1779217480992.jpeg';
+import p28 from '@assets/28_1779217480992.jpeg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -35,7 +42,7 @@ const PHOTOS: string[] = [
   g1, g2, g3, g4,
   p7, p8, p9, p10, p11, p12, p13, p13_2,
   p14, p14_1, p15, p16, p17, p19,
-  p20, p21,
+  p20, p21, p22, p23, p24, p25, p26, p27, p28,
 ];
 
 const TOTAL_SLOTS = 40;

@@ -17,6 +17,13 @@ import S17 from '@assets/17_1779216013206.jpeg';
 import S19 from '@assets/19_1779216013206.jpeg';
 import G20 from '@assets/20_1779216013206.jpeg';
 import G21 from '@assets/21_1779216013206.jpeg';
+import G22 from '@assets/22_1779217480992.jpeg';
+import G23 from '@assets/23_1779217480992.jpeg';
+import G24 from '@assets/24_1779217480992.jpeg';
+import G25 from '@assets/25_1779217480992.jpeg';
+import Q26 from '@assets/26_1779217480992.jpeg';
+import Q27 from '@assets/27_1779217480992.jpeg';
+import Q28 from '@assets/28_1779217480992.jpeg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -25,8 +32,6 @@ const PLACEHOLDER = '__placeholder__';
 type Room = {
   name: string;
   tagline: string;
-  size: string;
-  view: string;
   description: string;
   photos: string[];
 };
@@ -38,34 +43,26 @@ const ROOMS: Room[] = [
   {
     name: 'Libeccio',
     tagline: 'Stile mediterraneo',
-    size: '—',
-    view: 'Camera doppia',
     description: ROOM_DESCRIPTION,
     photos: [L7, L8, L9, L10, L11, L12, L13, L13_2],
   },
   {
     name: 'Scirocco',
     tagline: 'Stile mediterraneo',
-    size: '—',
-    view: 'Camera doppia',
     description: ROOM_DESCRIPTION,
     photos: [S14, S14_1, S15, S16, S17, S19],
   },
   {
     name: 'Grecale',
     tagline: 'Stile mediterraneo',
-    size: '—',
-    view: 'Camera doppia',
     description: ROOM_DESCRIPTION,
-    photos: [G20, G21, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+    photos: [G20, G21, G22, G23, G24, G25],
   },
   {
     name: 'Quarta',
     tagline: 'Stile mediterraneo',
-    size: '—',
-    view: 'Camera doppia',
     description: ROOM_DESCRIPTION,
-    photos: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
+    photos: [Q26, Q27, Q28],
   },
 ];
 
@@ -487,20 +484,6 @@ export default function DimoreTeaser() {
               {room.description}
             </p>
 
-            <dl className="space-y-3 mb-10 text-sm">
-              <div className="flex items-baseline gap-4">
-                <dt className="w-28 text-[10px] tracking-[0.2em] uppercase text-[#0A1128]/40">
-                  Superficie
-                </dt>
-                <dd className="font-serif text-[#0A1128]">{room.size}</dd>
-              </div>
-              <div className="flex items-baseline gap-4">
-                <dt className="w-28 text-[10px] tracking-[0.2em] uppercase text-[#0A1128]/40">
-                  Affaccio
-                </dt>
-                <dd className="font-serif text-[#0A1128]">{room.view}</dd>
-              </div>
-            </dl>
 
             {/* Per-room "Prenota Camera …" CTA was removed
                 at the user's request — guests use the global booking
