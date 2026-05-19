@@ -26,7 +26,7 @@ const SVLC_CARDS = [
   {
     n: '04',
     kicker: 'Vetta',
-    title: 'Riserva di Monte Cofano',
+    title: 'Riserva Monte Cofano',
     body:
       "Il promontorio che chiude il golfo a ovest: un sentiero costiero tra ginepri, palme nane e grotte di mare, fino al baglio e ai resti delle torri di avvistamento. Dall'alto, lo sguardo abbraccia tutto il golfo di San Vito.",
   },
