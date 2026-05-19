@@ -200,7 +200,7 @@ export default function Footer() {
           <div className="md:text-right flex flex-col md:items-end justify-between h-full">
             <div />
             <p className="mt-12 text-[9px] uppercase tracking-[0.2em] text-white/30">
-              © 2026 Il Veliero · made by{' '}
+              © 2026 Il Veliero ·{' '}
               <a
                 href="http://t.me/yeg0r"
                 target="_blank"
@@ -208,7 +208,7 @@ export default function Footer() {
                 className="hover:text-[#D4AF37] transition-colors underline-offset-2 hover:underline"
                 data-testid="footer-credit"
               >
-                Y
+                made by Y
               </a>
             </p>
           </div>
