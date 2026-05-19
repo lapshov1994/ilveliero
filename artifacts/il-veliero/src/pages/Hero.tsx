@@ -333,7 +333,7 @@ export default function Hero() {
                     setCheckout(isoPlusDays(v, 1));
                   }
                 }}
-                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto text-right md:text-left"
+                className="date-flush bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto text-right md:text-left"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-checkin"
               />
@@ -352,7 +352,7 @@ export default function Hero() {
                 value={checkout}
                 min={checkoutMin}
                 onChange={(e) => setCheckout(e.target.value)}
-                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto text-right md:text-left"
+                className="date-flush bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto text-right md:text-left"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-checkout"
               />

@@ -227,6 +227,19 @@
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;
   }
+  /* Hide the native calendar picker icon on date inputs so the date
+     text can sit flush against the right edge of the field (the
+     booking widget needs the date and the "Adulti" select to align
+     to the same x). The whole field stays clickable and opens the
+     picker via showPicker() on focus/click. */
+  input[type="date"].date-flush::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+  }
+  input[type="date"].date-flush {
+    -webkit-appearance: none;
+    appearance: none;
+  }
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
