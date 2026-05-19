@@ -22,6 +22,55 @@ export default function Hero() {
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const { isOpen } = useNav();
 
+  /* Booking widget — controlled state.
+     Dates are ISO (YYYY-MM-DD) for the native <input type="date">; they
+     are reformatted to dd.MM.yyyy when injected into the WhatsApp message
+     so the guest reads them in the Italian convention.
+     Defaults: tomorrow + 2 nights, 2 guests.
+
+     IMPORTANT: we use LOCAL date components (not toISOString, which is UTC)
+     so the today/tomorrow values are correct for the guest's own timezone.
+     With UTC slicing, a guest browsing in Europe/Rome after 23:00 would
+     see "today" rendered as tomorrow's UTC date — and vice versa. */
+  const toLocalIso = (d: Date): string => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const isoPlusDays = (iso: string, days: number): string => {
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+    return toLocalIso(dt);
+  };
+  const todayIso = toLocalIso(new Date());
+  const [checkin, setCheckin] = useState<string>(isoPlusDays(todayIso, 1));
+  const [checkout, setCheckout] = useState<string>(isoPlusDays(todayIso, 3));
+  const checkoutMin = isoPlusDays(checkin || todayIso, 1);
+  const [guests, setGuests] = useState<number>(2);
+
+  const fmtIt = (iso: string): string => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}`;
+  };
+
+  /** Build the wa.me link for the Prenota Ora CTA. The phone number
+   *  393382787626 is the owner's WhatsApp (provided by the user).
+   *  If both dates are set, include the range in the message; otherwise
+   *  fall back to the basic enquiry text. */
+  const whatsappUrl = (() => {
+    const base =
+      'Salve! Vi scrivo dal vostro sito web. Vorrei avere maggiori informazioni sulla disponibilità e sui prezzi per prenotare un soggiorno';
+    const hasRange = Boolean(checkin && checkout && checkout > checkin);
+    const range = hasRange ? ` dal ${fmtIt(checkin)} al ${fmtIt(checkout)}` : '';
+    const ospitiLabel = guests === 1 ? 'ospite' : 'ospiti';
+    const ospitiTxt = ` per ${guests} ${ospitiLabel}`;
+    const msg = `${base}${range}${ospitiTxt}. Grazie!`;
+    return `https://wa.me/393382787626?text=${encodeURIComponent(msg)}`;
+  })();
+
   useEffect(() => {
     // Header darkens once the hero section has been scrolled almost out
     // of view. Computed from the section's actual bounding rect rather
@@ -261,34 +310,93 @@ export default function Hero() {
           className="relative z-20 w-full md:w-[95%] max-w-none md:max-w-5xl md:mx-auto bg-[#0A1128] border-y md:border border-[#0A1128] flex flex-col md:flex-row justify-between items-stretch shadow-2xl md:absolute md:bottom-8 md:left-1/2 md:-translate-x-1/2"
         >
           <div className="flex-1 flex flex-col md:flex-row md:justify-around w-full px-5 md:px-6 py-4 text-[#5BB8E8] text-sm gap-3 md:gap-0 md:items-center">
-            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkin">
-              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Arrivo</span>
-              <span className="font-light tracking-wide">28.04.2026</span>
-            </div>
+            <label
+              className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group"
+              data-testid="widget-checkin"
+            >
+              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">
+                Arrivo
+              </span>
+              <input
+                type="date"
+                value={checkin}
+                min={todayIso}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCheckin(v);
+                  /* Keep checkout strictly AFTER check-in. If the new
+                     check-in is on or after the current checkout, bump
+                     checkout to check-in + 1 day so the WhatsApp message
+                     range (which requires checkout > checkin) always
+                     matches what the UI shows. */
+                  if (v && checkout && checkout <= v) {
+                    setCheckout(isoPlusDays(v, 1));
+                  }
+                }}
+                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
+                style={{ colorScheme: 'dark' }}
+                data-testid="input-checkin"
+              />
+            </label>
             <div className="hidden md:block w-px h-8 bg-[#5BB8E8]/25 mx-2" />
             <div className="block md:hidden h-px w-full bg-[#5BB8E8]/25" />
-            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-checkout">
-              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Partenza</span>
-              <span className="font-light tracking-wide">30.04.2026</span>
-            </div>
+            <label
+              className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group"
+              data-testid="widget-checkout"
+            >
+              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">
+                Partenza
+              </span>
+              <input
+                type="date"
+                value={checkout}
+                min={checkoutMin}
+                onChange={(e) => setCheckout(e.target.value)}
+                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
+                style={{ colorScheme: 'dark' }}
+                data-testid="input-checkout"
+              />
+            </label>
             <div className="hidden md:block w-px h-8 bg-[#5BB8E8]/25 mx-2" />
             <div className="block md:hidden h-px w-full bg-[#5BB8E8]/25" />
-            <div className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group" data-testid="widget-guests">
-              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">Ospiti</span>
-              <span className="font-light tracking-wide">2 Adulti</span>
-            </div>
+            <label
+              className="flex md:flex-col items-baseline md:items-start justify-between md:justify-start cursor-pointer group"
+              data-testid="widget-guests"
+            >
+              <span className="text-[10px] text-[#5BB8E8]/70 uppercase tracking-[0.15em] md:mb-1 group-hover:text-white transition-colors">
+                Ospiti
+              </span>
+              <select
+                value={guests}
+                onChange={(e) => setGuests(Number(e.target.value))}
+                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer appearance-none pr-1"
+                style={{ colorScheme: 'dark' }}
+                data-testid="input-guests"
+              >
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n} className="text-black">
+                    {n} {n === 1 ? 'Adulto' : 'Adulti'}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {/* CTA button — kept the original sandy-gold finish (#D4AF37)
-              the user explicitly asked us to restore. The widget body
-              stays sky-blue so the booking strip still echoes the
-              marquee colour beneath it. */}
-          <button
-            className="bg-[#D4AF37] text-black px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group"
+          {/* CTA — opens WhatsApp (wa.me/393382787626) in a new tab with
+              the pre-filled Italian enquiry message. Dates and guest
+              count come from the controlled state above; if no dates are
+              set, the message degrades to the basic enquiry text. */}
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#D4AF37] text-black px-6 md:px-10 py-4 uppercase text-[11px] tracking-[0.2em] font-medium transition-all duration-500 w-full md:w-auto hover:shadow-xl relative overflow-hidden group flex items-center justify-center"
             data-testid="btn-prenota"
           >
-            <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">Prenota Ora</span>
+            <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#0A1128]">
+              Prenota Ora
+            </span>
             <span className="absolute inset-0 bg-white scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-          </button>
+          </a>
         </div>
       </div>
 

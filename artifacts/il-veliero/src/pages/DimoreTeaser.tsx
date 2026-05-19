@@ -1,9 +1,26 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import bedroomImg from '@assets/bedroom.jpg';
+import L7 from '@assets/7_1779216013206.jpeg';
+import L8 from '@assets/8_1779216013206.jpeg';
+import L9 from '@assets/9_1779216013206.jpeg';
+import L10 from '@assets/10_1779216013206.jpeg';
+import L11 from '@assets/11_1779216013206.jpeg';
+import L12 from '@assets/12_1779216013206.jpeg';
+import L13 from '@assets/13_1779216013206.jpeg';
+import L13_2 from '@assets/13.2_1779216013206.jpeg';
+import S14 from '@assets/14_1779216013206.jpeg';
+import S14_1 from '@assets/14.1_1779216013206.jpeg';
+import S15 from '@assets/15_1779216013206.jpeg';
+import S16 from '@assets/16_1779216013206.jpeg';
+import S17 from '@assets/17_1779216013206.jpeg';
+import S19 from '@assets/19_1779216013206.jpeg';
+import G20 from '@assets/20_1779216013206.jpeg';
+import G21 from '@assets/21_1779216013206.jpeg';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const PLACEHOLDER = '__placeholder__';
 
 type Room = {
   name: string;
@@ -14,68 +31,64 @@ type Room = {
   photos: string[];
 };
 
+const ROOM_DESCRIPTION =
+  "Camera arredata in stile mediterraneo, luminosa e accogliente: comfort moderno e atmosfera serena. Aria condizionata, Wi-Fi gratuito, bagno privato e pulizia giornaliera per una vacanza all'insegna del relax.";
+
 const ROOMS: Room[] = [
   {
-    name: 'Scirocco',
-    tagline: 'Suite vista mare',
-    size: '35 m²',
-    view: 'Vista sul Monte Cofano',
-    description:
-      "Avvolta nei toni caldi della terra siciliana, la suite Scirocco ti accoglie con la sua ampia finestra a tutta altezza affacciata sull'orizzonte. Letto a baldacchino in ferro battuto, pavimento in cotto antico e una terrazza privata per i tramonti più lenti.",
-    photos: [
-      bedroomImg,
-      'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=1200&auto=format&fit=crop',
-    ],
+    name: 'Camera Libeccio',
+    tagline: 'Stile mediterraneo',
+    size: '—',
+    view: 'Camera doppia',
+    description: ROOM_DESCRIPTION,
+    photos: [L7, L8, L9, L10, L11, L12, L13, L13_2],
   },
   {
-    name: 'Mistral',
-    tagline: 'Camera con terrazza',
-    size: '28 m²',
-    view: 'Terrazza privata sul giardino',
-    description:
-      'Fresca, luminosa e ventilata, la camera Mistral porta dentro di sé il respiro del nord. Tessuti naturali in lino bianco, dettagli in ceramica di Caltagirone e una terrazza intima dove fare colazione tra le bouganville.',
-    photos: [
-      'https://images.unsplash.com/photo-1591088398332-8a7791972843?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1551776235-dde6d482980b?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1540518614846-7eded433c457?q=80&w=1200&auto=format&fit=crop',
-    ],
+    name: 'Camera Scirocco',
+    tagline: 'Stile mediterraneo',
+    size: '—',
+    view: 'Camera doppia',
+    description: ROOM_DESCRIPTION,
+    photos: [S14, S14_1, S15, S16, S17, S19],
   },
   {
-    name: 'Gelsomino',
-    tagline: 'Camera nel giardino',
-    size: '22 m²',
-    view: 'Affaccio sul patio fiorito',
-    description:
-      "Profumata di gelsomino e zagara, questa camera intima si apre direttamente sul patio interno dell'antica dimora. Volte a botte imbiancate a calce, un piccolo angolo lettura e il canto delle rondini al risveglio.",
-    photos: [
-      'https://images.unsplash.com/photo-1444201983204-c43cbd584d93?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1200&auto=format&fit=crop',
-    ],
+    name: 'Camera Grecale',
+    tagline: 'Stile mediterraneo',
+    size: '—',
+    view: 'Camera doppia',
+    description: ROOM_DESCRIPTION,
+    photos: [G20, G21, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
   },
   {
-    name: 'Levante',
-    tagline: 'Suite familiare',
-    size: '42 m²',
-    view: 'Doppio affaccio mare e giardino',
-    description:
-      "La più ampia delle nostre dimore, pensata per chi viaggia in famiglia o desidera spazio per perdersi. Due ambienti comunicanti, un grande bagno in marmo di Custonaci e una loggia con divano per le ore più dolci del pomeriggio.",
-    photos: [
-      'https://images.unsplash.com/photo-1602002418816-5c0aeef426aa?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1615874959474-d609969a20ed?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=1200&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1559599238-308793637427?q=80&w=1200&auto=format&fit=crop',
-    ],
+    name: 'Camera 4',
+    tagline: 'Stile mediterraneo',
+    size: '—',
+    view: 'Camera doppia',
+    description: ROOM_DESCRIPTION,
+    photos: [PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
   },
 ];
+
+/** Reusable "Foto in arrivo" placeholder, used while the owner sends the
+ *  remaining room photography. Keeps the carousel layout intact and the
+ *  navy / sand / gold palette consistent — no Unsplash stand-ins. */
+function PhotoPlaceholder({ roomName, full = false }: { roomName: string; full?: boolean }) {
+  return (
+    <div
+      className={`w-full h-full flex flex-col items-center justify-center bg-[#0A1128]/[0.04] border border-[#D4AF37]/30 ${
+        full ? 'aspect-auto' : ''
+      }`}
+      data-testid="room-photo-placeholder"
+    >
+      <span className="text-[10px] tracking-[0.3em] uppercase text-[#D4AF37] font-bold mb-2">
+        Foto in arrivo
+      </span>
+      <span className="text-[10px] tracking-[0.2em] uppercase text-[#0A1128]/40 font-light">
+        {roomName}
+      </span>
+    </div>
+  );
+}
 
 /* ──────────────────────────────────────────────────────────────────────────
    Segmented pill switch
@@ -392,12 +405,16 @@ export default function DimoreTeaser() {
               key={`${activeRoom}-${currentPhoto}`}
               className="absolute inset-0"
             >
-              <img
-                src={room.photos[currentPhoto]}
-                alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
+              {room.photos[currentPhoto] === PLACEHOLDER ? (
+                <PhotoPlaceholder roomName={room.name} />
+              ) : (
+                <img
+                  src={room.photos[currentPhoto]}
+                  alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
+                  className="w-full h-full object-cover"
+                  draggable={false}
+                />
+              )}
             </div>
 
             {/* Fullscreen / zoom — opens the current photo in a true
@@ -485,7 +502,7 @@ export default function DimoreTeaser() {
               </div>
             </dl>
 
-            {/* Per-room "Prenota Scirocco / Mistral / …" CTA was removed
+            {/* Per-room "Prenota Camera …" CTA was removed
                 at the user's request — guests use the global booking
                 widget at the top of the hero to start a reservation. */}
           </div>
@@ -515,13 +532,19 @@ export default function DimoreTeaser() {
             style={{ touchAction: 'pinch-zoom' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={room.photos[currentPhoto]}
-              alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
-              className="max-w-full max-h-full object-contain select-none"
-              draggable={false}
-              data-testid="lightbox-image"
-            />
+            {room.photos[currentPhoto] === PLACEHOLDER ? (
+              <div className="w-[80vw] max-w-2xl aspect-[4/3]">
+                <PhotoPlaceholder roomName={room.name} />
+              </div>
+            ) : (
+              <img
+                src={room.photos[currentPhoto]}
+                alt={`${room.name} — foto ${currentPhoto + 1} di ${totalPhotos}`}
+                className="max-w-full max-h-full object-contain select-none"
+                draggable={false}
+                data-testid="lightbox-image"
+              />
+            )}
           </div>
 
           {/* Close (top-right) */}

@@ -2,27 +2,23 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-  Coffee,
-  Palmtree,
-  Bike,
+  Snowflake,
   Wifi,
+  Bath,
   Sparkles,
-  Ship,
-  Dog,
-  Car,
+  Coffee,
+  Trees,
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const SERVICES = [
-  { Icon: Coffee, label: 'Colazione in Camera' },
-  { Icon: Palmtree, label: 'Giardino e Terrazza' },
-  { Icon: Bike, label: 'Biciclette Free' },
-  { Icon: Wifi, label: 'Free Wifi' },
+  { Icon: Snowflake, label: 'Camere Climatizzate' },
+  { Icon: Wifi, label: 'Wi-Fi Gratuito' },
+  { Icon: Bath, label: 'Bagno Privato' },
   { Icon: Sparkles, label: 'Pulizia Giornaliera' },
-  { Icon: Ship, label: 'Escursione in Barca' },
-  { Icon: Dog, label: 'Animali Ammessi' },
-  { Icon: Car, label: 'Parcheggio Adiacente' },
+  { Icon: Coffee, label: 'Colazione' },
+  { Icon: Trees, label: 'Giardino' },
 ];
 
 export default function Services() {
@@ -89,7 +85,7 @@ export default function Services() {
         {/* 2-per-row grid (denser, more compact) */}
         <div
           ref={gridRef}
-          className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8 md:gap-y-12 md:gap-x-10 max-w-4xl mx-auto"
+          className="grid grid-cols-2 md:grid-cols-3 gap-y-10 gap-x-8 md:gap-y-12 md:gap-x-10 max-w-4xl mx-auto"
         >
           {SERVICES.map(({ Icon, label }) => (
             <div

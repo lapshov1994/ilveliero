@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import shellsImg from '@assets/shells.jpg';
-import welcomeImg from '@assets/welcome_aboard.jpg';
+import hotelImg1 from '@assets/1_1779216013206.jpeg';
+import hotelImg2 from '@assets/2_1779216013206.jpeg';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -97,10 +97,10 @@ export default function Story() {
 
         {/* Section heading */}
         <div className="mb-14 md:mb-24">
-          <h2 className="text-sm tracking-[0.3em] text-[#D4AF37] uppercase mb-6">72 Ore Perfette</h2>
+          <h2 className="text-sm tracking-[0.3em] text-[#D4AF37] uppercase mb-6">Hotel Il Veliero</h2>
           <p className="text-4xl md:text-6xl font-serif max-w-2xl leading-tight">
-            Il tempo rallenta. <br/>
-            <span className="italic text-gray-400">Le giornate si misurano in onde.</span>
+            Nel cuore di <br/>
+            <span className="italic text-gray-400">San Vito Lo Capo.</span>
           </p>
         </div>
 
@@ -117,8 +117,8 @@ export default function Story() {
             <div ref={image1WrapRef} className="relative z-[110] isolate overflow-hidden aspect-[4/3] w-full bg-gray-100">
               <img
                 ref={image1Ref}
-                src={shellsImg}
-                alt="Conchiglie, stelle marine e coralli — dettagli marinari de Il Veliero"
+                src={hotelImg1}
+                alt="Hotel Il Veliero — la struttura nel cuore di San Vito Lo Capo"
                 className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
               />
             </div>
@@ -130,10 +130,14 @@ export default function Story() {
               ref={text1Ref}
               className="relative md:absolute md:-bottom-16 md:-right-24 bg-white p-8 md:p-12 shadow-2xl w-full md:w-[80%] mt-6 md:mt-0"
             >
-              <h3 className="text-3xl font-serif mb-4">Un risveglio profumato</h3>
+              <h3 className="text-3xl font-serif mb-4">Un'accoglienza familiare</h3>
               <p className="text-sm leading-relaxed text-gray-600">
-                Immagina di svegliarti con il profumo del gelsomino che entra dalla finestra.
-                Scendi in giardino, dove un caffè caldo e dolci appena sfornati ti aspettano all'ombra degli ulivi.
+                Nel cuore di San Vito Lo Capo, a pochi passi dal mare cristallino
+                della Sicilia occidentale, Hotel Il Veliero vi accoglie in un
+                ambiente curato, familiare e profondamente legato al territorio.
+                Le sue camere luminose, l'atmosfera autentica e la posizione
+                strategica lo rendono il punto di partenza ideale per scoprire
+                le meraviglie naturali e culturali della zona.
               </p>
             </div>
           </div>
@@ -149,20 +153,22 @@ export default function Story() {
             <div ref={image2WrapRef} className="relative z-[110] isolate w-full bg-gray-100 mb-8">
               <img
                 ref={image2Ref}
-                src={welcomeImg}
-                alt="Salvagente Welcome Aboard e poltroncina con cuscino veliero"
+                src={hotelImg2}
+                alt="Hotel Il Veliero — ambiente curato e atmosfera familiare"
                 className="block w-full h-auto"
               />
             </div>
 
             <div ref={text2Ref} className="px-4 md:px-0">
               <span className="text-xs tracking-[0.2em] text-[#D4AF37] uppercase font-bold block mb-3">
-                Tre minuti esatti
+                Comfort mediterraneo
               </span>
-              <h3 className="text-2xl font-serif mb-4">A due passi dall'acqua</h3>
+              <h3 className="text-2xl font-serif mb-4">Camere in stile siciliano</h3>
               <p className="text-sm leading-relaxed text-gray-600 mb-6">
-                Nessuna fretta. Lasci l'hotel e senti già la sabbia sotto i piedi. E quando torni,
-                trovi spazi immacolati. La pulizia non è un dettaglio, è la nostra ossessione per garantirti un rifugio sicuro.
+                Le camere arredate in stile mediterraneo offrono comfort moderno
+                e un'atmosfera serena. Ogni dettaglio è pensato per garantire
+                una vacanza all'insegna del relax: aria condizionata, Wi-Fi
+                gratuito, bagno privato e pulizia giornaliera.
               </p>
             </div>
           </div>

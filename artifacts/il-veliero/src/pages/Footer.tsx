@@ -12,7 +12,7 @@ const SVLC_CARDS = [
   {
     n: '02',
     kicker: 'Tramonto',
-    title: 'Camminare al Faro',
+    title: 'Faro di San Vito Lo Capo',
     body:
       "Trenta minuti di passeggiata lenta lungo gli scogli, fino al faro bianco di Capo San Vito. Il sole scende dietro Monte Cofano e per qualche minuto il mare diventa rame.",
   },
@@ -25,10 +25,10 @@ const SVLC_CARDS = [
   },
   {
     n: '04',
-    kicker: 'Sapori',
-    title: 'Cous Cous Fest, settembre',
+    kicker: 'Vetta',
+    title: 'Riserva di Monte Cofano',
     body:
-      "Per dieci giorni, San Vito è capitale del Mediterraneo. Cuochi da tutto il mondo, musica, e quel mare che fa da sfondo a un rituale gentile e antichissimo.",
+      "Il promontorio che chiude il golfo a ovest: un sentiero costiero tra ginepri, palme nane e grotte di mare, fino al baglio e ai resti delle torri di avvistamento. Dall'alto, lo sguardo abbraccia tutto il golfo di San Vito.",
   },
 ];
 
