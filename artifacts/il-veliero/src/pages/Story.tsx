@@ -150,12 +150,15 @@ export default function Story() {
                 The full photo (lifebuoy + chair, top to bottom) is
                 always visible; nothing important is sacrificed to a
                 grid-imposed aspect ratio. */}
-            <div ref={image2WrapRef} className="relative z-[110] isolate w-full bg-gray-100 mb-8">
+            {/* Fixed 3/4 portrait frame with object-cover so the photo
+                always fills the slot edge-to-edge — no creamy/black
+                letterbox bands on the sides of a narrower photo. */}
+            <div ref={image2WrapRef} className="relative z-[110] isolate w-full aspect-[3/4] bg-gray-100 mb-8 overflow-hidden">
               <img
                 ref={image2Ref}
                 src={hotelImg2}
                 alt="Hotel Il Veliero — ambiente curato e atmosfera familiare"
-                className="block w-full h-auto"
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
 

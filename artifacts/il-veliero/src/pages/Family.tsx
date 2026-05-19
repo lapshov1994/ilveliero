@@ -132,9 +132,6 @@ export default function Family() {
             <p className="font-serif italic text-xl md:text-2xl text-[#0A1128] mb-2">
               "San Vito è il nostro tesoro, e siamo felici di condividerlo con voi."
             </p>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">
-              — Famiglia Valenti
-            </p>
           </div>
         </div>
 

@@ -117,13 +117,6 @@ export default function Footer() {
                   →
                 </button>
               </div>
-              <Link
-                href="/blog"
-                className="text-[10px] tracking-[0.3em] uppercase text-white/60 hover:text-[#D4AF37] transition-colors duration-300 border-b border-white/30 hover:border-[#D4AF37] pb-1"
-                data-testid="link-cosa-fare-all"
-              >
-                Tutti gli articoli →
-              </Link>
             </div>
           </div>
 
@@ -159,9 +152,6 @@ export default function Footer() {
                 <p className="text-sm leading-relaxed text-white/60 font-light flex-1">
                   {c.body}
                 </p>
-                <span className="mt-8 text-[10px] tracking-[0.3em] uppercase text-white/40 group-hover:text-[#D4AF37] transition-colors duration-500 inline-flex items-center gap-3">
-                  Leggi <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
-                </span>
               </Link>
             ))}
           </div>
@@ -189,24 +179,37 @@ export default function Footer() {
             <p className="hover:text-white transition-colors cursor-default">Sicilia, Italia</p>
           </div>
 
-          {/* Contacts */}
+          {/* Contacts — the WhatsApp number is the owner's primary line
+              of contact, so the phone entry is now a wa.me link the
+              guest can tap straight from the footer. */}
           <div>
             <h4 className="text-white uppercase tracking-[0.2em] text-[10px] mb-6 font-medium">Contatti</h4>
-            <p className="mb-2 hover:text-[#D4AF37] cursor-pointer transition-colors">+39 0923 000000</p>
-            <p className="mb-2 hover:text-[#D4AF37] cursor-pointer transition-colors">info@ilveliero.it</p>
-            <p className="hover:text-[#D4AF37] cursor-pointer transition-colors mt-6 uppercase text-[10px] tracking-widest block">
-              Instagram ↗
-            </p>
+            <a
+              href="https://wa.me/393382787626"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mb-2 hover:text-[#D4AF37] transition-colors"
+              data-testid="footer-whatsapp"
+            >
+              +39 338 278 7626
+            </a>
           </div>
 
-          {/* Legal */}
+          {/* Signature column — credit line + © year. The "made by Y"
+              link points to the author's Telegram. */}
           <div className="md:text-right flex flex-col md:items-end justify-between h-full">
-            <div>
-              <p className="mb-3 hover:text-white cursor-pointer transition-colors text-xs">Privacy Policy</p>
-              <p className="mb-3 hover:text-white cursor-pointer transition-colors text-xs">Cookie Policy</p>
-            </div>
+            <div />
             <p className="mt-12 text-[9px] uppercase tracking-[0.2em] text-white/30">
-              © 2026 Il Veliero.
+              © 2026 Il Veliero · made by{' '}
+              <a
+                href="http://t.me/yeg0r"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#D4AF37] transition-colors underline-offset-2 hover:underline"
+                data-testid="footer-credit"
+              >
+                Y
+              </a>
             </p>
           </div>
 

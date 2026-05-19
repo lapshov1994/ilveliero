@@ -98,7 +98,7 @@ export default function About() {
             <p className="text-base md:text-lg font-light leading-relaxed text-gray-700">
               Il restauro del 2008 trasforma il Veliero in un piccolo albergo
               diffuso. Le stanze diventano quattro vere e proprie dimore —
-              Libeccio, Scirocco, Grecale e la quarta camera — ognuna pensata
+              Libeccio, Scirocco, Grecale e la quarta — ognuna pensata
               attorno a un vento, a una vista, a un ricordo della famiglia.
               È in quegli anni che entra in scena Lorenzo, figlio di
               Giovanni, oggi alla guida della casa con sua moglie Anna.

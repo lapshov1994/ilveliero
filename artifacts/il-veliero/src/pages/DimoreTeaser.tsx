@@ -36,7 +36,7 @@ const ROOM_DESCRIPTION =
 
 const ROOMS: Room[] = [
   {
-    name: 'Camera Libeccio',
+    name: 'Libeccio',
     tagline: 'Stile mediterraneo',
     size: '—',
     view: 'Camera doppia',
@@ -44,7 +44,7 @@ const ROOMS: Room[] = [
     photos: [L7, L8, L9, L10, L11, L12, L13, L13_2],
   },
   {
-    name: 'Camera Scirocco',
+    name: 'Scirocco',
     tagline: 'Stile mediterraneo',
     size: '—',
     view: 'Camera doppia',
@@ -52,7 +52,7 @@ const ROOMS: Room[] = [
     photos: [S14, S14_1, S15, S16, S17, S19],
   },
   {
-    name: 'Camera Grecale',
+    name: 'Grecale',
     tagline: 'Stile mediterraneo',
     size: '—',
     view: 'Camera doppia',
@@ -60,7 +60,7 @@ const ROOMS: Room[] = [
     photos: [G20, G21, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER, PLACEHOLDER],
   },
   {
-    name: 'Camera 4',
+    name: 'Quarta',
     tagline: 'Stile mediterraneo',
     size: '—',
     view: 'Camera doppia',

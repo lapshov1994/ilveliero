@@ -333,7 +333,7 @@ export default function Hero() {
                     setCheckout(isoPlusDays(v, 1));
                   }
                 }}
-                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
+                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-checkin"
               />
@@ -352,7 +352,7 @@ export default function Hero() {
                 value={checkout}
                 min={checkoutMin}
                 onChange={(e) => setCheckout(e.target.value)}
-                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
+                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer w-[7.5rem] md:w-auto"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-checkout"
               />
@@ -369,7 +369,7 @@ export default function Hero() {
               <select
                 value={guests}
                 onChange={(e) => setGuests(Number(e.target.value))}
-                className="bg-transparent border-none outline-none font-light tracking-wide text-[#5BB8E8] cursor-pointer appearance-none pr-1"
+                className="bg-transparent border-none outline-none text-sm font-light tracking-wide text-[#5BB8E8] cursor-pointer appearance-none pr-1"
                 style={{ colorScheme: 'dark' }}
                 data-testid="input-guests"
               >
