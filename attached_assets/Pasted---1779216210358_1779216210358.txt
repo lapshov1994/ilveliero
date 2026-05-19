@@ -1,0 +1,44 @@
+
+
+Замени текст и фотографии на сайте.
+
+Тексты (сам разбей так, чтобы красиво было но кидаю от начала и до конца)
+
+Первая часть: 
+Nel cuore di San Vito Lo Capo, a pochi passi dal mare cristallino e dalla celebre spiaggia di sabbia bianca, l’Affittacamere Il Veliero è la scelta ideale per chi desidera vivere una vacanza all’insegna del relax e della semplicità.
+
+Вторая часть: 
+Le camere, arredate in stile mediterraneo, sono pensate per offrire comfort e tranquillità, con ambienti luminosi e accoglienti. Ogni spazio è curato nei dettagli per garantire un soggiorno piacevole e rilassante, sia per coppie che per famiglie.
+La posizione strategica consente di raggiungere facilmente a piedi il centro del paese, ricco di ristoranti tipici, locali e negozi, e di esplorare le meraviglie naturali della zona, come la suggestiva Riserva Naturale dello Zingaro.
+
+
+Иконки удобств измени и оставь только эти с подписями: 
+Camere climatizzate
+Wi-Fi gratuito
+Bagno privato
+Pulizia giornaliera
+Colazione
+Giardino
+
+Названия комнат:
+la Camera Libeccio, La Camera Scirocco, La Camera Grecale, La Camera 4
+
+Кус Кус Фест замени на монте кофано
+Подписи к карточкам:
+Riserva dello Zingaro Lasciati incantare dalla bellezza selvaggia della Riserva dello Zingaro, dove sentieri incontaminati si tuffano in un mare dalle mille sfumature di turchese. È un vero paradiso terrestre che ti ruberà il cuore al primo sguardo, regalandoti un senso di assoluta e pura libertà.
+Camminare al Faro (San Vito lo Capo) Concediti una passeggiata indimenticabile verso l'iconico faro di San Vito lo Capo, cullato dalla brezza marina e dai colori infuocati del tramonto all'orizzonte. Questo luogo magico sprigiona un'energia romantica e vibrante, capace di trasformare un semplice cammino nel ricordo più prezioso del tuo viaggio.
+Tonnara di Scopello Immergiti nell'atmosfera senza tempo della storica Tonnara di Scopello, un capolavoro incastonato tra maestosi faraglioni e acque trasparenti che sembrano dipinte. È un vero e proprio set cinematografico a cielo aperto da togliere il fiato, dove l'antica storia siciliana si fonde con una bellezza travolgente.
+Riserva Monte Cofano Scopri il fascino aspro e prepotente della Riserva di Monte Cofano, dominata da un promontorio maestoso che si erge fiero a picco su un mare blu cobalto. Vivi un'avventura autentica e viscerale tra natura incontaminata e silenzi profondi, un'esperienza perfetta per chi desidera riconnettersi con l'anima vera della Sicilia.
+
+Фотографии по номерам расположены от начала и до конца (с учетом комнат). Оставшиеся я докину позже 
+1-4 по порядку
+5-13 первая комната
+14-19 вторая комната
+20-25 третья комната
+26-28 четвертая комната
+
+Такжет при нажатии на prenota ora пусть будет перебрасывать на WhatsApp вот с таким текстом: Salve! Vi scrivo dal vostro sito web. Vorrei avere maggiori informazioni sulla disponibilità e sui prezzi per prenotare un soggiorno. Grazie!
+Также классно будет если даты даст выбрать и вставит эти даты в текст тоже. Пока это временная заглушка
+
+
+
