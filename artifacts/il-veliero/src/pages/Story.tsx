@@ -97,7 +97,7 @@ export default function Story() {
 
         {/* Section heading */}
         <div className="mb-14 md:mb-24">
-          <h2 className="text-sm tracking-[0.3em] text-[#D4AF37] uppercase mb-6">Hotel Il Veliero</h2>
+          <h2 className="text-sm tracking-[0.3em] text-[#D4AF37] uppercase mb-6">Affittacamere Il Veliero</h2>
           <p className="text-4xl md:text-6xl font-serif max-w-2xl leading-tight">
             Nel cuore di <br/>
             <span className="italic text-gray-400">San Vito Lo Capo.</span>
@@ -120,7 +120,7 @@ export default function Story() {
                 src={hotelImg1}
                 loading="lazy"
                 decoding="async"
-                alt="Hotel Il Veliero — la struttura nel cuore di San Vito Lo Capo"
+                alt="Affittacamere Il Veliero — la struttura nel cuore di San Vito Lo Capo"
                 className="absolute -top-[15%] left-0 w-full h-[130%] object-cover scale-105"
               />
             </div>
@@ -135,7 +135,7 @@ export default function Story() {
               <h3 className="text-3xl font-serif mb-4">Un'accoglienza familiare</h3>
               <p className="text-sm leading-relaxed text-gray-600">
                 Nel cuore di San Vito Lo Capo, a pochi passi dal mare cristallino
-                della Sicilia occidentale, Hotel Il Veliero vi accoglie in un
+                della Sicilia occidentale, l'Affittacamere Il Veliero vi accoglie in un
                 ambiente curato, familiare e profondamente legato al territorio.
                 Le sue camere luminose, l'atmosfera autentica e la posizione
                 strategica lo rendono il punto di partenza ideale per scoprire
@@ -161,7 +161,7 @@ export default function Story() {
                 src={hotelImg2}
                 loading="lazy"
                 decoding="async"
-                alt="Hotel Il Veliero — ambiente curato e atmosfera familiare"
+                alt="Affittacamere Il Veliero — ambiente curato e atmosfera familiare"
                 className="absolute inset-0 w-full h-full object-cover"
               />
             </div>

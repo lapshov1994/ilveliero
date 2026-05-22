@@ -41,16 +41,10 @@ const ROOM_DESCRIPTION =
 
 const ROOMS: Room[] = [
   {
-    name: 'Libeccio',
+    name: 'Tramontana',
     tagline: 'Stile mediterraneo',
     description: ROOM_DESCRIPTION,
-    photos: [L7, L8, L9, L10, L11, L12, L13, L13_2],
-  },
-  {
-    name: 'Scirocco',
-    tagline: 'Stile mediterraneo',
-    description: ROOM_DESCRIPTION,
-    photos: [S14, S14_1, S15, S16, S17, S19],
+    photos: [Q26, Q27, Q28],
   },
   {
     name: 'Grecale',
@@ -59,10 +53,16 @@ const ROOMS: Room[] = [
     photos: [G20, G21, G22, G23, G24, G25],
   },
   {
-    name: 'Quarta',
+    name: 'Scirocco',
     tagline: 'Stile mediterraneo',
     description: ROOM_DESCRIPTION,
-    photos: [Q26, Q27, Q28],
+    photos: [S14, S14_1, S15, S16, S17, S19],
+  },
+  {
+    name: 'Libeccio',
+    tagline: 'Stile mediterraneo',
+    description: ROOM_DESCRIPTION,
+    photos: [L7, L8, L9, L10, L11, L12, L13, L13_2],
   },
 ];
 

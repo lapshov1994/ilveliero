@@ -77,7 +77,7 @@ export default function Gallery() {
             Immagini<br/><span className="italic">di Sicilia</span>
           </h1>
           <p className="mt-8 max-w-xl text-sm md:text-base font-light text-gray-500 leading-relaxed">
-            Le immagini del nostro hotel, delle camere, del giardino e del
+            Le immagini del nostro affittacamere, delle camere, del giardino e del
             mare di San Vito Lo Capo. La galleria viene aggiornata man
             mano che arrivano le nuove fotografie.
           </p>
@@ -100,7 +100,7 @@ export default function Gallery() {
                 >
                   <img
                     src={photo}
-                    alt={`Hotel Il Veliero — foto ${i + 1}`}
+                    alt={`Affittacamere Il Veliero — foto ${i + 1}`}
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
