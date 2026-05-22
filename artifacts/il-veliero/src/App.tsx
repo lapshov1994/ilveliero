@@ -17,7 +17,6 @@ import Services from '@/components/Services';
 import DimoreTeaser from '@/pages/DimoreTeaser';
 import Footer from '@/pages/Footer';
 import Gallery from '@/pages/Gallery';
-import About from '@/pages/About';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -115,7 +114,6 @@ export default function App() {
               <Route path="/" component={HomePage} />
               <Route path="/gallery" component={Gallery} />
               <Route path="/galleria" component={Gallery} />
-              <Route path="/about" component={About} />
               {/* Anything else falls back to the home page so old /rooms and
                   /blog URLs still land somewhere meaningful. */}
               <Route component={HomePage} />

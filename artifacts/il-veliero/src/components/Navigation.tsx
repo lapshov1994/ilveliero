@@ -18,7 +18,6 @@ const SECTIONS: Section[] = [
   { kind: 'anchor', label: 'Blog',       anchor: 'cosa-fare' },
   { kind: 'anchor', label: 'Camere',     anchor: 'dimore-teaser' },
   { kind: 'link',   label: 'Galleria',   href:   '/gallery' },
-  { kind: 'link',   label: 'About',      href:   '/about' },
   { kind: 'anchor', label: 'Contact us', anchor: 'footer' },
 ];
 

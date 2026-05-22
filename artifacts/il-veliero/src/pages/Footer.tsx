@@ -165,17 +165,16 @@ export default function Footer() {
             <div className="text-xl tracking-[0.2em] font-serif uppercase text-white mb-6 flex items-center">
               il veliero <span className="text-[#D4AF37] ml-2 text-xs">★★★</span>
             </div>
-            <p className="tracking-[0.15em] uppercase text-[9px] leading-loose text-white/40">
-              Autentico Artigianato Siciliano <br/>
-              Mare e Vento
+            <p className="font-serif italic text-sm leading-relaxed text-white/70">
+              Dove il mare incontra il cielo
             </p>
           </div>
 
           {/* Location */}
           <div>
             <h4 className="text-white uppercase tracking-[0.2em] text-[10px] mb-6 font-medium">Posizione</h4>
-            <p className="mb-2 hover:text-white transition-colors cursor-default">Via Savoia 15</p>
-            <p className="mb-2 hover:text-white transition-colors cursor-default">91010 San Vito Lo Capo (TP)</p>
+            <p className="mb-2 hover:text-white transition-colors cursor-default">Viale Pier Santi Mattarella 97</p>
+            <p className="mb-2 hover:text-white transition-colors cursor-default">91030 San Vito Lo Capo (TP)</p>
             <p className="hover:text-white transition-colors cursor-default">Sicilia, Italia</p>
           </div>
 
