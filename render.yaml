@@ -1,10 +1,13 @@
 version: '1'
 services:
   - type: static
-    name: ilveliero-site
+    name: ilveliero-1
     rootDir: artifacts/il-veliero
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter il-veliero run build
+    buildCommand: pnpm install && pnpm run build
     publishPath: dist
+    envVars:
+      - key: PNPM_VERSION
+        value: 9.1.0
     routes:
       - type: rewrite
         source: /*
