@@ -1,0 +1,10 @@
+services:
+  - type: static
+    name: ilveliero-site
+    rootDir: artifacts/il-veliero
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter il-veliero run build
+    publishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
