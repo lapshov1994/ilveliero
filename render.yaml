@@ -2,9 +2,8 @@ version: '1'
 services:
   - type: static
     name: ilveliero-1
-    rootDir: artifacts/il-veliero
-    buildCommand: pnpm install && pnpm run build
-    publishPath: dist
+    buildCommand: pnpm install && cd artifacts/il-veliero && pnpm run build
+    publishPath: artifacts/il-veliero/dist
     envVars:
       - key: PNPM_VERSION
         value: 9.1.0
